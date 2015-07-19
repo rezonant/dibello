@@ -1,0 +1,59 @@
+/**
+ * 
+ * / LIGHTINJECTOR
+ * /
+ * / AUTHOR: William Lahti
+ * / (C) 2015 William Lahti
+ *
+ * A light-weight function dependency injector, similar to the one found in Angular.js
+ *
+ */
+
+var annotateFn = require('./annotateFn.js');
+
+function InjectionException(message) {
+	this.error = 'inject-error';
+	this.message = message;
+}
+
+/**
+ * Calls the given function, passing parameters to said function which have
+ * names which match entries in the given map. 
+ * 
+ * @param {} map
+ * @param {} self
+ * @param function fn
+ * @returns mixed The result of the function once called
+ */
+function inject(map, self, fn) {
+	var meta = annotateFn(fn);
+	var params = meta.params;
+	fn = meta.fn;
+	
+	var args = [];
+	
+	if (map.$populate) {
+		map.$populate(params);
+	}
+	
+	for (var i = 0, max = params.length; i < max; ++i) {
+		var param = params[i];
+		var factory = map[param];
+		
+		if (typeof factory === 'undefined') {
+			
+			if (map.$any) {
+				factory = map.$any;
+			} else {
+				throw new InjectionException('No service factory for injected parameter '+param+' (Parameter must be a valid service)');
+			}	
+		}
+		
+		args.push(factory(inject));
+	}
+	
+	return fn.apply(self, args);
+}
+
+inject.InjectionException = InjectionException;
+module.exports = inject;
