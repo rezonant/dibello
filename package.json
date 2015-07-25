@@ -1,0 +1,23 @@
+{
+  "name": "skate",
+  "version": "0.0.1",
+  "description": "A high-level API on top of IndexedDB",
+  "main": "src/skate.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "karma start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://aether.tirrin.com:8081/liam/skate.git"
+  },
+  "keywords": [
+    "indexeddb",
+    "idb",
+    "orm"
+  ],
+  "author": "William Lahti <wilahti@gmail.com>",
+  "license": "MIT"
+}

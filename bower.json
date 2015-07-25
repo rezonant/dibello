@@ -1,0 +1,23 @@
+{
+  "name": "skate",
+  "version": "0.0.1",
+  "authors": [
+    "William Lahti <wilahti@gmail.com>"
+  ],
+  "description": "A high-level API on top of IndexedDB",
+  "main": "src/skate.js",
+  "keywords": [
+    "indexeddb",
+    "idb",
+    "orm"
+  ],
+  "license": "MIT",
+  "homepage": "http://github.com/rezonant/skate",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
