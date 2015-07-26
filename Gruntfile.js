@@ -68,5 +68,11 @@ module.exports = function(grunt) {
 
   // Default task(s).
   grunt.registerTask('default', ['browserify', 'uglify']);
+  grunt.registerTask('tag-patch', ['default', 'test', 'bump:patch']);
+  grunt.registerTask('tag-minor', ['default', 'test', 'bump:minor']);
+  grunt.registerTask('tag-major', ['default', 'test', 'bump:major']);
+  grunt.registerTask('tag-git', ['default', 'test', 'bump:git']);
+  grunt.registerTask('tag-prepatch', ['default', 'test', 'bump:prepatch']);
+  grunt.registerTask('tag-prerelease', ['default', 'test', 'bump:prerelease']);
 
 };
