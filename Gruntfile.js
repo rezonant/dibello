@@ -32,7 +32,7 @@ module.exports = function(grunt) {
 			files: ["package.json", "bower.json"],
 			updateConfigs: ["pkg"],
 			commitFiles: ['package.json', 'bower.json', 'dist/skate.js', 'dist/skate.min.js'],
-			commitMessage: ['Release v%VERSION%'],
+			commitMessage: 'Release v%VERSION%',
 			createTag: true,
 			tagName: 'v%VERSION%',
 			tagMessage: 'Version %VERSION%',
