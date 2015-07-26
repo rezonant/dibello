@@ -43,6 +43,13 @@ module.exports = function(grunt) {
 		}
 	},
 
+	karma: {
+	  unit: {
+        configFile: 'karma.conf.js',
+		singleRun: true
+      }
+	},
+
     uglify: {
       options: {
         banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n',
@@ -65,14 +72,17 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-bump');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-karma');
 
   // Default task(s).
   grunt.registerTask('default', ['browserify', 'uglify']);
+  grunt.registerTask('test', ['karma']);
+
   grunt.registerTask('tag-patch', ['default', 'test', 'bump:patch']);
   grunt.registerTask('tag-minor', ['default', 'test', 'bump:minor']);
   grunt.registerTask('tag-major', ['default', 'test', 'bump:major']);
   grunt.registerTask('tag-git', ['default', 'test', 'bump:git']);
   grunt.registerTask('tag-prepatch', ['default', 'test', 'bump:prepatch']);
   grunt.registerTask('tag-prerelease', ['default', 'test', 'bump:prerelease']);
-
+ 
 };
