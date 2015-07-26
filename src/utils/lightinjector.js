@@ -49,7 +49,12 @@ function inject(map, self, fn) {
 			}	
 		}
 		
-		args.push(factory(inject));
+		if (typeof factory === 'function') {
+			args.push(factory(inject));
+		} else {
+			args.push(factory);
+		}
+		
 	}
 	
 	return fn.apply(self, args);

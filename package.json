@@ -21,6 +21,7 @@
   "author": "William Lahti <wilahti@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "deepcopy": "^0.5.0",
     "es5generators": "0.0.1"
   },
   "devDependencies": {

@@ -10,7 +10,7 @@
 var stripCopy = require('./stripCopy.js');
 var Generator = require('es5generators');
 
-function Repository(db, storeName) {
+function Repository(db, storeName, transaction) {
 	var self = this;
 	
 	if (db instanceof Promise) {
@@ -20,9 +20,12 @@ function Repository(db, storeName) {
 	}
 	
 	this.storeName = storeName;
-	this.transaction = null;
+	this.transaction = transaction? transaction : null;
 	
 }; module.exports = Repository;
+
+Repository.prototype.dehydrate = function() {};
+Repository.prototype.hydrate = function() {};
 
 Repository.prototype.getStoreTransaction = function(db) {
 	if (this.transaction)
@@ -37,25 +40,19 @@ Repository.prototype.setTransaction = function(tx) {
 	this.transaction = tx;
 };
 
+Repository.prototype.stripCopy = function(item) {
+	return stripCopy(item);
+};
+
 Repository.prototype.persist = function(item) {
 	var self = this;
 	
 	// Lets make a copy and strip out all the Angular bits (ie anything prefixed with $)
-	item = stripcopy(item);
+	item = stripCopy(item);
 
 	return new Promise(function(resolve, reject) {
-		var clone = $.extend({}, story);
-
-		delete clone.$$hashKey;
-
-		var taskIDs = [];
-		if (clone.tasks) {
-			for (var i = 0, max = clone.tasks.length; i < max; ++i)
-				taskIDs.push(clone.tasks[i].id);
-			delete clone.tasks;
-		}
-		clone.taskIDs = taskIDs;
-
+		var clone = self.stripCopy(item);
+		self.dehydrate(clone);
 		self.ready.then(function(db) {
 			var tx = self.getStoreTransaction(db);
 			var store = tx.objectStore(self.storeName);
@@ -85,21 +82,16 @@ Repository.prototype.get = function(id) {
 
 Repository.prototype.all = function() {
 	var self = this;
-	
-	return self.ready.then(function(db) {
-		return new Promise(function(resolve, reject) {
+	return new Generator(function(done, reject, emit) {
+		self.ready.then(function(db) {
 			var tx = self.getStoreTransaction(db);
 			var store = tx.objectStore(self.storeName);
-			
-			resolve(store.openCursor());
-			/**
-			var items = [];
+
 			store.openCursor().yield(function(item) {
-				items.push(item);
+				emit(item);
 			}).finishes(function() {
-				resolve(items);
+				done();
 			});
-			**/
 		});
 	});
 };
@@ -114,35 +106,39 @@ Repository.prototype.all = function() {
 Repository.prototype.getMany = function(ids, includeNulls) {
 	var self = this;
 	
-	return new StreamablePromise(function(resolve, reject, emit) {
+	return new Generator(function(done, reject, emit) {
 		self.ready.then(function(db) {
 			var tx = self.getStoreTransaction(db);
 			var store = tx.objectStore(self.storeName);
 
 			var itemPromises = [];
-			var items = [];
 
 			for (var i = 0, max = ids.length; i < max; ++i) {
 				var id = ids[i];
 				!function() {
+					//itemPromises.push(new Promise(function(resolve) { resolve({id: id}); }));
 					itemPromises.push(new Promise(function(resolve, reject) {
+						
+						//store.foo(function() { resolve({}); }); return;
+						var originalResolve = resolve;
 						store.get(id).yield(function(item) {
-							items.push(item);
 							emit(item);
 							resolve(item);
 						}).catch(function(err) {
 							if (includeNulls) {
-								items.push(null);
 								emit(null);
 							}
 							resolve(null);
 						});
+						
+					}).then(function(items) {
+						return items;
 					}));
 				}(id);
 			}
-
-			Promise.all(itemPromises).then(function() {
-				resolve();
+			
+			Promise.all(itemPromises).then(function(items) {
+				done();
 			});
 		});
 	});
@@ -164,7 +160,7 @@ Repository.prototype.getMany = function(ids, includeNulls) {
 Repository.prototype.find = function(criteria) {
 	var self = this;
 
-	return new StreamablePromise(function(resolve, reject, emit) {
+	return new Generator(function(resolve, reject, emit) {
 		self.ready.then(function(db) {
 			var isEquivalent;
 			isEquivalent = function(criteriaValue, realValue) {
@@ -208,54 +204,56 @@ Repository.prototype.find = function(criteria) {
 			// asynchronously.
 
 			for (var fieldName in criteria) {
-				promise = promise.then(function() {
-					var fieldValue = criteria[fieldName];
+				!function(fieldName) {
+					promise = promise.then(function() {
+						var fieldValue = criteria[fieldName];
 
-					if (items === null) {
-						// Source
+						if (items === null) {
+							// Source
 
-						if (store.indexNames.contains(fieldName)) {
-							var index = store.index(fieldName);
+							if (store.indexNames.contains(fieldName)) {
+								var index = store.index(fieldName);
 
-							return new Promise(function(resolve, reject) {
-								items = [];
+								return new Promise(function(resolve, reject) {
+									items = [];
 
-								index.openCursor(fieldValue).yield(function(item) {
-									items.push(item);
-								}).finishes(function() {
-									resolve();
+									index.openCursor(fieldValue).yield(function(item) {
+										items.push(item);
+									}).finishes(function() {
+										resolve();
+									});
 								});
-							});
 
 
+							} else {
+								return new Promise(function(resolve, reject) {
+									items = [];
+
+									store.openCursor().yield(function(item) {
+										items.push(item);
+									}).finishes(function() {
+										resolve();
+									});
+								});
+							}
 						} else {
-							return new Promise(function(resolve, reject) {
-								items = [];
+							// Filter
 
-								store.openCursor().yield(function(item) {
-									items.push(item);
-								}).finishes(function() {
-									resolve();
-								});
-							});
+							var newItems = [];
+
+							for (var i = 0, max = items.length; i < max; ++i) {
+								var item = items[i];
+
+								if (!isEquivalent(fieldValue, item[fieldName]))
+									continue;
+
+								newItems.push(item);
+							}
+
+							items = newItems;
 						}
-					} else {
-						// Filter
-
-						var newItems = [];
-
-						for (var i = 0, max = items.length; i < max; ++i) {
-							var item = items[i];
-
-							if (!isEquivalent(fieldValue, item[fieldName]))
-								continue;
-
-							newItems.push(item);
-						}
-
-						items = newItems;
-					}
-				});
+					});
+				}(fieldName);
 			};
 
 			// Once the promise chain is finished, we'll finally resolve the

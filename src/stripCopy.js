@@ -1,3 +1,4 @@
+var deepcopy = require('deepcopy');
 
 function strip(obj) {
 	if (obj === null)
@@ -22,7 +23,10 @@ function strip(obj) {
 };
 
 function stripCopy(obj) {
-	var copy = angular.copy(obj);
+	var copy;
+			
+	//copy = angular.copy(obj);
+	copy = deepcopy(obj);
 	strip(obj);
 	return obj;
 };

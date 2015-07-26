@@ -49,6 +49,17 @@ StoreBuilder.prototype.getStore = function(name) {
 	return this.builder.getStore(name);
 };
 
+StoreBuilder.prototype.getField = function(name) {
+	if (!this.store.fields[name]) {
+		throw {
+			error: 'NoSuchField',
+			message: 'The field '+name+' does not exist'
+		};
+	}
+	
+	return this.store.fields[name];
+};
+
 StoreBuilder.prototype.key = function(name) {
 	this.addField(name, {key: true, index: name, name: name, unique: false});
 	return this;

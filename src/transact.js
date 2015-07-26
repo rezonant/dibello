@@ -69,23 +69,25 @@ function transact(db, transactionOrFactory, fn, mode) {
 					continue;
 				
 				var storeOnly = false;
+				var storeName = param;
 				
-				if (param.indexOf('store:') == 0) {
+				if (storeName.indexOf('store:') == 0) {
 					storeOnly = true;
-					param = param.replace(/^store:/, '');
+					storeName = storeName.replace(/^store:/, '');
 				}
 				
 				var store;
 				try {
-					store = tx.objectStore(param);
+					store = this.transaction.objectStore(storeName);
 				} catch (e) {
 					throw new SkateUnknownStoreException('No such object store '+param);
 				}
 				
-				if (storeOnly)
+				if (storeOnly) {
 					this[param] = store;
-				else
-					this[param] = new Repository(db, store);
+				} else {
+					this[param] = new Repository(db, param, this.transaction);
+				}
 			}
 		}
 	}, null, fn);

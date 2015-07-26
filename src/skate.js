@@ -182,28 +182,28 @@ var skate = {
 			var oldVersion = event.oldVersion;
 			var newVersion = event.newVersion;
 			
-			console.log('[dijest-data] Schema update required from '+oldVersion+' to '+newVersion);
-
-			console.log('[dijest-data] Loading schema history...');
+			//console.log('[skate] Schema update required from '+oldVersion+' to '+newVersion);
+			//console.log('[skate] Loading schema history...');
+			
 			for (var version = 1; version <= oldVersion; ++version) {
-				console.log(' - Loading schema version #'+version+' (model-only)');
+				//console.log(' - Loading schema version #'+version+' (model-only)');
 				options.migrations[version](schema);
 			}
 			
 			schema.setDatabase(db, event.currentTarget.transaction);
 			db.onerror = function (event) {
-				console.error('[dijest-data] Error while building database schema');
+				console.error('[skate] Error while building database schema');
 				console.log(event);
 			};
 
-			console.log('Applying migrations...');
+			//console.log('[skate] Applying migrations...');
 			for (var version = oldVersion+1; version <= newVersion; ++version) {
-				console.log(' - Applying schema version #'+version+' (live)');
+				//console.log('[skate] - Applying schema version #'+version+' (live)');
 				options.migrations[version](schema);
 			}
 			
 			schema.disconnectDatabase();
-			console.log('Schema updated successfully.');
+			//console.log('Schema updated successfully.');
 
 			db.onerror = null;
 		};

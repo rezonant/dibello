@@ -7,11 +7,12 @@
  * 
  */
 
+var transact = require('./transact.js');
+var StoreBuilder = require('./StoreBuilder.js');
+
 function SchemaBuilder() {
 	this.stores = [];
 }; module.exports = SchemaBuilder;
-
-var transact = require('./transact.js');
 
 /**
  * Pass in a version change transaction so that we can modify the schema.
@@ -22,6 +23,10 @@ SchemaBuilder.prototype.setDatabase = function(db, transaction) {
 	
 	this.db = db;
 	this.transaction = transaction;
+};
+
+SchemaBuilder.prototype.isLive = function() {
+	return this.transaction && this.db;
 };
 
 /**
