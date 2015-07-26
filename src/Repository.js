@@ -8,7 +8,7 @@
  */
 
 var stripCopy = require('./stripCopy.js');
-var StreamablePromise = require('./utils/StreamablePromise.js');
+var Generator = require('es5generators');
 
 function Repository(db, storeName) {
 	var self = this;
