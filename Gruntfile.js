@@ -29,7 +29,7 @@ module.exports = function(grunt) {
 
 	bump: {
 		options: {
-			files: ["package.json", "bower.json", "README.md"],
+			files: ["package.json", "bower.json", "README.md", "dist/skate.js", "dist/skate.min.js"],
 			updateConfigs: ["pkg"],
 			//commitFiles: ['package.json', 'bower.json', 'README.md'],
 			commitFiles: false,
