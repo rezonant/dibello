@@ -2,10 +2,6 @@
 
 Provides a high-level API on top of IndexedDB.
 
-### Version
-
-0.0.3
-
 ### Installation
 
 Node (server-side):
