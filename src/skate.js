@@ -46,6 +46,12 @@ var skate = {
 	
 	/**
 	 * Returns a promise to open an IndexedDB database using Skate's schema manager.
+	 * 
+	 * You must pass the top-level indexedDB API object. If you are in a browser which
+	 * supports IndexedDB, then simply pass window.indexedDB. If you are in Node.js 
+	 * using indexeddb-js, then you should pass the indexeddbjs.indexedDB instance you
+	 * normally construct.
+	 * 
 	 * When the promise resolves you will receive an IndexedDB IDBDatabase instance.
 	 * 
 	 * In order for Skate to prepare the database, you must provide the desired IDB 
@@ -127,7 +133,7 @@ var skate = {
 	 * @param {} options
 	 * @returns {Promise|skate.open.ready}
 	 */
-	open: function(dbName, options) {
+	open: function(indexedDB, dbName, options) {
 		
 		// Process options
 		
@@ -154,7 +160,7 @@ var skate = {
 	
 		// Open DB request
 		
-		var DBOpenRequest = window.indexedDB.open(dbName, version);
+		var DBOpenRequest = indexedDB.open(dbName, version);
 
 		// these two event handlers act on the database being opened successfully, or not
 		DBOpenRequest.onerror = function (event) {
