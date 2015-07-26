@@ -29,15 +29,14 @@ module.exports = function(grunt) {
 
 	bump: {
 		options: {
-			files: ["package.json", "bower.json", "README.md", "dist/skate.js", "dist/skate.min.js"],
+			files: ["package.json", "bower.json"],
 			updateConfigs: ["pkg"],
-			//commitFiles: ['package.json', 'bower.json', 'README.md'],
-			commitFiles: false,
+			commitFiles: ['package.json', 'bower.json', 'dist/skate.js', 'dist/skate.min.js'],
 			commitMessage: ['Release v%VERSION%'],
-			createTag: false,
+			createTag: true,
 			tagName: 'v%VERSION%',
 			tagMessage: 'Version %VERSION%',
-			push: false,
+			push: true,
 			pushTo: 'origin',
 			gitDescribeOptions: '--tags --always --abbrev=1 --dirty=-d'
 		}
