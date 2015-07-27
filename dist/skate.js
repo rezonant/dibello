@@ -258,15 +258,6 @@ function Generator(cb) {
 	self._registeredCatches = [];
 	self._registeredDones = [];
 	
-	var onEmit = function(item) {
-		var yields = self._emitters;
-		for (var i = 0, max = yields.length; i < max; ++i) {
-			var cb = yields[i];
-			
-			cb.assign();
-		}
-	};
-	
 	var callback = function(fns, args) {
 		for (var i = 0, max = fns.length; i < max; ++i) {
 			fns[i].apply(null, args);
@@ -274,50 +265,78 @@ function Generator(cb) {
 	};
 	
 	var done = function() {
-		callback(self._registeredDones, []);
+		setTimeout(function() {
+			callback(self._registeredDones, []);
+		}, 1);
 	};
 	
 	var reject = function(error) {
-		callback(self._registeredCatches, [error]);
+		setTimeout(function() {
+			callback(self._registeredCatches, [error]);
+		}, 1);
 	};
 	
-	var emit = function(item) {
-		callback(self._registeredEmits, [item]);
+	var emit = function(item, cancel) {
+		setTimeout(function() {
+			callback(self._registeredEmits, [item, cancel]);
+		}, 1);
 	};
 	
-	// Unlike promises, callbacks to generator functions _must_ be asynchronous
-	// to ensure anyone even has a chance to register for the first item in some cases.
-	// Since this is done on a timeout, it ensures that you have until control is released
-	// from your function to register emits, dones, and thens before the first item is generated.
-	// Items are NOT stored after they are emitted, if you miss it you won't get it.
-	
-	setTimeout(function() {
-		
-		// Can't iterate over a generator function, only
-		// a generator instance. Start the generator, assuming 
-		// it takes no arguments as there is no other option.
-		// We'll act as if that instance was passed in.
+	// Can't iterate over a generator function, only
+	// a generator instance. Start the generator, assuming 
+	// it takes no arguments as there is no other option.
+	// We'll act as if that instance was passed in.
 
-		if (cb.constructor.name == 'GeneratorFunction') {
-			cb = cb();
+	if (cb.constructor.name == 'GeneratorFunction') {
+		cb = cb();
+	}
+
+	// We can wrap ES6 generators too.
+
+	if (cb.constructor.name == 'GeneratorFunctionPrototype') {
+		var item;
+		var cancelled = false;
+		
+		while (!cancelled && !(item = cb.next()).done) {
+			emit(item.value, function() {
+				cancelled = true;
+			});
 		}
-		
-		// We can wrap ES6 generators too.
-		
-		if (cb.constructor.name == 'GeneratorFunctionPrototype') {
-			var item;
-			while (!(item = cb.next()).done) {
-				emit(item.value);
-			}
+		done();
+
+		return;
+	} 
+
+	// We can wrap arrays
+
+	if (cb.constructor.name == 'Array') { 
+		var items = cb;
+		var position = 0;
+		var cancelled = false;
+		for (var i = 0, max = items.length; i < max; ++i) {
+			emit(items[i], function() {
+				cancelled = true;
+			});
+		}
+
+		done();
+
+		return;
+	}
+
+	// We can wrap promises
+
+	if (cb.constructor.name == 'Promise') {
+		cb.then(function(result) {
+			emit(result, function() { });
 			done();
-			
-			return;
-		} 
-		
-		// Standard ES5 route.
-		
-		cb(done, reject, emit);
-	}, 1);
+		});
+		return;
+	}
+
+	// Standard ES5 route.
+
+	cb(done, reject, emit);
 }
 
 // Integrate with the environment.
@@ -333,33 +352,66 @@ if (typeof module !== 'undefined')
 Generator.InvalidResolution = {
 	error: 'streamablePromise-invalid-resolution',
 	message: 'You cannot resolve() a Generator with a value. '+
-			 'The value of a streamable promise is always the array of yielded items'
+			 'The Promise value of a generator is always an array of yielded items'
 };
 Generator.InvalidSubpromiseResolution = {
 	error: 'streamablePromise-invalid-subresolution',
 	message: 'While attempting to combine the results of multiple promises, '+
-			 'one of the (non-streamable) promises returned an item which was not an array.'
+			 'one of the promises returned an item which was not an array.'
 };
 
 // Static methods
 
 /**
- * Union the results of the promises into a single Generator
+ * Create a generator to emit a single value as given.
+ * @param {type} value
+ * @returns {Generator}
+ */
+Generator.resolve = function(value) {
+	return new Generator(function(done, reject, emit) {
+		emit(value);
+		done();
+	});
+}
+	
+/**
+ * Create a generator which emits for each item of the promise's array result.
+ * If the promise does not provide an array, this will break.
+ */
+Generator.splitPromise = function(promise) {
+	return new Generator(function(done, reject, emit) {
+		promise.then(function(result) {
+			for (var i = 0, max = result.length; i < max; ++i)
+				emit(result[i]);
+			done();
+		});
+	});
+};
+
+/**
+ * Union the results of the given generators into a single generator
  * 
  * @param {type} promises
  * @returns {undefined}
  */
-Generator.union = function(promises) {
-	return new Generator(function(resolve, reject, emit) {
-		for (var i = 0, max = promises.length; i < max; ++i) {
-			var promise = promises[i];
+Generator.union = function(generators) {
+	return new Generator(function(done, reject, emit) {
+		var promises = [];
+		
+		for (var i = 0, max = generators.length; i < max; ++i) {
+			var generator = generators[i];
 
-			if (promise.emit) {
-				promise.emit(function(item) {
+			if (generator.emit) {
+				generator.emit(function(item) {
 					emit(item);
 				});
+				
+				promises.push(generator.done());
+				
 			} else {
-				promise.then(function(items) {
+				Console.log('WARNING: Passing promises directly to Generator.union() is deprecated. Please wrap the promise in a Generator first.');
+				
+				promises.push(generator.then(function(items) {
 					if (typeof items !== 'object' || items.length === undefined) {
 						throw Generator.InvalidSubpromiseResolution;
 					}
@@ -367,9 +419,14 @@ Generator.union = function(promises) {
 					for (var j = 0, jMax = items.length; j < jMax; ++j) {
 						emit(items[j]);
 					}
-				});
+				}));
 			}
 		}
+		
+		Promise.all(promises).then(function() {
+			done();
+		});
+		
 	});
 };
 
@@ -428,7 +485,7 @@ Generator.exclude = function(setA, setB, comparator)
 }
 
 /**
- * Intersects the given set of streamable promises, using the given "hasher" function
+ * Intersects the given set of generators, using the given "hasher" function
  * to produce an ID string for each object. This approach is much more efficient than intersecting
  * by comparison (intersectByComparison()), so this should be used instead whenever possible.
  * Efficiency: ?
@@ -437,17 +494,17 @@ Generator.exclude = function(setA, setB, comparator)
  * @param {type} hasher
  * @returns {undefined}
  */
-Generator.intersectByHash = function(promises, hasher) {
+Generator.intersectByHash = function(generators, hasher) {
 	
 	return new Generator(function(resolve, reject, emit) {
 		var map = {};
 		var handlers = [];
 		
-		for (var i = 0, max = promises.length; i < max; ++i) {
-			var promise = promises[i];
+		for (var i = 0, max = generators.length; i < max; ++i) {
+			var generator = generators[i];
 			
 			var handleEmit = function(item) {
-				var id = identify(item);
+				var id = hasher(item);
 				var count = 0;
 				if (map[id])
 					count = map[id];
@@ -455,19 +512,21 @@ Generator.intersectByHash = function(promises, hasher) {
 				count += 1;
 				map[id] = count;
 				
-				if (count == promises.length) {
+				if (count == generators.length) {
 					emit(item);
 				}
 			}
 			
-			if (promise.emit) {
+			if (generator.emit) {
 				handlers.push(new Promise(function(resolve, reject) {
-					handlers.emit(handleEmit).then(function() {
+					generator.emit(handleEmit).done(function() {
 						resolve();
 					});
 				}));
 			} else {
-				handlers.push(promise.then(function(items) {
+				console.log('WARNING: Passing promises to Generator.intersectByHash() is deprecated. Please wrap it in a Generator first.');
+				
+				handlers.push(generator.then(function(items) {
 					for (var j = 0, jMax = items.length; j < jMax; ++j) {
 						handleEmit(items[j]);
 					}
@@ -482,7 +541,7 @@ Generator.intersectByHash = function(promises, hasher) {
 }
 
 /**
- * Intersects the given set of streamable promises, using the given "comparator" function
+ * Intersects the given set of generators, using the given "comparator" function
  * to determine if two objects are equal. This form of intersect operation can be much 
  * less efficient than intersection by identity (intersectByIdentity). Efficiency n^2
  * 
@@ -490,14 +549,14 @@ Generator.intersectByHash = function(promises, hasher) {
  * @param {type} identify
  * @returns {undefined}
  */
-Generator.intersectByComparison = function(promises, comparator) {
+Generator.intersectByComparison = function(generators, comparator) {
 	
 	return new Generator(function(resolve, reject, emit) {
 		var handlers = [];
 		var distinctItems = [];
 		
-		for (var i = 0, max = promises.length; i < max; ++i) {
-			var promise = promises[i];
+		for (var i = 0, max = generators.length; i < max; ++i) {
+			var generator = generators[i];
 			
 			var handleEmit = function(item) {
 				var found = false;
@@ -508,7 +567,7 @@ Generator.intersectByComparison = function(promises, comparator) {
 					if (comparator(distinctItem.item, item)) {
 						distinctItem.count += 1;
 						
-						if (!distinctItem.emitted && distinctItem.count == promises.length) {
+						if (!distinctItem.emitted && distinctItem.count == generators.length) {
 							distinctItem.emitted = true;
 							emit(distinctItem.item);
 						}
@@ -527,7 +586,7 @@ Generator.intersectByComparison = function(promises, comparator) {
 					emitted: false
 				};
 				
-				if (distinctItem.count == promises.length) {
+				if (distinctItem.count == generators.length) {
 					emit(distinctItem.item);
 					distinctItem.emitted = true;
 				}
@@ -535,14 +594,14 @@ Generator.intersectByComparison = function(promises, comparator) {
 				distinctItems.push(distinctItem);
 			}
 			
-			if (promise.emit) {
+			if (generator.emit) {
 				handlers.push(new Promise(function(resolve, reject) {
-					promise.emit(handleEmit).then(function() {
+					generator.emit(handleEmit).then(function() {
 						resolve();
 					});
 				}));
 			} else {
-				handlers.push(promise.then(function(items) {
+				handlers.push(generator.then(function(items) {
 					for (var j = 0, jMax = items.length; j < jMax; ++j) {
 						handleEmit(items[j]);
 					}
@@ -559,23 +618,89 @@ Generator.intersectByComparison = function(promises, comparator) {
 // Instance methods
 
 /**
- * Register a callback for the emit event, when the streamable promise
+ * Register a callback for the emit event, when the generator
  * emits an item.
+ * 
+ * You may also omit the callback and be returned a promise.
+ * This promise will resolve when the next item is emitted from the 
+ * Generator, but will not be resolved again, because promises only
+ * resolve once.
+ * 
+ * To instead have a recurring handler, you must pass a callback.
  * 
  * @param {type} cb
  * @returns {Generator.prototype}
  */
 Generator.prototype.emit = function(cb) {
+	if (!cb) {
+		var self = this;
+		return new Promise(function(resolve, reject) {
+			var handler;
+			self.emit(handler = function(item) {
+				resolve(item);
+				
+			});
+		});
+	}
 	this._registeredEmits.push(cb);
 	return this;
 };
 
+Generator.prototype.deregister = function(event, cb) {
+	var map = {
+		emit: this._registeredEmits,
+		catch: this._registeredCatches,
+		done: this._registeredDones
+	};
+	
+	if (map[event].indexOf(cb) >= 0)
+		map[event].splice(map[event].indexOf(cb), 1);
+};
+
+/**
+ * Register a callback for the catch event, when the generator encounters
+ * an exception or error.
+ * 
+ * You may also omit the callback and be returned a promise.
+ * This promise will either resolve to an error or never resolve.
+ * The promise will never reject.
+ * 
+ * @param {type} cb
+ * @returns {Generator.prototype}
+ */
 Generator.prototype.catch = function(cb) {
+	if (!cb) {
+		var self = this;
+		return new Promise(function(resolve) {
+			self.catch(function(err) {
+				resolve(err);
+			});
+		});
+	}
 	this._registeredCatches.push(cb);
 	return this;
 };
 
+/**
+ * Pass a callback function or pass no arguments to receive
+ * a Promise for completion of the generator.
+ * 
+ * @param {type} cb
+ * @returns {Promise|Generator.prototype}
+ */
 Generator.prototype.done = function(cb) {
+	
+	if (!cb) {
+		var self = this;
+		return new Promise(function(resolve, reject) {
+			self.done(function() {
+				resolve();
+			}).catch(function(err) {
+				reject(err);
+			});
+		});
+	}
+	
 	this._registeredDones.push(cb);
 	return this;
 };
@@ -3010,6 +3135,52 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./support/isBuffer":9,"_process":8,"inherits":7}],11:[function(require,module,exports){
+
+function IDBRequestGenerator(request) {
+	var cancelled = false;
+	return new Generator(function(done, reject, emit) {
+		
+		request.onsuccess = function(ev) {
+			if (!ev.target)
+				return;
+			
+			var cursor = ev.target.result;
+			// End the generator if we're done
+			if (!cursor) {
+				done();
+				return;
+			}
+
+			if (!cancelled) {
+				emit(cursor.value, function() {
+					cancelled = true;
+				});
+			}
+			
+			// Callback requested us to end early
+			
+			if (cancelled) {
+				done();
+				return;
+			}
+			
+			if (!cursor.continue)
+				throw "ev is "+ev.target.result;
+			cursor.continue();
+		};
+
+		request.onerror = function(ev) {
+			reject(ev);
+		};
+	});
+}; 
+
+if (typeof window !== 'undefined') {
+	window.SkateIDBRequestGenerator = IDBRequestGenerator;
+}
+
+module.exports = IDBRequestGenerator;
+},{}],12:[function(require,module,exports){
 /**
  * / SKATE /
  * / AUTHOR: William Lahti <wilahti@gmail.com>
@@ -3020,7 +3191,8 @@ function hasOwnProperty(obj, prop) {
  */
 
 var stripCopy = require('./stripCopy.js');
-var Generator = require('es5generators');
+var Generator = require('es5-generators');
+var IDBRequestGenerator = require('./IDBRequestGenerator.js');
 
 function Repository(db, storeName, transaction) {
 	var self = this;
@@ -3036,8 +3208,8 @@ function Repository(db, storeName, transaction) {
 	
 }; module.exports = Repository;
 
-Repository.prototype.dehydrate = function() {};
-Repository.prototype.hydrate = function() {};
+Repository.prototype.dehydrate = function(item) {};
+Repository.prototype.hydrate = function(item) { return Promise.resolve(item); };
 
 Repository.prototype.getStoreTransaction = function(db) {
 	if (this.transaction)
@@ -3048,14 +3220,50 @@ Repository.prototype.getStoreTransaction = function(db) {
 if (window)
 	window.SkateRepository = Repository;
 
+
+Repository.prototype.generateGuid = function() {
+	var result, i, j;
+	result = '';
+	for (j = 0; j < 32; j++) {
+		if (j == 8 || j == 12 || j == 16 || j == 20)
+			result = result + '-';
+		i = Math.floor(Math.random() * 16).toString(16).toUpperCase();
+		result = result + i;
+	}
+	return result;
+};
+
+Repository.generateGuid = Repository.prototype.generateGuid();
+
+/**
+ * Set the transaction on this repository object so that future operations 
+ * use it instead of creating a new one. This is used during skate.transact()
+ * calls to ensure that a new Repository will use the newly created transaction
+ * (amongst other uses).
+ * 
+ * @param {IDBTransaction} tx
+ */
 Repository.prototype.setTransaction = function(tx) {
 	this.transaction = tx;
 };
 
+/**
+ * Clone the given item and then strip non-persistable fields.
+ * 
+ * @param {type} item
+ * @returns {unresolved}
+ */
 Repository.prototype.stripCopy = function(item) {
 	return stripCopy(item);
 };
 
+/**
+ * Persist the given item into the object store.
+ * Return a promise to resolve once the operation is completed.
+ * 
+ * @param {object} item
+ * @returns {Promise} Resolves once the operation is completed.
+ */
 Repository.prototype.persist = function(item) {
 	var self = this;
 	
@@ -3068,40 +3276,73 @@ Repository.prototype.persist = function(item) {
 		self.ready.then(function(db) {
 			var tx = self.getStoreTransaction(db);
 			var store = tx.objectStore(self.storeName);
-
-			store.put(clone, clone.id).succeeds(function() {
-				resolve();
-			}).catch(function(err) {
-				reject(err);
-			});
+			new IDBRequestGenerator(store.put(clone, clone.id))
+				.done(function() {
+					resolve();
+				}).catch(function(err) {
+					reject(err);
+				});
 		});
 	});
 };
 
+Repository.prototype.hydrateCursor = function(cursor) {
+	return this.hydrateGenerator(new IDBRequestGenerator(cursor));
+};
+
+Repository.prototype.hydrateGenerator = function(generator) {
+	var self = this;	
+	return new Generator(function(done, reject, emit) {
+		generator
+			.emit(function(item) {
+				self.hydrate(item).then(function(hydratedItem) {
+					emit(hydratedItem);
+				});
+			});
+		generator
+			.done(function() {
+				done();
+			});
+		generator
+			.catch(function(err) {
+				reject(err);
+			});
+	});
+};
+
+/**
+ * Promises to return a single item.
+ * 
+ * @param {type} id
+ * @returns {unresolved}
+ */
 Repository.prototype.get = function(id) {
 	var self = this;
 	return self.ready.then(function(db) {
 		return new Promise(function(resolve, reject) {
 			var tx = self.getStoreTransaction(db);
 			var store = tx.objectStore(self.storeName);
-			
-			store.get(id).yield(function(item) {
-				resolve(item);
+			self.hydrateCursor(store.get(id)).emit(function(hydratedItem) {
+				resolve(hydratedItem);
 			});
 		});
 	});
 };
 
+/**
+ * Generates all items in the object store.
+ * @returns {Generator}
+ */
 Repository.prototype.all = function() {
 	var self = this;
 	return new Generator(function(done, reject, emit) {
 		self.ready.then(function(db) {
 			var tx = self.getStoreTransaction(db);
 			var store = tx.objectStore(self.storeName);
-
-			store.openCursor().yield(function(item) {
+			var cursor = self.hydrateCursor(store.openCursor());
+			cursor.emit(function(item) {
 				emit(item);
-			}).finishes(function() {
+			}).done(function() {
 				done();
 			});
 		});
@@ -3109,7 +3350,8 @@ Repository.prototype.all = function() {
 };
 
 /**
- * Get many keys in one swoop
+ * Look up many items with many keys at once.
+ * Result is a generator which will emit each of the items.
  * TODO: Can we do this using cursors and key ranges?
  * 
  * @param {type} ids
@@ -3131,17 +3373,16 @@ Repository.prototype.getMany = function(ids, includeNulls) {
 					//itemPromises.push(new Promise(function(resolve) { resolve({id: id}); }));
 					itemPromises.push(new Promise(function(resolve, reject) {
 						
-						//store.foo(function() { resolve({}); }); return;
-						var originalResolve = resolve;
-						store.get(id).yield(function(item) {
-							emit(item);
-							resolve(item);
-						}).catch(function(err) {
-							if (includeNulls) {
-								emit(null);
-							}
-							resolve(null);
-						});
+						self.hydrateCursor(store.get(id))
+							.emit(function(item) {
+								emit(item);
+								resolve(item);
+							}).catch(function(err) {
+								if (includeNulls) {
+									emit(null);
+								}
+								resolve(null);
+							});
 						
 					}).then(function(items) {
 						return items;
@@ -3228,24 +3469,24 @@ Repository.prototype.find = function(criteria) {
 
 								return new Promise(function(resolve, reject) {
 									items = [];
-
-									index.openCursor(fieldValue).yield(function(item) {
-										items.push(item);
-									}).finishes(function() {
-										resolve();
-									});
+									new IDBRequestGenerator(index.openCursor(fieldValue))
+										.emit(function(item) {
+											items.push(item);
+										}).done(function() {
+											resolve();
+										});
 								});
 
 
 							} else {
 								return new Promise(function(resolve, reject) {
 									items = [];
-
-									store.openCursor().yield(function(item) {
-										items.push(item);
-									}).finishes(function() {
-										resolve();
-									});
+									new IDBRequestGenerator(store.openCursor())
+										.emit(function(item) {
+											items.push(item);
+										}).done(function() {
+											resolve();
+										});
 								});
 							}
 						} else {
@@ -3284,10 +3525,30 @@ Repository.prototype.find = function(criteria) {
 	});
 };
 
+/**
+ * Promises to resolve once the item has been deleted.
+ * 
+ * @param {type} id
+ * @returns {undefined}
+ */
 Repository.prototype.delete = function(id) {
-
+	var self = this;
+	return new Promise(function(resolve, reject) {
+		self.ready.then(function(db) {
+			var tx = self.getStoreTransaction(db);
+			var store = tx.objectStore(self.storeName);
+			store.delete(id);
+			
+			new IDBRequestGenerator(store.delete(id))
+				.done(function() {
+					resolve();
+				});
+		});
+	});
 };
-},{"./stripCopy.js":22,"es5generators":2}],12:[function(require,module,exports){
+
+
+},{"./IDBRequestGenerator.js":11,"./stripCopy.js":17,"es5-generators":2}],13:[function(require,module,exports){
 /**
  * / SKATE /
  * / AUTHOR: William Lahti <wilahti@gmail.com>
@@ -3380,7 +3641,7 @@ SchemaBuilder.prototype.run = function(callback) {
 	return this;
 };
 
-},{"./StoreBuilder.js":13,"./transact.js":23}],13:[function(require,module,exports){
+},{"./StoreBuilder.js":14,"./transact.js":18}],14:[function(require,module,exports){
 /**
  * / SKATE /
  * / AUTHOR: William Lahti <wilahti@gmail.com>
@@ -3507,240 +3768,7 @@ StoreBuilder.prototype.unique = function(name) {
 	return this;
 };
 
-},{}],14:[function(require,module,exports){
-/**
- * / SKATE /
- * / AUTHOR: William Lahti <wilahti@gmail.com>
- * / (C) 2015 William Lahti
- * 
- */
-
-window.Array.prototype.yield = function(cb) {
-	for (var i = 0, max = this.length; i < max; ++i) {
-		var ret = cb(this[i]);
-		if (typeof ret === 'undefined')
-			ret = true;
-		
-		if (!ret)
-			return;
-	}
-};
-
 },{}],15:[function(require,module,exports){
-
-window.IDBCursor.prototype.hydrate = function(hydrator) {
-	var self = this;
-
-	var hydrationCursor = {
-		yields: [],
-		finishers: [],
-		catchers: [],
-		
-		yield: function(cb) {
-			this.yields.push(cb);
-		},
-		finishes: function(cb) {
-			this.finishers.push(cb);
-		},
-		catch: function(cb) {
-			this.catchers.push(cb);
-		}
-	};
-
-	var uponCatch = function(err) {
-		var catchers = hydrationCursor.yields;
-		for (var i = 0, max = yields.length; i < max; ++i) {
-			catchers[i].apply(hydrationCursor, [err]);
-		}
-	};
-
-	var uponYield = function(item) {
-		var yields = hydrationCursor.yields;
-		for (var i = 0, max = yields.length; i < max; ++i) {
-			yields[i].apply(hydrationCursor, [item]);
-		}
-	};
-	
-	var uponFinish = function(items) {
-		var finishers = hydrationCursor.finishers;
-		for (var i = 0, max = finishers.length; i < max; ++i) {
-			finishers[i].apply(hydrationCursor, [items]);
-		}
-	};
-
-	var result;
-	
-	this
-		.yield(function(item) {
-			hydrator(item).then(function(hydratedItem) {
-				result.push(hydratedItem);
-				uponYield(hydratedItem);
-			});
-		})
-		.finishes(function(value) {
-			uponFinish(result);
-			})
-		.catch(function(err) {
-			uponCatch(err);
-		});
-		
-	return hydrationCursor;
-};
-
-},{}],16:[function(require,module,exports){
-
-var transact = require('../transact.js');
-
-/**
- * Lose the boilerplate clutter in your IndexedDB transactions using Skate's 
- * injection-driven transaction API.
- * 
- * Simply call transact, passing a function with parameters that specify what 
- * repositories are desired, and optionally an IndexedDB transaction mode ('readonly', 'readwrite')
- * 
- * Some additional non-object-store parameters may be used: 'db' (the IDBDatabase instance), 'transaction' (the IDBTransaction instance)
- * The transaction will be created specifying ONLY the object stores you requested, so attempting
- * to get additional object stores later will not work.
- * 
- * For that you must start a new transaction, which you can do with db.transact() from within the
- * callback.
- * 
- * @param {type} fn
- * @param {type} mode
- * @returns {undefined}
- */
-window.IDBDatabase.prototype.transact = function(fn, mode) {
-	return transact(this, null, fn, mode);
-};
-},{"../transact.js":23}],17:[function(require,module,exports){
-
-window.IDBObjectStore.prototype.generateGuid = function() {
-	var result, i, j;
-	result = '';
-	for (j = 0; j < 32; j++) {
-		if (j == 8 || j == 12 || j == 16 || j == 20)
-			result = result + '-';
-		i = Math.floor(Math.random() * 16).toString(16).toUpperCase();
-		result = result + i;
-	}
-	return result;
-};
-
-window.IDBObjectStore.prototype.all = function(offset, limit) {
-	var self = this;
-	
-	return new Promise(function(resolve, reject) {
-		var results = [];
-		var count = 0;
-		var resolved = false;
-		self.openCursor()
-			.yield(function(value) {
-				results.push(value);
-				if (++count >= limit)
-					return false;
-			})
-			.finishes(function() {
-				resolve(results);
-			})
-			.catch(function(err) {
-				console.log(err);
-				debugger;
-				reject(err);
-			});
-		
-	});
-};
-
-},{}],18:[function(require,module,exports){
-/**
- * / SKATE /
- * / AUTHOR: William Lahti <wilahti@gmail.com>
- * / (C) 2015 William Lahti
- * 
- */
-
-window.IDBRequest.prototype.finishes = function(cb) {
-	this.__skate_onfinish = cb;
-	return this;
-};
-
-window.IDBRequest.prototype.yield = function(cb) {
-	this.onsuccess = function(ev) {
-		var cursor = ev.target.result;
-		
-		if (!cursor) {
-			
-			// Ending naturally
-			
-			if (this.__skate_onfinish) {
-				this.__skate_onfinish();
-			}
-			
-			return;
-		}
-		
-		var ret = cb(cursor.value);
-		if (typeof ret === 'undefined')
-			ret = true;
-		
-		if (ret) {
-			cursor.continue();
-		} else {
-			
-			// Ending early
-			
-			if (this.__skate_onfinish) {
-				this.__skate_onfinish();
-				return;
-			}
-		}
-	};
-	
-	return this;
-};
-
-window.IDBRequest.prototype.succeeds = function(cb) {
-	this.onsuccess = cb;
-	return this;
-};
-
-window.IDBRequest.prototype.catch = function(cb) {
-	this.onerror = cb;
-	return this;
-};
-
-},{}],19:[function(require,module,exports){
-/**
- * / SKATE /
- * / AUTHOR: William Lahti <wilahti@gmail.com>
- * / (C) 2015 William Lahti
- * 
- */
-
-window.Promise.prototype.debug = function() {
-	console.log('Waiting for promise to resolve...');
-	this.then(function(value) {
-		console.log('Promise resolved with the value:');
-		console.log(value);
-	}).catch(function(err) {
-		console.log('Promise rejected with error:');
-		console.log(err);
-	});
-};
-window.Promise.prototype.yield = function(cb) {
-	this.then(function(result) {
-		if (result.length) {
-			result.yield(cb);
-			return;
-		}
-		
-		cb(result);
-	});
-};
-
-
-
-},{}],20:[function(require,module,exports){
 
 // Standardize any prefixed implementations of IndexedDB
 
@@ -3751,7 +3779,7 @@ if (typeof window !== 'undefined') {
 	window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
 	window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
 }
-},{}],21:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 /**
  * / SKATE /
  * / AUTHOR: William Lahti <wilahti@gmail.com>
@@ -3765,13 +3793,8 @@ require('./idbStandardize.js');
 var SchemaBuilder = require('./SchemaBuilder.js');
 var StoreBuilder = require('./StoreBuilder.js');
 var Repository = require('./Repository.js');
-
-require('./extensions/IDBObjectStore.js');
-require('./extensions/IDBRequest.js');
-require('./extensions/Array.js');
-require('./extensions/Promise.js');
-require('./extensions/IDBCursor.js');
-require('./extensions/IDBDatabase.js');
+var transact = require('./transact.js');
+var Generator = require('es5-generators');
 
 // API
 
@@ -3784,7 +3807,8 @@ var skate = {
 	classes: {
 		Repository: Repository,
 		SchemaBuilder: SchemaBuilder,
-		StoreBuilder: StoreBuilder
+		StoreBuilder: StoreBuilder,
+		Generator: Generator
 	},
 	
 	/**
@@ -3796,6 +3820,44 @@ var skate = {
 	 */
 	repository: function(db, storeName) {
 		return new Repository(db, storeName);
+	},
+	
+	/**
+	 * Start a Skate transaction on the given DB with the given function.
+	 * 
+	 * A dependency injection process similar to Angular's is done, 
+	 * except the injector is capable of providing transaction-related services
+	 * instead of user-interface ones.
+	 * 
+	 * The following services can be injected into the function you pass.
+	 * - db           - the current IDBDatabase 
+	 * - transaction  - the current IDBTransaction
+	 * - transact     - A function bound to the database which allows for starting
+	 *                  additional independent transactions
+	 * - <name>       - SkateRepository for the given IDB object store, by name
+	 * - $<name>      - IDBObjectStore instance for the given store.
+	 *                  Note that to do this you must use declarative (array-style)
+	 *                  injection.
+	 * 
+	 * The IDB transaction is created to involve all of the stores you specify within
+	 * your injection function. For instance, if you load the 'cars' and 'bikes' 
+	 * repositories, as in:
+	 *
+	 *     skate.transact(db, 'readwrite', function(transaction, cars, bikes) { })
+	 * 
+	 * Then the transaction passed into the function will be created to allow the cars and bikes
+	 * object stores, as if you had done the following stock IndexedDB call:
+	 * 
+	 *     var tx = db.transaction(['cars', 'bikes'], 'readwrite');
+	 *     var cars = tx.objectStore('cars');
+	 *     var bikes = tx.objectStore('bikes');
+	 * 
+	 * @param {type} db
+	 * @param {type} fn
+	 * @returns {undefined}
+	 */
+	transact: function(db, mode, fn) {
+		return transact(db, null, fn, mode);
 	},
 	
 	/**
@@ -3857,7 +3919,7 @@ var skate = {
 	 *				
 	 *				schema.getStore('apples')
 	 *					.run(function(apples) {
-	 *						apples.all().yield(function(apple) {
+	 *						apples.all().emit(function(apple) {
 	 *							var map = { small: 2, medium: 3, large: 4, 'extra-large': 5 };
 	 *							
 	 *							if (apple.size) {
@@ -3874,10 +3936,10 @@ var skate = {
 	 * }).then(function(db) {
 	 *		// Hey, lets use it!
 	 *		
-	 *		db.transact(function(apples) {
+	 *		skate.transact(db, function(apples) {
 	 *			apples.find({
 	 *				size: 'large'
-	 *			}).yield(function(apple) {
+	 *			}).emit(function(apple) {
 	 *				console.log('Found a large apple!', apple);
 	 *			});
 	 *		})
@@ -3966,7 +4028,7 @@ var skate = {
 	}
 }; module.exports = skate;
 
-},{"./Repository.js":11,"./SchemaBuilder.js":12,"./StoreBuilder.js":13,"./extensions/Array.js":14,"./extensions/IDBCursor.js":15,"./extensions/IDBDatabase.js":16,"./extensions/IDBObjectStore.js":17,"./extensions/IDBRequest.js":18,"./extensions/Promise.js":19,"./idbStandardize.js":20}],22:[function(require,module,exports){
+},{"./Repository.js":12,"./SchemaBuilder.js":13,"./StoreBuilder.js":14,"./idbStandardize.js":15,"./transact.js":18,"es5-generators":2}],17:[function(require,module,exports){
 var deepcopy = require('deepcopy');
 
 function strip(obj) {
@@ -4001,7 +4063,7 @@ function stripCopy(obj) {
 };
 
 module.exports = stripCopy;
-},{"deepcopy":1}],23:[function(require,module,exports){
+},{"deepcopy":1}],18:[function(require,module,exports){
 /**
  * / SKATE /
  * / AUTHOR: William Lahti <wilahti@gmail.com>
@@ -4098,7 +4160,7 @@ function transact(db, transactionOrFactory, fn, mode) {
 };
 
 module.exports = transact;
-},{"./Repository.js":11,"./utils/annotateFn.js":24,"./utils/lightinjector.js":25}],24:[function(require,module,exports){
+},{"./Repository.js":12,"./utils/annotateFn.js":19,"./utils/lightinjector.js":20}],19:[function(require,module,exports){
 /**
  * 
  * / ANNOTATEFN
@@ -4152,7 +4214,7 @@ function annotateFn(fn) {
 		params: fn.$params
 	};
 }; module.exports = annotateFn;
-},{}],25:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 /**
  * 
  * / LIGHTINJECTOR
@@ -4217,4 +4279,4 @@ function inject(map, self, fn) {
 
 inject.InjectionException = InjectionException;
 module.exports = inject;
-},{"./annotateFn.js":24}]},{},[21]);
+},{"./annotateFn.js":19}]},{},[16]);
