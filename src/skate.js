@@ -11,13 +11,8 @@ require('./idbStandardize.js');
 var SchemaBuilder = require('./SchemaBuilder.js');
 var StoreBuilder = require('./StoreBuilder.js');
 var Repository = require('./Repository.js');
-
-require('./extensions/IDBObjectStore.js');
-require('./extensions/IDBRequest.js');
-require('./extensions/Array.js');
-require('./extensions/Promise.js');
-require('./extensions/IDBCursor.js');
-require('./extensions/IDBDatabase.js');
+var transact = require('./transact.js');
+var Generator = require('es5-generators');
 
 // API
 
@@ -30,7 +25,8 @@ var skate = {
 	classes: {
 		Repository: Repository,
 		SchemaBuilder: SchemaBuilder,
-		StoreBuilder: StoreBuilder
+		StoreBuilder: StoreBuilder,
+		Generator: Generator
 	},
 	
 	/**
@@ -42,6 +38,44 @@ var skate = {
 	 */
 	repository: function(db, storeName) {
 		return new Repository(db, storeName);
+	},
+	
+	/**
+	 * Start a Skate transaction on the given DB with the given function.
+	 * 
+	 * A dependency injection process similar to Angular's is done, 
+	 * except the injector is capable of providing transaction-related services
+	 * instead of user-interface ones.
+	 * 
+	 * The following services can be injected into the function you pass.
+	 * - db           - the current IDBDatabase 
+	 * - transaction  - the current IDBTransaction
+	 * - transact     - A function bound to the database which allows for starting
+	 *                  additional independent transactions
+	 * - <name>       - SkateRepository for the given IDB object store, by name
+	 * - $<name>      - IDBObjectStore instance for the given store.
+	 *                  Note that to do this you must use declarative (array-style)
+	 *                  injection.
+	 * 
+	 * The IDB transaction is created to involve all of the stores you specify within
+	 * your injection function. For instance, if you load the 'cars' and 'bikes' 
+	 * repositories, as in:
+	 *
+	 *     skate.transact(db, 'readwrite', function(transaction, cars, bikes) { })
+	 * 
+	 * Then the transaction passed into the function will be created to allow the cars and bikes
+	 * object stores, as if you had done the following stock IndexedDB call:
+	 * 
+	 *     var tx = db.transaction(['cars', 'bikes'], 'readwrite');
+	 *     var cars = tx.objectStore('cars');
+	 *     var bikes = tx.objectStore('bikes');
+	 * 
+	 * @param {type} db
+	 * @param {type} fn
+	 * @returns {undefined}
+	 */
+	transact: function(db, mode, fn) {
+		return transact(db, null, fn, mode);
 	},
 	
 	/**
@@ -103,7 +137,7 @@ var skate = {
 	 *				
 	 *				schema.getStore('apples')
 	 *					.run(function(apples) {
-	 *						apples.all().yield(function(apple) {
+	 *						apples.all().emit(function(apple) {
 	 *							var map = { small: 2, medium: 3, large: 4, 'extra-large': 5 };
 	 *							
 	 *							if (apple.size) {
@@ -120,10 +154,10 @@ var skate = {
 	 * }).then(function(db) {
 	 *		// Hey, lets use it!
 	 *		
-	 *		db.transact(function(apples) {
+	 *		skate.transact(db, function(apples) {
 	 *			apples.find({
 	 *				size: 'large'
-	 *			}).yield(function(apple) {
+	 *			}).emit(function(apple) {
 	 *				console.log('Found a large apple!', apple);
 	 *			});
 	 *		})

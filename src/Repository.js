@@ -8,7 +8,8 @@
  */
 
 var stripCopy = require('./stripCopy.js');
-var Generator = require('es5generators');
+var Generator = require('es5-generators');
+var IDBRequestGenerator = require('./IDBRequestGenerator.js');
 
 function Repository(db, storeName, transaction) {
 	var self = this;
@@ -24,8 +25,8 @@ function Repository(db, storeName, transaction) {
 	
 }; module.exports = Repository;
 
-Repository.prototype.dehydrate = function() {};
-Repository.prototype.hydrate = function() {};
+Repository.prototype.dehydrate = function(item) {};
+Repository.prototype.hydrate = function(item) { return Promise.resolve(item); };
 
 Repository.prototype.getStoreTransaction = function(db) {
 	if (this.transaction)
@@ -36,14 +37,50 @@ Repository.prototype.getStoreTransaction = function(db) {
 if (window)
 	window.SkateRepository = Repository;
 
+
+Repository.prototype.generateGuid = function() {
+	var result, i, j;
+	result = '';
+	for (j = 0; j < 32; j++) {
+		if (j == 8 || j == 12 || j == 16 || j == 20)
+			result = result + '-';
+		i = Math.floor(Math.random() * 16).toString(16).toUpperCase();
+		result = result + i;
+	}
+	return result;
+};
+
+Repository.generateGuid = Repository.prototype.generateGuid();
+
+/**
+ * Set the transaction on this repository object so that future operations 
+ * use it instead of creating a new one. This is used during skate.transact()
+ * calls to ensure that a new Repository will use the newly created transaction
+ * (amongst other uses).
+ * 
+ * @param {IDBTransaction} tx
+ */
 Repository.prototype.setTransaction = function(tx) {
 	this.transaction = tx;
 };
 
+/**
+ * Clone the given item and then strip non-persistable fields.
+ * 
+ * @param {type} item
+ * @returns {unresolved}
+ */
 Repository.prototype.stripCopy = function(item) {
 	return stripCopy(item);
 };
 
+/**
+ * Persist the given item into the object store.
+ * Return a promise to resolve once the operation is completed.
+ * 
+ * @param {object} item
+ * @returns {Promise} Resolves once the operation is completed.
+ */
 Repository.prototype.persist = function(item) {
 	var self = this;
 	
@@ -56,40 +93,73 @@ Repository.prototype.persist = function(item) {
 		self.ready.then(function(db) {
 			var tx = self.getStoreTransaction(db);
 			var store = tx.objectStore(self.storeName);
-
-			store.put(clone, clone.id).succeeds(function() {
-				resolve();
-			}).catch(function(err) {
-				reject(err);
-			});
+			new IDBRequestGenerator(store.put(clone, clone.id))
+				.done(function() {
+					resolve();
+				}).catch(function(err) {
+					reject(err);
+				});
 		});
 	});
 };
 
+Repository.prototype.hydrateCursor = function(cursor) {
+	return this.hydrateGenerator(new IDBRequestGenerator(cursor));
+};
+
+Repository.prototype.hydrateGenerator = function(generator) {
+	var self = this;	
+	return new Generator(function(done, reject, emit) {
+		generator
+			.emit(function(item) {
+				self.hydrate(item).then(function(hydratedItem) {
+					emit(hydratedItem);
+				});
+			});
+		generator
+			.done(function() {
+				done();
+			});
+		generator
+			.catch(function(err) {
+				reject(err);
+			});
+	});
+};
+
+/**
+ * Promises to return a single item.
+ * 
+ * @param {type} id
+ * @returns {unresolved}
+ */
 Repository.prototype.get = function(id) {
 	var self = this;
 	return self.ready.then(function(db) {
 		return new Promise(function(resolve, reject) {
 			var tx = self.getStoreTransaction(db);
 			var store = tx.objectStore(self.storeName);
-			
-			store.get(id).yield(function(item) {
-				resolve(item);
+			self.hydrateCursor(store.get(id)).emit(function(hydratedItem) {
+				resolve(hydratedItem);
 			});
 		});
 	});
 };
 
+/**
+ * Generates all items in the object store.
+ * @returns {Generator}
+ */
 Repository.prototype.all = function() {
 	var self = this;
 	return new Generator(function(done, reject, emit) {
 		self.ready.then(function(db) {
 			var tx = self.getStoreTransaction(db);
 			var store = tx.objectStore(self.storeName);
-
-			store.openCursor().yield(function(item) {
+			var cursor = self.hydrateCursor(store.openCursor());
+			cursor.emit(function(item) {
 				emit(item);
-			}).finishes(function() {
+			}).done(function() {
 				done();
 			});
 		});
@@ -97,7 +167,8 @@ Repository.prototype.all = function() {
 };
 
 /**
- * Get many keys in one swoop
+ * Look up many items with many keys at once.
+ * Result is a generator which will emit each of the items.
  * TODO: Can we do this using cursors and key ranges?
  * 
  * @param {type} ids
@@ -119,17 +190,16 @@ Repository.prototype.getMany = function(ids, includeNulls) {
 					//itemPromises.push(new Promise(function(resolve) { resolve({id: id}); }));
 					itemPromises.push(new Promise(function(resolve, reject) {
 						
-						//store.foo(function() { resolve({}); }); return;
-						var originalResolve = resolve;
-						store.get(id).yield(function(item) {
-							emit(item);
-							resolve(item);
-						}).catch(function(err) {
-							if (includeNulls) {
-								emit(null);
-							}
-							resolve(null);
-						});
+						self.hydrateCursor(store.get(id))
+							.emit(function(item) {
+								emit(item);
+								resolve(item);
+							}).catch(function(err) {
+								if (includeNulls) {
+									emit(null);
+								}
+								resolve(null);
+							});
 						
 					}).then(function(items) {
 						return items;
@@ -216,24 +286,24 @@ Repository.prototype.find = function(criteria) {
 
 								return new Promise(function(resolve, reject) {
 									items = [];
-
-									index.openCursor(fieldValue).yield(function(item) {
-										items.push(item);
-									}).finishes(function() {
-										resolve();
-									});
+									new IDBRequestGenerator(index.openCursor(fieldValue))
+										.emit(function(item) {
+											items.push(item);
+										}).done(function() {
+											resolve();
+										});
 								});
 
 
 							} else {
 								return new Promise(function(resolve, reject) {
 									items = [];
-
-									store.openCursor().yield(function(item) {
-										items.push(item);
-									}).finishes(function() {
-										resolve();
-									});
+									new IDBRequestGenerator(store.openCursor())
+										.emit(function(item) {
+											items.push(item);
+										}).done(function() {
+											resolve();
+										});
 								});
 							}
 						} else {
@@ -272,6 +342,25 @@ Repository.prototype.find = function(criteria) {
 	});
 };
 
+/**
+ * Promises to resolve once the item has been deleted.
+ * 
+ * @param {type} id
+ * @returns {undefined}
+ */
 Repository.prototype.delete = function(id) {
-
+	var self = this;
+	return new Promise(function(resolve, reject) {
+		self.ready.then(function(db) {
+			var tx = self.getStoreTransaction(db);
+			var store = tx.objectStore(self.storeName);
+			store.delete(id);
+			
+			new IDBRequestGenerator(store.delete(id))
+				.done(function() {
+					resolve();
+				});
+		});
+	});
 };
+

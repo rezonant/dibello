@@ -31,21 +31,27 @@ function mockedDB(options) {
 				});
 
 				var request = {
-					_succeeds: function() {
+					onsuccess: function() {
 						console.log('Default succeeds! No one got it!');
 					},
-					_catch: function() {
+					onerror: function() {
 						console.log('Default catch! No one got it!');
 					},
-					succeeds: function(x) { this._succeeds = x; },
-					catch: function(x) { this._catch = x; }
+					succeeds: function(x) { this.onsuccess = x; },
+					catch: function(x) { this.onerror = x; }
 				};
 
 				setTimeout(function() {
 					if (typeof options.putFails !== 'undefined')
-						request._catch(options.putFails);
+						request.onerror(options.putFails);
 					else {
-						request._succeeds();
+						var target = {
+							result: null
+						}
+						request.onsuccess({
+							target: target,
+							currentTarget: target
+						});
 					}
 				}, 1);
 				
@@ -117,7 +123,7 @@ describe('Repository.persist()', function() {
 	});
 });
 describe('Repository.get()', function() {
-	
+	 
 	it('should call the underlying store.get() method', function(done) {
 		var db = mockedDB();
 		var repo = new Repository(db, 'foo');
@@ -130,12 +136,22 @@ describe('Repository.get()', function() {
 			expect(key).toBe('123');
 			
 			var request = {
-				yield: function(cb) { this._yield = cb; }
+				onsuccess: function() { console.log('no one got it'); },
+				onerror: function() { console.log('no one got it'); }
 			};
 			
 			setTimeout(function() {
-				request._yield({
-					id: '123'
+				var target = {
+					result: {
+						value: {
+							id: '123'
+						},
+						"continue": function() { }
+					}
+				};
+				request.onsuccess({
+					target: target,
+					currentTarget: target
 				});
 			}, 1);
 			
@@ -164,15 +180,27 @@ describe('Repository.all()', function() {
 		
 		store.openCursor = function() {
 			var request = {
-				_yield: function() { console.log('DEFAULT YIELD'); },
-				_finishes: function() { console.log('DEFAULT FINISH'); },
-				yield: function(cb) { this._yield = cb; return this; },
-				finishes: function(cb) { this._finishes = cb; return this; }
+				onsuccess: function() { console.log('DEFAULT YIELD'); },
+				_finishes: function() { 
+					var target = {
+						result: null
+					};  
+					this.onsuccess({target: target, currentTarget: target});
+				},
 			};
 			
 			setTimeout(function() {
-				request._yield({
-					id: '123'
+				var target = {
+					result: {
+						value: {
+							id: '123'
+						},
+						"continue": function() { }
+					}
+				};
+				request.onsuccess({
+					target: target,
+					currentTarget: target
 				});
 				request._finishes();
 			}, 1);
@@ -202,15 +230,22 @@ describe('Repository.getMany()', function() {
 		
 		store.get = function(key) {
 			var request = {
-				_yield: function() { console.log('default yield on get()! oh no!'); },
-				"yield": function(cb) { this._yield = cb; return this; },
-				_catch: function() { console.log('default catch on get()! oh no!'); },
-				catch: function(cb) { this._catch = cb; return this; }, 
+				onsuccess: function() { console.log('default yield on get()! oh no!'); },
+				onerror: function() { console.log('default catch on get()! oh no!'); }
 			};
 			
 			setTimeout(function() {
-				request._yield.call(null, {
-					id: key
+				var target = {
+					result: {
+						value: {
+							id: key
+						},
+						"continue": function() {}
+					}
+				};
+				request.onsuccess({
+					target: target,
+					currentTarget: target
 				});
 			}, 1);
 			
@@ -234,7 +269,7 @@ describe('Repository.find()', function() {
 	
 	it('should get the underlying index and use openCursor()', function(done) {
 		var db = mockedDB();
-		var repo = new Repository(db, 'foo');
+		var repo = new Repository(db, 'foo'); 
 		var tx = repo.getStoreTransaction(db);
 		var store = tx.objectStore('foo');
 		var getCalled = false;
@@ -251,22 +286,32 @@ describe('Repository.find()', function() {
 				key: key,
 				openCursor: function(key) {
 					var request = {
-						_yield: function() { },
-						_catch: function() { },
-						_finishes: function() { },
-						
-						yield: function(cb) { this._yield = cb; return this; },
-						catch: function(cb) { this._catch = cb; return this; }, 
-						finishes: function(cb) { this._finishes = cb; return this; }
+						onsuccess: function() { },
+						onerror: function() { },
+						_finishes: function() { 
+							var target = {
+								result: null
+							};
+							this.onsuccess({target: target, currentTarget: target});
+						}
 					};
 
 					setTimeout(function() {
-						request._yield.call(null, {
-							id: 'foobar',
-							key: key
+						var target = {
+							result: {
+								value: {
+									id: 'foobar',
+									key: key
+								},
+								continue: function() { }
+							}
+						}
+						request.onsuccess({
+							target: target,
+							currentTarget: target
 						});
 						
-						request._finishes.call(null);
+						request._finishes();
 					}, 1);
 
 					return request;
@@ -282,6 +327,9 @@ describe('Repository.find()', function() {
 		
 	});
 	it('should filter index results', function(done) {
+		
+		// setup
+		
 		var db = mockedDB();
 		var repo = new Repository(db, 'foo');
 		var tx = repo.getStoreTransaction(db);
@@ -300,40 +348,52 @@ describe('Repository.find()', function() {
 				key: key,
 				openCursor: function(key) {
 					var request = {
-						_yield: function() { },
-						_catch: function() { },
-						_finishes: function() { },
-						
-						yield: function(cb) { this._yield = cb; return this; },
-						catch: function(cb) { this._catch = cb; return this; }, 
-						finishes: function(cb) { this._finishes = cb; return this; }
+						onsuccess: function() { },
+						onerror: function() { },
+						_finishes: function() { 
+							var target = { 
+								result: null
+							};
+							this.onsuccess({target: target, currentTarget: target});
+						}
 					};
 
 					setTimeout(function() {
-						request._yield.call(null, {
+						var target = {
+							result: {
+								value: null,
+								continue: function() { }
+							}
+						};
+						
+						target.result.value = {
 							id: 'asdf',
 							wombat: true,
 							key: 123
-						});
-						request._yield.call(null, {
+						}
+						request.onsuccess({target:target,currentTarget:target});
+						target.result.value = {
 							id: 'foobar',
 							wombat: true,
 							nifty: true,
 							key: 123
-						});
-						request._yield.call(null, {
+						}
+						request.onsuccess({target:target,currentTarget:target});
+						target.result.value = {
 							id: 'barfoo',
 							nifty: true,
 							key: 123
-						});
-						
-						request._finishes.call(null);
+						}
+						request.onsuccess({target:target,currentTarget:target});
+						request._finishes();
 					}, 1);
 
 					return request;
 				}
 			};
 		}
+		
+		// act
 		
 		repo.find({
 			key:123,
