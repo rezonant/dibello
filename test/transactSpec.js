@@ -7,7 +7,7 @@ function mockedDB() {
 	};
 }
 
-describe('transact', function() {
+describe('transact()', function() {
 	it('should inject the transaction', function() {
 		transact(mockedDB(), function(stores, mode) {
 			return {
@@ -20,7 +20,7 @@ describe('transact', function() {
 					};
 				}
 			};
-		}, function(transaction) {
+		}, null, function(transaction) {
 			expect(transaction._mode).toBe('readwrite');
 		}, 'readwrite');
 	});
@@ -37,7 +37,7 @@ describe('transact', function() {
 					};
 				}
 			};
-		}, function(transaction, foo) {
+		}, null, function(transaction, foo) {
 			expect(transaction._mode).toBe('readwrite');
 			expect(transaction._stores).toContain('foo');
 			expect(foo.get).toBeTruthy();
@@ -58,7 +58,7 @@ describe('transact', function() {
 					};
 				}
 			};
-		}, function(transaction, foo, bar, baz) {
+		}, null, function(transaction, foo, bar, baz) {
 			expect(transaction._mode).toBe('readwrite');
 			expect(transaction._stores).toContain('foo');
 			expect(transaction._stores).toContain('bar');
@@ -83,7 +83,7 @@ describe('transact', function() {
 					};
 				}
 			};
-		}, function(db) {
+		}, null, function(db) {
 			expect(db.iamadb).toBe(true);
 			
 		}, 'readwrite');
@@ -102,7 +102,7 @@ describe('transact', function() {
 					};
 				}
 			};
-		}, ['store:foo', function(foo) {
+		}, null, ['store:foo', function(foo) {
 			expect(foo._name).toBe('foo');
 			expect(typeof foo.get).toBe('function');
 		}], 'readwrite');

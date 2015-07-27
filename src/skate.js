@@ -13,7 +13,7 @@ var StoreBuilder = require('./StoreBuilder.js');
 var Repository = require('./Repository.js');
 var transact = require('./transact.js');
 var Generator = require('es5-generators');
-
+var Database = require('./Database.js');
 // API
 
 var skate = {
@@ -75,7 +75,12 @@ var skate = {
 	 * @returns {undefined}
 	 */
 	transact: function(db, mode, fn) {
-		return transact(db, null, fn, mode);
+		var self = this;
+		return transact(db, null, function(db, name, transaction) {
+			var repo = new Repository(db, name, transaction);
+			self.prepareRepository(repo);
+			return repo;
+		}, fn, mode);
 	},
 	
 	/**
@@ -175,23 +180,19 @@ var skate = {
 		if (options.version)
 			version = options.version;
 		
-		var item = {
-			name: dbName,
-			options: options,
-			ready: null,
-		};
-		
 		// Ready promise
 		
 		var resolveReady;
 		var rejectReady;
+		
 		var ready = new Promise(function(resolve, reject) {
 			resolveReady = resolve;
 			rejectReady = reject;
 		});
 		
-		var schema = new SchemaBuilder();
-	
+		var schema = new SchemaBuilder(dbName, this);
+		var migrated = false;
+		
 		// Open DB request
 		
 		var DBOpenRequest = indexedDB.open(dbName, version);
@@ -202,7 +203,15 @@ var skate = {
 		};
 
 		DBOpenRequest.onsuccess = function (event) {
-			resolveReady(DBOpenRequest.result);
+			
+			// If we didn't migrate, populate the schema as necessary
+			if (!migrated && options.migrations) {
+				for (var v = 1; v <= version; ++v) {
+					options.migrations[v](schema);
+				}
+			}
+			
+			resolveReady(new Database(schema, DBOpenRequest.result));
 		};
 
 		// Construct the final schema
@@ -212,16 +221,22 @@ var skate = {
 		// window.indexedDB.open line above
 		//it is only implemented in recent browsers
 		DBOpenRequest.onupgradeneeded = function (event) {
+			migrated = true;
 			var db = event.target.result;
 			var oldVersion = event.oldVersion;
 			var newVersion = event.newVersion;
 			
 			//console.log('[skate] Schema update required from '+oldVersion+' to '+newVersion);
 			//console.log('[skate] Loading schema history...');
+
+			if (!options.migrations) {
+				throw "Cowardly refusing to upgrade when no migrations are specified.";
+			}
 			
 			for (var version = 1; version <= oldVersion; ++version) {
 				//console.log(' - Loading schema version #'+version+' (model-only)');
-				options.migrations[version](schema);
+				if (options.migrations[version])
+					options.migrations[version](schema);
 			}
 			
 			schema.setDatabase(db, event.currentTarget.transaction);

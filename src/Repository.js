@@ -10,6 +10,7 @@
 var stripCopy = require('./stripCopy.js');
 var Generator = require('es5-generators');
 var IDBRequestGenerator = require('./IDBRequestGenerator.js');
+var IDBCursorGenerator = require('./IDBCursorGenerator.js');
 
 function Repository(db, storeName, transaction) {
 	var self = this;
@@ -64,6 +65,12 @@ Repository.prototype.setTransaction = function(tx) {
 	this.transaction = tx;
 };
 
+Repository.prototype.getStore = function() {
+	if (!this.transaction) {
+		throw "Cannot get object store for a non-transaction repository";
+	}
+}
+
 /**
  * Clone the given item and then strip non-persistable fields.
  * 
@@ -104,7 +111,7 @@ Repository.prototype.persist = function(item) {
 };
 
 Repository.prototype.hydrateCursor = function(cursor) {
-	return this.hydrateGenerator(new IDBRequestGenerator(cursor));
+	return this.hydrateGenerator(new IDBCursorGenerator(cursor));
 };
 
 Repository.prototype.hydrateGenerator = function(generator) {
@@ -162,6 +169,138 @@ Repository.prototype.all = function() {
 			}).done(function() {
 				done();
 			});
+		});
+	});
+};
+
+/**
+ * Retrieve an index object which allows for querying a specific index.
+ * 
+ * @param {type} name
+ * @returns {undefined}
+ */
+Repository.prototype.index = function(name) {
+	var repo = this;
+	return {
+		name: name,
+		count: function() {
+			var self = this;
+			
+			return new Promise(function(resolve, reject) {
+				repo.ready.then(function(db) {
+					var tx = self.getStoreTransaction(db);
+					var store = tx.objectStore(self.storeName);
+					var index = store.index(self.name);
+					
+					new IDBRequestGenerator(index.count())
+						.emit(function(count) {
+							resolve(count);
+						});
+				});
+			});
+		},
+		get: function(key) {
+			var self = this;
+			
+			return new Promise(function(resolve, reject) {
+				
+				repo.ready.then(function(db) {
+					var tx = self.getStoreTransaction(db);
+					var store = tx.objectStore(self.storeName);
+					var index = store.index(self.name);
+					
+					new IDBRequestGenerator(index.get(key))
+						.emit(function(item) {
+							resolve(item);
+						});
+				});
+			});
+		},
+		getKey: function(key) {
+			var self = this;
+			
+			return new Promise(function(resolve, reject) {
+				
+				repo.ready.then(function(db) {
+					var tx = self.getStoreTransaction(db);
+					var store = tx.objectStore(self.storeName);
+					var index = store.index(self.name);
+					
+					new IDBRequestGenerator(index.getKey(key))
+						.emit(function(item) {
+							resolve(item);
+						});
+				});
+			});
+		},
+		cursor: function(range) {
+			var self = this;
+			
+			return new Generator(function(done, reject, emit) {
+				repo.ready.then(function(db) {
+					var tx = self.getStoreTransaction(db);
+					var store = tx.objectStore(self.storeName);
+					var index = store.index(self.name);
+					
+					self.hydrateCursor(index.openCursor(range))
+						.emit(function(item, cancel) {
+							emit(item, cancel);
+						})
+						.catch(function(err) {
+							reject(err);
+						})
+						.done(function() {
+							done();
+						});
+				});
+			});
+		},
+		keyCursor: function(range) {
+			var self = this;
+			
+			return new Generator(function(done, reject, emit) {
+				repo.ready.then(function(db) {
+					var tx = self.getStoreTransaction(db);
+					var store = tx.objectStore(self.storeName);
+					var index = store.index(self.name);
+					
+					self.hydrateCursor(index.openKeyCursor(range))
+						.emit(function(item, cancel) {
+							emit(item, cancel);
+						})
+						.catch(function(err) {
+							reject(err);
+						})
+						.done(function() {
+							done();
+						});
+				});
+			});
+		}
+	};
+};
+
+/**
+ * Open a cursor on the main index of this object store
+ */
+Repository.prototype.cursor = function(range) {
+	var self = this;
+	
+	return new Generator(function(done, reject, emit) {
+		self.ready.then(function(db) {
+			var tx = self.getStoreTransaction(db);
+			var store = tx.objectStore(self.storeName);
+
+			self.hydrateCursor(store.openCursor(range))
+				.emit(function(item, cancel) {
+					emit(item, cancel);
+				})
+				.catch(function(err) {
+					reject(err);
+				})
+				.done(function() {
+					done();
+				});
 		});
 	});
 };
@@ -286,7 +425,7 @@ Repository.prototype.find = function(criteria) {
 
 								return new Promise(function(resolve, reject) {
 									items = [];
-									new IDBRequestGenerator(index.openCursor(fieldValue))
+									new IDBCursorGenerator(index.openCursor(fieldValue))
 										.emit(function(item) {
 											items.push(item);
 										}).done(function() {
@@ -298,7 +437,7 @@ Repository.prototype.find = function(criteria) {
 							} else {
 								return new Promise(function(resolve, reject) {
 									items = [];
-									new IDBRequestGenerator(store.openCursor())
+									new IDBCursorGenerator(store.openCursor())
 										.emit(function(item) {
 											items.push(item);
 										}).done(function() {

@@ -10,8 +10,10 @@
 var transact = require('./transact.js');
 var StoreBuilder = require('./StoreBuilder.js');
 
-function SchemaBuilder() {
-	this.stores = [];
+function SchemaBuilder(name, registry) {
+	this.name = name;
+	this.stores = {};
+	this.registry = registry;
 }; module.exports = SchemaBuilder;
 
 /**
@@ -85,7 +87,27 @@ SchemaBuilder.prototype.run = function(callback) {
 		var params = metadata.params;
 		var self = this;
 		
-		transact(this.db, this.transaction, fn, 'readwrite');
+		transact(this.db, this.transaction, function(db, name, tx) {
+			var repo = new Repository(db, name, tx);
+			registry.prepareRepository(repo);
+			return repo;
+		}, fn, 'readwrite');
 	}
 	return this;
+};
+
+SchemaBuilder.prototype.debug = function() {
+	console.log('Schema for database '+this.name);
+	
+	for (var name in this.stores) {
+		var store = this.stores[name];
+		console.log('store '+name);
+		console.log('- pkey: '+store.store.primaryKey);
+		
+		for (var fieldName in store.store.fields) {
+			var field = store.store.fields[fieldName];
+			console.log(' - '+fieldName);
+		}
+	}
+	
 };

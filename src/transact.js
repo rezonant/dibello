@@ -25,8 +25,14 @@ function SkateUnknownStoreException(message) {
  * @param {type} mode
  * @returns {undefined}
  */
-function transact(db, transactionOrFactory, fn, mode) {
+function transact(db, transactionOrFactory, repositoryFactory, fn, mode) {
 	var mode = mode || 'readonly';
+	
+	if (!repositoryFactory) {
+		repositoryFactory = function(db, name, tx) {
+			return new Repository(db, name, tx);
+		};
+	}
 	
 	// Use LightInjector to inject the parameters dynamically.
 	// We'll use this to map in the database, a transaction,
@@ -86,7 +92,7 @@ function transact(db, transactionOrFactory, fn, mode) {
 				if (storeOnly) {
 					this[param] = store;
 				} else {
-					this[param] = new Repository(db, param, this.transaction);
+					this[param] = repositoryFactory(db, param, this.transaction);
 				}
 			}
 		}

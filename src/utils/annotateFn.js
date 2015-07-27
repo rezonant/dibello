@@ -29,11 +29,22 @@ function annotateFn(fn) {
 		};
 	}
 
+	if (typeof fn === 'string') {
+		console.log('A string was passed to annotateFn()');
+		throw 'A string was passed to annotateFn()';
+	}
+
 	var $params;
 	if (!($params = fn.$params)) {
 		$params = [];
 		var fnText = fn.toString().replace(STRIP_COMMENTS, '');
 		var argDecl = fnText.match(FN_ARGS);
+		
+		if (!argDecl) {
+			console.log("Failed to parse function declaration: "+fnText);
+			throw "Failed to parse function declaration: "+fnText;
+		}
+		
 		var parts = argDecl[1].split(FN_ARG_SPLIT);
 
 		for (var i = 0, max = parts.length; i < max; ++i) {

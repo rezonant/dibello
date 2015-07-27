@@ -1,26 +1,34 @@
 
 function IDBCursorGenerator(request) {
+	var cancelled = false;
 	return new Generator(function(done, reject, emit) {
+		
 		request.onsuccess = function(ev) {
-			var cursor = ev.target.result;
+			if (!ev.target)
+				return;
 			
+			var cursor = ev.target.result;
 			// End the generator if we're done
 			if (!cursor) {
 				done();
 				return;
 			}
 
-			var ret = cb(cursor.value);
-			if (typeof ret === 'undefined')
-				ret = true;
-
+			if (!cancelled) {
+				emit(cursor.value, function() {
+					cancelled = true;
+				});
+			}
+			
 			// Callback requested us to end early
 			
-			if (!ret) {
+			if (cancelled) {
 				done();
 				return;
 			}
 			
+			if (!cursor.continue)
+				throw "ev is "+ev.target.result;
 			cursor.continue();
 		};
 
@@ -33,3 +41,5 @@ function IDBCursorGenerator(request) {
 if (typeof window !== 'undefined') {
 	window.SkateIDBCursorGenerator = IDBCursorGenerator;
 }
+
+module.exports = IDBCursorGenerator;

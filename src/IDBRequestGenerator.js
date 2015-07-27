@@ -7,29 +7,9 @@ function IDBRequestGenerator(request) {
 			if (!ev.target)
 				return;
 			
-			var cursor = ev.target.result;
-			// End the generator if we're done
-			if (!cursor) {
-				done();
-				return;
-			}
-
-			if (!cancelled) {
-				emit(cursor.value, function() {
-					cancelled = true;
-				});
-			}
-			
-			// Callback requested us to end early
-			
-			if (cancelled) {
-				done();
-				return;
-			}
-			
-			if (!cursor.continue)
-				throw "ev is "+ev.target.result;
-			cursor.continue();
+			var result = ev.target.result;
+			emit(result);
+			done();
 		};
 
 		request.onerror = function(ev) {

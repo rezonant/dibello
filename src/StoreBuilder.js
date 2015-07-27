@@ -5,12 +5,20 @@
  * 
  */
 
+/**
+ * 
+ * @param {type} builder
+ * @param {type} name
+ * @param {type} id
+ * @returns {StoreBuilder}Allows for describing (and optionally applying chanages to) the schema of 
+ * an IndexedDB object store.
+ */
 function StoreBuilder(builder, name, id) {
 	this.builder = builder;
 	this.store = {
 		primaryKey: id,
 		name: name,
-		fields: [],
+		fields: {},
 	};
 	
 	if (builder) {
@@ -22,11 +30,18 @@ function StoreBuilder(builder, name, id) {
 	}
 }; module.exports = StoreBuilder;
 
+/**
+ * Run an imperative migration block. The callback will only be exected
+ * if the builder is in live (modifying) mode.
+ */
 StoreBuilder.prototype.run = function(callback) {
 	if (this.builder)
 		return this.builder.run(callback);
 };
 
+/**
+ * Create a new object store.
+ */
 StoreBuilder.prototype.createStore = function(name) {
 	if (!this.builder) {
 		throw {
@@ -38,6 +53,9 @@ StoreBuilder.prototype.createStore = function(name) {
 	return this.builder.createStore(name);
 };
 
+/**
+ * Retrieve an existing object store
+ */
 StoreBuilder.prototype.getStore = function(name) {
 	if (!this.builder) {
 		throw {
@@ -49,6 +67,9 @@ StoreBuilder.prototype.getStore = function(name) {
 	return this.builder.getStore(name);
 };
 
+/**
+ * Retrieve an existing field
+ */
 StoreBuilder.prototype.getField = function(name) {
 	if (!this.store.fields[name]) {
 		throw {
@@ -60,16 +81,25 @@ StoreBuilder.prototype.getField = function(name) {
 	return this.store.fields[name];
 };
 
+/**
+ * Add a new key field
+ */
 StoreBuilder.prototype.key = function(name) {
 	this.addField(name, {key: true, index: name, name: name, unique: false});
 	return this;
 };
 
+/**
+ * Add a new generic field 
+ */
 StoreBuilder.prototype.field = function(name) {
 	this.addField(name, {key: false, index: name, name: name, unique: false});
 	return this;
 };
 
+/**
+ * Allows for creating any type of field with a single API.
+ */
 StoreBuilder.prototype.addField = function(name, data) {
 	if (this.store.fields[name]) {
 		throw {
@@ -92,11 +122,17 @@ StoreBuilder.prototype.addField = function(name, data) {
 	return this;
 };
 
+/**
+ * Remove the given field
+ */
 StoreBuilder.prototype.remove = function(name) {
 	this.removeField(name);
 	return this;
 }
 
+/**
+ * Alias for remove()
+ */
 StoreBuilder.prototype.removeField = function(name) {
 	delete this.store.fields[name];
 	
@@ -109,16 +145,25 @@ StoreBuilder.prototype.removeField = function(name) {
 	return this;
 }
 
+/**
+ * Add the primary key field to this store
+ */
 StoreBuilder.prototype.id = function(name) {
 	this.addField(name, {key: true, index: name, name: name, unique: true});
 	return this;
 };
 
+/**
+ * Adds a foreign key field to this store
+ */
 StoreBuilder.prototype.foreign = function(name, ref) {
 	this.addField(name, {key: true, index: name, name: name, unique: false, references: ref});
 	return this;
 };
 
+/**
+ * Adds a unique key field to this store
+ */
 StoreBuilder.prototype.unique = function(name) {
 	this.addField(name, {key: true, index: name, name: name, unique: true});
 	return this;

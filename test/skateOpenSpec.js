@@ -83,10 +83,10 @@ describe("skate.open()", function() {
 		var promise = skate.open(simpleMockedDB(), 'test123', {version: 3});
 		
 		promise.then(function(db) {
-			expect(db.name).toBe('test123');
-			expect(db.version).toBe(3);
-			expect(db.ready).toBe(true);
-			done();
+			expect(db.idb().name).toBe('test123');
+			expect(db.idb().version).toBe(3);
+			expect(db.idb().ready).toBe(true);
+			done(); 
 		});
 	});
 	
