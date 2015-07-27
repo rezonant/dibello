@@ -12,9 +12,13 @@ function Database(schema, idb) {
  */
 Database.prototype.transact = function(mode, fn) {
 	var self = this;
-	return transact(this.idb(), null, function(db, name, transaction) {
+	return transact(this, null, function(db, name, transaction) {
 		return self.repository(name, transaction);
 	}, fn, mode);
+};
+
+Database.prototype.setIDB = function(db) {
+	this._idb = db;
 };
 
 /**

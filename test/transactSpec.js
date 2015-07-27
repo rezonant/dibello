@@ -1,5 +1,7 @@
 
+var Database = require('../src/Database.js');
 var transact = require('../src/transact.js');
+var SchemaBuilder = require('../src/SchemaBuilder.js');
 
 function mockedDB() {
 	return {
@@ -9,7 +11,7 @@ function mockedDB() {
 
 describe('transact()', function() {
 	it('should inject the transaction', function() {
-		transact(mockedDB(), function(stores, mode) {
+		transact(new Database(new SchemaBuilder('foo', {}), mockedDB()), function(stores, mode) {
 			return {
 				_stores: stores,
 				_mode: mode,
@@ -26,7 +28,7 @@ describe('transact()', function() {
 	});
 	
 	it('should inject a valid object store', function() {
-		transact(mockedDB(), function(stores, mode) {
+		transact(new Database(new SchemaBuilder('foo', {}), mockedDB()), function(stores, mode) {
 			return {
 				_stores: stores,
 				_mode: mode,
@@ -46,7 +48,7 @@ describe('transact()', function() {
 	});
 	
 	it('should request all needed stores', function() {
-		transact(mockedDB(), function(stores, mode) {
+		transact(new Database(new SchemaBuilder('foo', {}), mockedDB()), function(stores, mode) {
 			return {
 				_stores: stores,
 				_mode: mode,
@@ -70,8 +72,27 @@ describe('transact()', function() {
 		}, 'readwrite');
 	});
 	
+	it('should inject the idb', function() {
+		transact(new Database(new SchemaBuilder('foo', {}), mockedDB()), function(stores, mode) {
+			return {
+				_stores: stores,
+				_mode: mode,
+				
+				objectStore: function(name) {
+					return {
+						_name: name,
+						get: function() {}
+					};
+				}
+			};
+		}, null, function(idb) {
+			expect(idb.iamadb).toBe(true);
+			
+		}, 'readwrite');
+	});
+	
 	it('should inject the db', function() {
-		transact(mockedDB(), function(stores, mode) {
+		transact(new Database(new SchemaBuilder('foo', {}), mockedDB()), function(stores, mode) {
 			return {
 				_stores: stores,
 				_mode: mode,
@@ -84,13 +105,13 @@ describe('transact()', function() {
 				}
 			};
 		}, null, function(db) {
-			expect(db.iamadb).toBe(true);
+			expect(typeof db.transact).toBe('function');
 			
 		}, 'readwrite');
 	});
 	
 	it('should inject only the stores with store: selector', function() {
-		transact(mockedDB(), function(stores, mode) {
+		transact(new Database(new SchemaBuilder('foo', {}), mockedDB()), function(stores, mode) {
 			return {
 				_stores: stores,
 				_mode: mode,

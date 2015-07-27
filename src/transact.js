@@ -40,6 +40,8 @@ function transact(db, transactionOrFactory, repositoryFactory, fn, mode) {
 	
 	injector({
 		db: db,
+		idb: db.idb(),
+		schema: db.getSchema(),
 		
 		/**
 		 * Traverse through the parameters given and decorate the map

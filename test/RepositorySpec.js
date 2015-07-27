@@ -264,6 +264,54 @@ describe('Repository.getMany()', function() {
 	});
 });
 
+describe('Repository.cursor()', function() {
+	it('should use openCursor()', function(done) {
+		var db = mockedDB();
+		var repo = new Repository(db, 'foo');
+		var tx = repo.getStoreTransaction(db);
+		var store = tx.objectStore('foo');
+		var getCalled = false;
+		
+		repo.setTransaction(tx);
+		
+		store.openCursor = function() {
+			var request = {
+				onsuccess: function() { console.log('DEFAULT YIELD'); },
+				_finishes: function() { 
+					var target = {
+						result: null
+					};  
+					this.onsuccess({target: target, currentTarget: target});
+				},
+			};
+			
+			setTimeout(function() {
+				var target = {
+					result: {
+						value: {
+							id: '123'
+						},
+						"continue": function() { }
+					}
+				};
+				request.onsuccess({
+					target: target,
+					currentTarget: target
+				});
+				request._finishes();
+			}, 1);
+			
+			return request;
+		};
+		
+		repo.cursor().emit(function(item) {
+			expect(item.id).toBe('123');
+		}).done(function() {
+			done();
+		});
+		
+	});
+});
 
 describe('Repository.find()', function() {
 	

@@ -41,49 +41,6 @@ var skate = {
 	},
 	
 	/**
-	 * Start a Skate transaction on the given DB with the given function.
-	 * 
-	 * A dependency injection process similar to Angular's is done, 
-	 * except the injector is capable of providing transaction-related services
-	 * instead of user-interface ones.
-	 * 
-	 * The following services can be injected into the function you pass.
-	 * - db           - the current IDBDatabase 
-	 * - transaction  - the current IDBTransaction
-	 * - transact     - A function bound to the database which allows for starting
-	 *                  additional independent transactions
-	 * - <name>       - SkateRepository for the given IDB object store, by name
-	 * - $<name>      - IDBObjectStore instance for the given store.
-	 *                  Note that to do this you must use declarative (array-style)
-	 *                  injection.
-	 * 
-	 * The IDB transaction is created to involve all of the stores you specify within
-	 * your injection function. For instance, if you load the 'cars' and 'bikes' 
-	 * repositories, as in:
-	 *
-	 *     skate.transact(db, 'readwrite', function(transaction, cars, bikes) { })
-	 * 
-	 * Then the transaction passed into the function will be created to allow the cars and bikes
-	 * object stores, as if you had done the following stock IndexedDB call:
-	 * 
-	 *     var tx = db.transaction(['cars', 'bikes'], 'readwrite');
-	 *     var cars = tx.objectStore('cars');
-	 *     var bikes = tx.objectStore('bikes');
-	 * 
-	 * @param {type} db
-	 * @param {type} fn
-	 * @returns {undefined}
-	 */
-	transact: function(db, mode, fn) {
-		var self = this;
-		return transact(db, null, function(db, name, transaction) {
-			var repo = new Repository(db, name, transaction);
-			self.prepareRepository(repo);
-			return repo;
-		}, fn, mode);
-	},
-	
-	/**
 	 * Returns a promise to open an IndexedDB database using Skate's schema manager.
 	 * 
 	 * You must pass the top-level indexedDB API object. If you are in a browser which
@@ -191,6 +148,7 @@ var skate = {
 		});
 		
 		var schema = new SchemaBuilder(dbName, this);
+		var db = new Database(schema, null);
 		var migrated = false;
 		
 		// Open DB request
@@ -203,7 +161,9 @@ var skate = {
 		};
 
 		DBOpenRequest.onsuccess = function (event) {
-			
+			var idb = event.target.result;
+			db.setIDB(idb);
+			 
 			// If we didn't migrate, populate the schema as necessary
 			if (!migrated && options.migrations) {
 				for (var v = 1; v <= version; ++v) {
@@ -211,7 +171,7 @@ var skate = {
 				}
 			}
 			
-			resolveReady(new Database(schema, DBOpenRequest.result));
+			resolveReady(db);
 		};
 
 		// Construct the final schema
@@ -222,7 +182,11 @@ var skate = {
 		//it is only implemented in recent browsers
 		DBOpenRequest.onupgradeneeded = function (event) {
 			migrated = true;
-			var db = event.target.result;
+			var idb = event.target.result;
+			
+			db.setIDB(idb);
+			schema.setDatabase(db, null);
+			
 			var oldVersion = event.oldVersion;
 			var newVersion = event.newVersion;
 			
@@ -240,7 +204,8 @@ var skate = {
 			}
 			
 			schema.setDatabase(db, event.currentTarget.transaction);
-			db.onerror = function (event) {
+			
+			idb.onerror = function (event) {
 				console.error('[skate] Error while building database schema');
 				console.log(event);
 			};
@@ -254,7 +219,7 @@ var skate = {
 			schema.disconnectDatabase();
 			//console.log('Schema updated successfully.');
 
-			db.onerror = null;
+			idb.onerror = null;
 		};
 		
 		return ready;
