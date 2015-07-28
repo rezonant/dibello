@@ -22,8 +22,8 @@ describe('transact()', function() {
 					};
 				}
 			};
-		}, null, function(transaction) {
-			expect(transaction._mode).toBe('readwrite');
+		}, null, function($transaction) {
+			expect($transaction._mode).toBe('readwrite');
 		}, 'readwrite');
 	});
 	
@@ -39,9 +39,9 @@ describe('transact()', function() {
 					};
 				}
 			};
-		}, null, function(transaction, foo) {
-			expect(transaction._mode).toBe('readwrite');
-			expect(transaction._stores).toContain('foo');
+		}, null, function($transaction, foo) {
+			expect($transaction._mode).toBe('readwrite');
+			expect($transaction._stores).toContain('foo');
 			expect(foo.get).toBeTruthy();
 			
 		}, 'readwrite');
@@ -60,11 +60,11 @@ describe('transact()', function() {
 					};
 				}
 			};
-		}, null, function(transaction, foo, bar, baz) {
-			expect(transaction._mode).toBe('readwrite');
-			expect(transaction._stores).toContain('foo');
-			expect(transaction._stores).toContain('bar');
-			expect(transaction._stores).toContain('baz');
+		}, null, function($transaction, foo, bar, baz) {
+			expect($transaction._mode).toBe('readwrite');
+			expect($transaction._stores).toContain('foo');
+			expect($transaction._stores).toContain('bar');
+			expect($transaction._stores).toContain('baz');
 			expect(foo.storeName).toBe('foo');
 			expect(bar.storeName).toBe('bar');
 			expect(baz.storeName).toBe('baz');
@@ -85,8 +85,8 @@ describe('transact()', function() {
 					};
 				}
 			};
-		}, null, function(idb) {
-			expect(idb.iamadb).toBe(true);
+		}, null, function($$db) {
+			expect($$db.iamadb).toBe(true);
 			
 		}, 'readwrite');
 	});
@@ -104,8 +104,8 @@ describe('transact()', function() {
 					};
 				}
 			};
-		}, null, function(db) {
-			expect(typeof db.transact).toBe('function');
+		}, null, function($db) {
+			expect(typeof $db.transact).toBe('function');
 			
 		}, 'readwrite');
 	});

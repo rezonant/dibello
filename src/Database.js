@@ -1,9 +1,11 @@
 var transact = require('./transact.js');
+var Repository = require('./Repository.js');
 
 function Database(schema, idb) {
 	this._schema = schema;
 	this._idb = idb;
-	this._repositoryConfigs = {};
+	this._repositoryConfigs = {}; 
+	this._transact = transact;
 }; module.exports = Database;
 
 /**
@@ -12,7 +14,7 @@ function Database(schema, idb) {
  */
 Database.prototype.transact = function(mode, fn) {
 	var self = this;
-	return transact(this, null, function(db, name, transaction) {
+	transact(this, null, function(db, name, transaction) {
 		return self.repository(name, transaction);
 	}, fn, mode);
 };

@@ -25,8 +25,9 @@ function SkateUnknownStoreException(message) {
  * @param {type} mode
  * @returns {undefined}
  */
-function transact(db, transactionOrFactory, repositoryFactory, fn, mode) {
+function transact(db, transactionOrFactory, repositoryFactory, fn, mode, extraInjectables) {
 	var mode = mode || 'readonly';
+	var idb = db.idb();
 	
 	if (!repositoryFactory) {
 		repositoryFactory = function(db, name, tx) {
@@ -34,14 +35,15 @@ function transact(db, transactionOrFactory, repositoryFactory, fn, mode) {
 		};
 	}
 	
-	// Use LightInjector to inject the parameters dynamically.
-	// We'll use this to map in the database, a transaction,
-	// and repositories for any specifically named object stores.
-	
-	injector({
-		db: db,
-		idb: db.idb(),
-		schema: db.getSchema(),
+	var injectables = {
+		$db: db,
+		$$db: db.idb(),
+		$schema: db.getSchema(),
+		$transact: function() {
+			return function(mode, fn) {
+				transact(db, transactionOrFactory, repositoryFactory, fn, mode);
+			};
+		},
 		
 		/**
 		 * Traverse through the parameters given and decorate the map
@@ -51,7 +53,7 @@ function transact(db, transactionOrFactory, repositoryFactory, fn, mode) {
 		 * @param {Array} params
 		 * @returns
 		 */
-		$populate: function(params) {
+		$populate$: function(params) {
 			var storeNames = [];
 			for (var i = 0, max = params.length; i < max; ++i) {
 				if (params[i] == 'db')
@@ -61,11 +63,11 @@ function transact(db, transactionOrFactory, repositoryFactory, fn, mode) {
 			}
 
 			if (transactionOrFactory == null) {
-				this.transaction = db.transaction(storeNames, mode);
+				this.$transaction = idb.transaction(storeNames, mode);
 			} else if (typeof transactionOrFactory === 'function') {
-				this.transaction = transactionOrFactory(storeNames, mode);
+				this.$transaction = transactionOrFactory(storeNames, mode);
 			} else {
-				this.transaction = transactionOrFactory;
+				this.$transaction = transactionOrFactory;
 			}
 			
 			var hydratedParams = [];
@@ -75,6 +77,26 @@ function transact(db, transactionOrFactory, repositoryFactory, fn, mode) {
 				// Skip predefined stuff
 				if (this[param])
 					continue;
+				
+				// Are we a promise?
+				if (param == 'resolve' || param == 'reject') {
+					
+					if (!promise) {
+						promise = new Promise(function(resolve, reject) {
+							promiseResolve = resolve;
+							promiseReject = reject;
+						});
+					}
+					
+					if (param == 'resolve')
+						this.resolve = promiseResolve;
+					
+					if (param == 'reject')
+						this.reject = promiseReject;
+					
+					continue;
+			
+				}
 				
 				var storeOnly = false;
 				var storeName = param;
@@ -86,7 +108,7 @@ function transact(db, transactionOrFactory, repositoryFactory, fn, mode) {
 				
 				var store;
 				try {
-					store = this.transaction.objectStore(storeName);
+					store = this.$transaction.objectStore(storeName);
 				} catch (e) {
 					throw new SkateUnknownStoreException('No such object store '+param);
 				}
@@ -94,11 +116,31 @@ function transact(db, transactionOrFactory, repositoryFactory, fn, mode) {
 				if (storeOnly) {
 					this[param] = store;
 				} else {
-					this[param] = repositoryFactory(db, param, this.transaction);
+					this[param] = repositoryFactory(db, param, this.$transaction);
 				}
 			}
 		}
-	}, null, fn);
+	};
+	
+	if (extraInjectables) {
+		for (var name in extraInjectables) {
+			if (injectables[name])
+				continue;
+			injectables[name] = extraInjectables[name];
+		}
+	}
+	
+	// Use LightInjector to inject the parameters dynamically.
+	// We'll use this to map in the database, a transaction,
+	// and repositories for any specifically named object stores.
+	
+	var result = injector(injectables, null, fn);
+	
+	if (result && result.constructor && result.constructor.name == 'Promise') {
+		return result;
+	}
+	
+	return Promise.resolve(result);
 };
 
 module.exports = transact;

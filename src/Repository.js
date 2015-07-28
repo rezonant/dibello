@@ -38,7 +38,23 @@ Repository.prototype.getStoreTransaction = function(db) {
 if (window)
 	window.SkateRepository = Repository;
 
+Repository.prototype._hydrateItem = function(db, item) {
+	var self = this;
+	return db._transact(db, null, function(db, name, transaction) {
+		return db.repository(name, transaction);
+	}, self.hydrate, 'readonly', {
+		item: item
+	});
+};
 
+Repository.prototype._dehydrateItem = function(db, item) {
+	this.dehydrate(db, item);
+	
+	// Standard dehydration
+	
+	return item;
+};
+ 
 Repository.prototype.generateGuid = function() {
 	var result, i, j;
 	result = '';
@@ -95,9 +111,9 @@ Repository.prototype.persist = function(item) {
 	item = stripCopy(item);
 
 	return new Promise(function(resolve, reject) {
-		var clone = self.stripCopy(item);
-		self.dehydrate(clone);
 		self.ready.then(function(db) {
+			var clone = self.stripCopy(item);
+			self._dehydrateItem(db, clone);
 			var tx = self.getStoreTransaction(db);
 			var store = tx.objectStore(self.storeName);
 			new IDBRequestGenerator(store.put(clone, clone.id))
@@ -117,20 +133,22 @@ Repository.prototype.hydrateCursor = function(cursor) {
 Repository.prototype.hydrateGenerator = function(generator) {
 	var self = this;	
 	return new Generator(function(done, reject, emit) {
-		generator
-			.emit(function(item) {
-				self.hydrate(item).then(function(hydratedItem) {
-					emit(hydratedItem);
+		self.ready.then(function(db) {
+			generator
+				.emit(function(item) {
+					self._hydrateItem(db, item).then(function(hydratedItem) {
+						emit(hydratedItem);
+					});
 				});
-			});
-		generator
-			.done(function() {
-				done();
-			});
-		generator
-			.catch(function(err) {
-				reject(err);
-			});
+			generator
+				.done(function() {
+					done();
+				});
+			generator
+				.catch(function(err) {
+					reject(err);
+				});
+		});
 	});
 };
 

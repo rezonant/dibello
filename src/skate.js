@@ -130,7 +130,6 @@ var skate = {
 	 * @returns {Promise|skate.open.ready}
 	 */
 	open: function(indexedDB, dbName, options) {
-		
 		// Process options
 		
 		var version = 1;

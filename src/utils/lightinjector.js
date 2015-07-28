@@ -32,18 +32,28 @@ function inject(map, self, fn) {
 	
 	var args = [];
 	
-	if (map.$populate) {
-		map.$populate(params);
+	if (map.$populate$) {
+		map.$populate$(params);
 	}
 	
 	for (var i = 0, max = params.length; i < max; ++i) {
 		var param = params[i];
 		var factory = map[param];
 		
+		// We want to be able to inject services with names containing $ at the beginning, middle
+		// or end as necessary, so we do not, as a matter of policy, inject any service that both 
+		// starts and ends with '$' such as '$populate$' or '$any$'. Naturally the injectables 
+		// object can make productive use of this fact to have 'private' methods.
+		
+		if (param.match(/\$.*\$$/)) {
+			args.push(null);
+			continue;
+		}
+		
 		if (typeof factory === 'undefined') {
 			
-			if (map.$any) {
-				factory = map.$any;
+			if (map.$any$) {
+				factory = map.$any$;
 			} else {
 				throw new InjectionException('No service factory for injected parameter '+param+' (Parameter must be a valid service)');
 			}	

@@ -1,5 +1,7 @@
 
 var Repository = require('../src/Repository.js');
+var Database = require('../src/Database.js');
+
 function mockedDB(options) {
 	
 	if (!options)
@@ -74,7 +76,7 @@ function mockedDB(options) {
 describe('Repository.getStoreTransaction()', function() {
 	
 	it('should return a new transaction', function(done) {
-		var repo = new Repository(mockedDB(), 'foo');
+		var repo = new Repository(new Database(null, mockedDB()), 'foo');
 		var tx = repo.getStoreTransaction(mockedDB(), 'readwrite');
 		
 		expect(tx._stores.length).toBe(1);
@@ -87,7 +89,7 @@ describe('Repository.getStoreTransaction()', function() {
 describe('Repository.setTransaction()', function() {
 	
 	it('should set the active transaction on the repository', function(done) {
-		var repo = new Repository(mockedDB(), 'foo');
+		var repo = new Repository(new Database(null, mockedDB()), 'foo');
 		var tx = {_stores: []};
 		
 		repo.setTransaction(tx);
@@ -95,7 +97,7 @@ describe('Repository.setTransaction()', function() {
 		done();
 	});
 	it('should cause getStoreTransaction() to return the set transaction', function(done) {
-		var repo = new Repository(mockedDB(), 'foo');
+		var repo = new Repository(new Database(null, mockedDB()), 'foo');
 		var tx = {_stores: []};
 		
 		repo.setTransaction(tx);
@@ -107,7 +109,7 @@ describe('Repository.persist()', function() {
 	
 	it('should call the underlying store.put() method', function(done) {
 		var db = mockedDB();
-		var repo = new Repository(db, 'foo');
+		var repo = new Repository(new Database(null, db), 'foo');
 		var tx = repo.getStoreTransaction(db);
 		
 		repo.setTransaction(tx);	 
@@ -126,7 +128,7 @@ describe('Repository.get()', function() {
 	 
 	it('should call the underlying store.get() method', function(done) {
 		var db = mockedDB();
-		var repo = new Repository(db, 'foo');
+		var repo = new Repository(new Database(null, db), 'foo');
 		var tx = repo.getStoreTransaction(db);
 		var store = tx.objectStore('foo');
 		var getCalled = false;
@@ -171,7 +173,7 @@ describe('Repository.all()', function() {
 	
 	it('should call the underlying store.openCursor() method', function(done) {
 		var db = mockedDB();
-		var repo = new Repository(db, 'foo');
+		var repo = new Repository(new Database(null, db), 'foo');
 		var tx = repo.getStoreTransaction(db);
 		var store = tx.objectStore('foo');
 		var getCalled = false;
@@ -221,7 +223,7 @@ describe('Repository.getMany()', function() {
 	
 	it('should call the underlying store.get() method', function(done) {
 		var db = mockedDB();
-		var repo = new Repository(db, 'foo');
+		var repo = new Repository(new Database(null, db), 'foo');
 		var tx = repo.getStoreTransaction(db);
 		var store = tx.objectStore('foo');
 		var getCalled = false;
@@ -267,7 +269,7 @@ describe('Repository.getMany()', function() {
 describe('Repository.cursor()', function() {
 	it('should use openCursor()', function(done) {
 		var db = mockedDB();
-		var repo = new Repository(db, 'foo');
+		var repo = new Repository(new Database(null, db), 'foo');
 		var tx = repo.getStoreTransaction(db);
 		var store = tx.objectStore('foo');
 		var getCalled = false;
@@ -317,7 +319,7 @@ describe('Repository.find()', function() {
 	
 	it('should get the underlying index and use openCursor()', function(done) {
 		var db = mockedDB();
-		var repo = new Repository(db, 'foo'); 
+		var repo = new Repository(new Database(null, db), 'foo'); 
 		var tx = repo.getStoreTransaction(db);
 		var store = tx.objectStore('foo');
 		var getCalled = false;
@@ -379,7 +381,7 @@ describe('Repository.find()', function() {
 		// setup
 		
 		var db = mockedDB();
-		var repo = new Repository(db, 'foo');
+		var repo = new Repository(new Database(null, db), 'foo');
 		var tx = repo.getStoreTransaction(db);
 		var store = tx.objectStore('foo');
 		var getCalled = false;
