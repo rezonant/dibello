@@ -3135,8 +3135,138 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./support/isBuffer":9,"_process":8,"inherits":7}],11:[function(require,module,exports){
+/**
+ * Module providing Skate's Database class which wraps an IndexedDB database to provide
+ * access to Skate's features as well as the underlying IndexedDB features.
+ * 
+ * @module skate/Database
+ * @author William Lahti <wilahti@gmail.com>
+ * @copyright (C) 2015 William Lahti
+ */
+var transact = require('./transact.js');
+var Repository = require('./Repository.js');
 
-function IDBRequestGenerator(request) {
+/**
+ * Constructs a Database object which represents an IndexedDB database.
+ * 
+ * @class
+ * @param {SchemaBuilder} schema
+ * @param {IDBDatabase} idb
+ * @returns {Database}
+ * 
+ */
+function Database(schema, idb) {
+	this._schema = schema;
+	this._idb = idb;
+	this._repositoryConfigs = {};  
+	this._transact = transact;
+}; module.exports = Database;
+
+
+
+/**
+ * Start a transaction.
+ * @returns {Promise} A promise to resolve once the transaction has completed processing.
+ */
+Database.prototype.transact = function(mode, fn) {
+	var self = this;
+	return transact(this, null, function(db, name, transaction) {
+		return self.repository(name, transaction);
+	}, fn, mode);
+};
+
+/**
+ * Set the IDBDatabase instance held by this Database instance
+ * @param {IDBDatabase} idb The {@link https://developer.mozilla.org/en-US/docs/Web/API/IDBDatabase IDBDatabase} instance
+ */
+Database.prototype.setIDB = function(idb) {
+	this._idb = idb;
+};
+
+/**
+ * Retrieve a repository
+ * 
+ * @param {String} name The name of the repository to retrieve
+ * @param {type} tx An optional transaction which the repository should be associated with
+ * @returns {skate/Repository~Repository} The new repository object
+ */
+Database.prototype.repository = function(name, tx) {
+	var repo = new Repository(this.idb(), name, tx);
+	this.prepareRepository(repo);
+	return repo;
+};
+
+/**
+ * Prepare the given Repository instance by calling any config functions
+ * registered for its name.
+ * 
+ * @param {type} repository
+ */
+Database.prototype.prepareRepository = function(repository) {
+	if (this._repositoryConfigs[repository.storeName])
+		this._repositoryConfigs[repository.storeName](repository);
+};
+
+/**
+ * Registers a configuration function. Whenever a repository of this 
+ * type needs to be made, the given function will be called. 
+ * It is possible to have multiple configurers, but should be avoided 
+ * for simplicity.
+ * 
+ * @param {String} name The name of the repository to configure
+ * @param {function} cb A callback which will be called for each 
+ *		instance of the desired repository which is created
+ */
+Database.prototype.configRepository = function(name, cb) {
+	if (this._repositoryConfigs[name]) {
+		var original = this._repositoryConfigs[name];
+		this._repositoryConfigs[name] = function(repo) {
+			original(repo);
+			cb(repo);
+		}; 
+	} else {
+		this._repositoryConfigs[name] = cb;
+	}
+};
+
+/**
+ * Get the schema of this database, as determined by the migrations which initialized 
+ * it. This is mostly for use internally but can be useful for debugging (see 
+ * SchemaBuilder.debug()).
+ * 
+ * @returns {SchemaBuilder} The SchemaBuilder containing this database's current schema
+ */
+Database.prototype.getSchema = function() {
+	return this._schema;
+}
+
+/**
+ * Retrieve the underlying IDBDatabase instance 
+ * @returns {IDBDatabase} The {@link https://developer.mozilla.org/en-US/docs/Web/API/IDBDatabase IDBDatabase} instance
+ */
+Database.prototype.idb = function() {
+	return this._idb;
+};
+
+
+},{"./Repository.js":14,"./transact.js":20}],12:[function(require,module,exports){
+/**
+ * Module providing a class that converts an IDBCursor into a
+ * Generator.
+ *
+ * @module skate/IDBCursorGenerator
+ * @author William Lahti <wilahti@gmail.com>
+ * @copyright (C) 2015 William Lahti  
+ */
+
+/**
+ * Converts an IDBCursor into a Generator
+ * @class
+ * @param {IDBCursor} cursor
+ * @returns {Generator}
+ */
+function IDBCursorGenerator(cursor) {
+	var request = cursor;
 	var cancelled = false;
 	return new Generator(function(done, reject, emit) {
 		
@@ -3176,24 +3306,77 @@ function IDBRequestGenerator(request) {
 }; 
 
 if (typeof window !== 'undefined') {
+	window.SkateIDBCursorGenerator = IDBCursorGenerator;
+}
+
+module.exports = IDBCursorGenerator;
+},{}],13:[function(require,module,exports){
+/**
+ * Module providing a class that converts an IDBRequest into a
+ * Generator.
+ *
+ * @module skate/IDBRequestGenerator
+ * @author William Lahti <wilahti@gmail.com>
+ * @copyright (C) 2015 William Lahti  
+ */
+
+/**
+ * Converts an IDBRequest into a Generator
+ * @class
+ * @param {IDBRequest} request
+ * @returns {Generator}
+ */
+function IDBRequestGenerator(request) {
+	var cancelled = false;
+	return new Generator(function(done, reject, emit) {
+		
+		request.onsuccess = function(ev) {
+			if (!ev.target)
+				return;
+			
+			var result = ev.target.result;
+			emit(result);
+			done();
+		};
+
+		request.onerror = function(ev) {
+			reject(ev);
+		};
+	});
+}; 
+
+if (typeof window !== 'undefined') {
 	window.SkateIDBRequestGenerator = IDBRequestGenerator;
 }
 
 module.exports = IDBRequestGenerator;
-},{}],12:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 /**
- * / SKATE /
- * / AUTHOR: William Lahti <wilahti@gmail.com>
- * / (C) 2015 William Lahti
+ * Module providing a class which provides a high-level API on top
+ * of an IndexedDB object store (IDBObjectStore)
  * 
- * Repository class
- * 
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/IDBObjectStore MDN Reference - IDBObjectStore}
+ * @module skate/Repository 
+ * @author William Lahti <wilahti@gmail.com>
+ * @copyright (C) 2015 William Lahti 
  */
 
 var stripCopy = require('./stripCopy.js');
 var Generator = require('es5-generators');
 var IDBRequestGenerator = require('./IDBRequestGenerator.js');
+var IDBCursorGenerator = require('./IDBCursorGenerator.js');
 
+/**
+ * 
+ * Provides a high-level API on top of an IndexedDB 
+ * object store (IDBObjectStore)
+ * 
+ * @class Repository
+ * @param {Database} db The database to associate the repository with
+ * @param {String} storeName The name of the store which this repository will represent
+ * @param {IDBTransaction} transaction The optional IDB transaction to associate with the new repository
+ * @returns {Repository}
+ */
 function Repository(db, storeName, transaction) {
 	var self = this;
 	
@@ -3208,20 +3391,89 @@ function Repository(db, storeName, transaction) {
 	
 }; module.exports = Repository;
 
-Repository.prototype.dehydrate = function(item) {};
-Repository.prototype.hydrate = function(item) { return Promise.resolve(item); };
-
-Repository.prototype.getStoreTransaction = function(db) {
-	if (this.transaction)
-		return this.transaction;
-	return db.transaction([this.storeName], 'readwrite');
-}
-
-if (window)
+if (typeof window !== 'undefined')
 	window.SkateRepository = Repository;
 
+/**
+ * Immediately dehydrates (flattens) the properties of the given object.
+ * This method can be overridden for a specific repository by using skate/Database.configRepository()
+ * 
+ * @param {type} item
+ * @see {@link module:skate/Database~Database#configRepository Database.configRepository}
+ * @see {@link module:skate/Database~Database#transact Database.transact}
+ * @returns {undefined}
+ */
+Repository.prototype.dehydrate = function(item) {};
 
-Repository.prototype.generateGuid = function() {
+/** 
+ * Returns a promise to hydrate the properties of a given object.
+ * This function is called using skate/Database.transact(), so you can request
+ * repositories or other dependencies using Skate's function injection mechanism.
+ * 
+ * @see {@link module:skate/Database~Database#transact Database.transact} 
+ * @param {type} item In addition to the standard transact services, you may also inject 'item' which is the item being hydrated
+ * @returns {unresolved}
+ */
+Repository.prototype.hydrate = function(item) { return Promise.resolve(item); };
+
+/**
+ * Get an IndexedDB transaction (IDBTransaction) for only the store represented by 
+ * this repository. The resulting transaction cannot be used to access any other store.
+ * 
+ * @param {Database} idb The IDBDatabase instance
+ * @returns {type|IDBTransaction}
+ */
+Repository.prototype.getStoreTransaction = function(idb) {
+	if (this.transaction)
+		return this.transaction;
+	return idb.transaction([this.storeName], 'readwrite');
+}
+
+/*-*
+ * Return a promise to hydrate the given item by 
+ * transacting this repository's .hydrate() method.
+ * 
+ * @private
+ * @param {Database} db The {@link module:skate/Database~Database Database} instance
+ * @param {object} item The item being hydrated
+ */
+Repository.prototype._hydrateItem = function(db, item) {
+	var self = this; 
+	 
+	// Standard hydration
+	
+	var schema = db.getSchema();
+	var store = schema.getStore(self.storeName);
+	var foreignFields = store.getForeignFields();
+	
+	
+	return db._transact(db, null, function(db, name, transaction) {
+		return db.repository(name, transaction);
+	}, self.hydrate, 'readonly', {
+		item: item
+	});
+};
+
+/*-*
+ * Dehydrate the given item.
+ * 
+ * @param {type} db
+ * @param {type} item
+ * @returns {unresolved}
+ */
+Repository.prototype._dehydrateItem = function(db, item) {
+	this.dehydrate(db, item);
+	
+	// Standard dehydration
+	
+	return item;
+};
+
+/**
+ * Generate a GUID which may be used as the ID for a new object.
+ * @returns {String} The new GUID
+ */
+Repository.generateGuid = function() {
 	var result, i, j;
 	result = '';
 	for (j = 0; j < 32; j++) {
@@ -3231,9 +3483,7 @@ Repository.prototype.generateGuid = function() {
 		result = result + i;
 	}
 	return result;
-};
-
-Repository.generateGuid = Repository.prototype.generateGuid();
+}; Repository.prototype.generateGuid = Repository.generateGuid;
 
 /**
  * Set the transaction on this repository object so that future operations 
@@ -3241,16 +3491,32 @@ Repository.generateGuid = Repository.prototype.generateGuid();
  * calls to ensure that a new Repository will use the newly created transaction
  * (amongst other uses).
  * 
- * @param {IDBTransaction} tx
+ * @param {IDBTransaction} tx The {@link https://developer.mozilla.org/en-US/docs/Web/API/IDBTransaction IDBTransaction} to set
  */
 Repository.prototype.setTransaction = function(tx) {
 	this.transaction = tx;
 };
 
 /**
+ * On a transacted Repository instance, this method returns the underlying 
+ * object store instance (IDBObjectStore). If called on a non-transacted 
+ * Repository (ie one created with {@link module:skate/Database~Database#repository Database.repository()}),
+ * this method will throw an exception.
+ * 
+ * @returns {@link https://developer.mozilla.org/en-US/docs/Web/API/IDBObjectStore IDBObjectStore}
+ */
+Repository.prototype.getStore = function() {
+	if (!this.transaction) {
+		throw "Cannot get object store for a non-transaction repository";
+	}
+	
+	return 
+}
+
+/**
  * Clone the given item and then strip non-persistable fields.
  * 
- * @param {type} item
+ * @param {object} item The object which should be stripped
  * @returns {unresolved}
  */
 Repository.prototype.stripCopy = function(item) {
@@ -3261,7 +3527,7 @@ Repository.prototype.stripCopy = function(item) {
  * Persist the given item into the object store.
  * Return a promise to resolve once the operation is completed.
  * 
- * @param {object} item
+ * @param {object} item The object which should be persisted
  * @returns {Promise} Resolves once the operation is completed.
  */
 Repository.prototype.persist = function(item) {
@@ -3271,9 +3537,9 @@ Repository.prototype.persist = function(item) {
 	item = stripCopy(item);
 
 	return new Promise(function(resolve, reject) {
-		var clone = self.stripCopy(item);
-		self.dehydrate(clone);
 		self.ready.then(function(db) {
+			var clone = self.stripCopy(item);
+			self._dehydrateItem(db, clone);
 			var tx = self.getStoreTransaction(db);
 			var store = tx.objectStore(self.storeName);
 			new IDBRequestGenerator(store.put(clone, clone.id))
@@ -3286,35 +3552,53 @@ Repository.prototype.persist = function(item) {
 	});
 };
 
+/**
+ * Returns a generator which wraps the given 
+ * {@link https://developer.mozilla.org/en-US/docs/Web/API/IDBCursor IDBCursor}, 
+ * hydrating the objects emitted using {@link module:skate/Repository~Repository#hydrate hydrate()}.
+ * 
+ * @param {IDBCursor} cursor The {@link https://developer.mozilla.org/en-US/docs/Web/API/IDBCursor IDBCursor} instance
+ * @returns {Generator} A generator which will emit each of the hydrated items emitted from the given cursor
+ */
 Repository.prototype.hydrateCursor = function(cursor) {
-	return this.hydrateGenerator(new IDBRequestGenerator(cursor));
+	return this.hydrateGenerator(new IDBCursorGenerator(cursor));
 };
 
+/**
+ * Returns a generator which wraps the given generator, hydrating 
+ * the objects emitted using 
+ * {@link module:skate/Repository~Repository#hydrate hydrate()}.
+ * 
+ * @param {Generator} generator The generator whose items should be hydrated
+ * @returns {Generator} A generator which emits the hydrated items
+ */
 Repository.prototype.hydrateGenerator = function(generator) {
 	var self = this;	
 	return new Generator(function(done, reject, emit) {
-		generator
-			.emit(function(item) {
-				self.hydrate(item).then(function(hydratedItem) {
-					emit(hydratedItem);
+		self.ready.then(function(db) {
+			generator
+				.emit(function(item) {
+					self._hydrateItem(db, item).then(function(hydratedItem) {
+						emit(hydratedItem);
+					});
 				});
-			});
-		generator
-			.done(function() {
-				done();
-			});
-		generator
-			.catch(function(err) {
-				reject(err);
-			});
+			generator
+				.done(function() {
+					done();
+				});
+			generator
+				.catch(function(err) {
+					reject(err);
+				});
+		});
 	});
 };
 
 /**
  * Promises to return a single item.
  * 
- * @param {type} id
- * @returns {unresolved}
+ * @param {String} id The ID of the object to fetch
+ * @returns {Promise} A promise to return the item
  */
 Repository.prototype.get = function(id) {
 	var self = this;
@@ -3350,12 +3634,147 @@ Repository.prototype.all = function() {
 };
 
 /**
+ * Retrieve an index object which allows for querying a specific index.
+ * 
+ * @param {String} name The name of the index to retrieve
+ * @returns {Index}
+ */
+Repository.prototype.index = function(name) {
+	var repo = this;
+	return {
+		name: name,
+		count: function() {
+			var self = this;
+			
+			return new Promise(function(resolve, reject) {
+				repo.ready.then(function(db) {
+					var tx = self.getStoreTransaction(db);
+					var store = tx.objectStore(self.storeName);
+					var index = store.index(self.name);
+					
+					new IDBRequestGenerator(index.count())
+						.emit(function(count) {
+							resolve(count);
+						});
+				});
+			});
+		},
+		get: function(key) {
+			var self = this;
+			
+			return new Promise(function(resolve, reject) {
+				
+				repo.ready.then(function(db) {
+					var tx = self.getStoreTransaction(db);
+					var store = tx.objectStore(self.storeName);
+					var index = store.index(self.name);
+					
+					new IDBRequestGenerator(index.get(key))
+						.emit(function(item) {
+							resolve(item);
+						});
+				});
+			});
+		},
+		getKey: function(key) {
+			var self = this;
+			
+			return new Promise(function(resolve, reject) {
+				
+				repo.ready.then(function(db) {
+					var tx = self.getStoreTransaction(db);
+					var store = tx.objectStore(self.storeName);
+					var index = store.index(self.name);
+					
+					new IDBRequestGenerator(index.getKey(key))
+						.emit(function(item) {
+							resolve(item);
+						});
+				});
+			});
+		},
+		cursor: function(range) {
+			var self = this;
+			
+			return new Generator(function(done, reject, emit) {
+				repo.ready.then(function(db) {
+					var tx = self.getStoreTransaction(db);
+					var store = tx.objectStore(self.storeName);
+					var index = store.index(self.name);
+					
+					self.hydrateCursor(index.openCursor(range))
+						.emit(function(item, cancel) {
+							emit(item, cancel);
+						})
+						.catch(function(err) {
+							reject(err);
+						})
+						.done(function() {
+							done();
+						});
+				});
+			});
+		},
+		keyCursor: function(range) {
+			var self = this;
+			
+			return new Generator(function(done, reject, emit) {
+				repo.ready.then(function(db) {
+					var tx = self.getStoreTransaction(db);
+					var store = tx.objectStore(self.storeName);
+					var index = store.index(self.name);
+					
+					self.hydrateCursor(index.openKeyCursor(range))
+						.emit(function(item, cancel) {
+							emit(item, cancel);
+						})
+						.catch(function(err) {
+							reject(err);
+						})
+						.done(function() {
+							done();
+						});
+				});
+			});
+		}
+	};
+};
+
+/**
+ * Open a cursor on the main index of this object store
+ * 
+ * @param {IDBKeyRange} An optional {@link https://developer.mozilla.org/en-US/docs/Web/API/IDBKeyRange IDBKeyRange} 
+ *		instance specifying the range of the query
+ */
+Repository.prototype.cursor = function(range) {
+	var self = this;
+	
+	return new Generator(function(done, reject, emit) {
+		self.ready.then(function(db) {
+			var tx = self.getStoreTransaction(db);
+			var store = tx.objectStore(self.storeName);
+
+			self.hydrateCursor(store.openCursor(range))
+				.emit(function(item, cancel) {
+					emit(item, cancel);
+				})
+				.catch(function(err) {
+					reject(err);
+				})
+				.done(function() {
+					done();
+				});
+		});
+	});
+};
+
+/**
  * Look up many items with many keys at once.
  * Result is a generator which will emit each of the items.
  * TODO: Can we do this using cursors and key ranges?
  * 
- * @param {type} ids
- * @returns {unresolved}
+ * @param {Array} ids An array of IDs which should be looked up
+ * @returns {Generator}
  */
 Repository.prototype.getMany = function(ids, includeNulls) {
 	var self = this;
@@ -3407,8 +3826,9 @@ Repository.prototype.getMany = function(ids, includeNulls) {
  * this query will be stored in memory, then all subsequent
  * keys will filter the result set until the final result is obtained.
  * 
- * @param {type} criteria
- * @returns {unresolved}
+ * @param {object} criteria An object containing key/value pairs to search for. The first 
+ *		key/value pair is used as an index.
+ * @returns {Promise} A promise to return the matching items
  */
 Repository.prototype.find = function(criteria) {
 	var self = this;
@@ -3469,7 +3889,7 @@ Repository.prototype.find = function(criteria) {
 
 								return new Promise(function(resolve, reject) {
 									items = [];
-									new IDBRequestGenerator(index.openCursor(fieldValue))
+									new IDBCursorGenerator(index.openCursor(fieldValue))
 										.emit(function(item) {
 											items.push(item);
 										}).done(function() {
@@ -3481,7 +3901,7 @@ Repository.prototype.find = function(criteria) {
 							} else {
 								return new Promise(function(resolve, reject) {
 									items = [];
-									new IDBRequestGenerator(store.openCursor())
+									new IDBCursorGenerator(store.openCursor())
 										.emit(function(item) {
 											items.push(item);
 										}).done(function() {
@@ -3528,8 +3948,8 @@ Repository.prototype.find = function(criteria) {
 /**
  * Promises to resolve once the item has been deleted.
  * 
- * @param {type} id
- * @returns {undefined}
+ * @param {String} id The ID of the object to delete
+ * @returns {Promise} A promise to resolve once the item has been deleted.
  */
 Repository.prototype.delete = function(id) {
 	var self = this;
@@ -3548,21 +3968,28 @@ Repository.prototype.delete = function(id) {
 };
 
 
-},{"./IDBRequestGenerator.js":11,"./stripCopy.js":17,"es5-generators":2}],13:[function(require,module,exports){
+},{"./IDBCursorGenerator.js":12,"./IDBRequestGenerator.js":13,"./stripCopy.js":19,"es5-generators":2}],15:[function(require,module,exports){
 /**
- * / SKATE /
- * / AUTHOR: William Lahti <wilahti@gmail.com>
- * / (C) 2015 William Lahti
+ * Module providing the SchemaBuilder class.
  * 
- * SchemaBuilder class
- * 
+ * @module skate/SchemaBuilder 
+ * @author William Lahti <wilahti@gmail.com>
+ * @copyright (C) 2015 William Lahti 
  */
 
 var transact = require('./transact.js');
 var StoreBuilder = require('./StoreBuilder.js');
 
-function SchemaBuilder() {
-	this.stores = [];
+/**
+ * @class
+ * @param {String} name The name of the IndexedDB database being defined
+ * @param {object} registry An object with a prepareRepository() method, or NULL
+ * @returns {SchemaBuilder}
+ */
+function SchemaBuilder(name, registry) {
+	this.name = name;
+	this.stores = {};
+	this.registry = registry;
 }; module.exports = SchemaBuilder;
 
 /**
@@ -3593,7 +4020,7 @@ SchemaBuilder.prototype.disconnectDatabase = function() {
 /**
  * Create a new store
  * 
- * @param {type} name
+ * @param {String} name
  * @returns {StoreBuilder}
  */
 SchemaBuilder.prototype.createStore = function(name) {
@@ -3609,8 +4036,8 @@ SchemaBuilder.prototype.createStore = function(name) {
 /**
  * Get an existing store so that you can modify it.
  * 
- * @param {type} name
- * @returns {Array}
+ * @param {String} name
+ * @returns {StoreBuilder}
  */
 SchemaBuilder.prototype.getStore = function(name) {
 	if (!this.stores[name]) {
@@ -3626,8 +4053,8 @@ SchemaBuilder.prototype.getStore = function(name) {
 /**
  * Migrate data imperatively. Only calls back if a migration is in progress.
  * 
- * @param {type} callback
- * @returns {SchemaBuilder.prototype}
+ * @param {function} callback
+ * @returns {SchemaBuilder}
  */
 SchemaBuilder.prototype.run = function(callback) {
 	if (this.transaction && this.db) {
@@ -3636,25 +4063,57 @@ SchemaBuilder.prototype.run = function(callback) {
 		var params = metadata.params;
 		var self = this;
 		
-		transact(this.db, this.transaction, fn, 'readwrite');
+		transact(this.db, this.transaction, function(db, name, tx) {
+			var repo = new Repository(db, name, tx);
+			registry.prepareRepository(repo);
+			return repo;
+		}, fn, 'readwrite');
 	}
 	return this;
 };
 
-},{"./StoreBuilder.js":14,"./transact.js":18}],14:[function(require,module,exports){
 /**
- * / SKATE /
- * / AUTHOR: William Lahti <wilahti@gmail.com>
- * / (C) 2015 William Lahti
- * 
+ * Output the current schema to the console for debugging.
+ */
+SchemaBuilder.prototype.debug = function() {
+	console.log('Schema for database '+this.name);
+	
+	for (var name in this.stores) {
+		var store = this.stores[name];
+		console.log('store '+name);
+		console.log('- pkey: '+store.store.primaryKey);
+		
+		for (var fieldName in store.store.fields) {
+			var field = store.store.fields[fieldName];
+			console.log(' - '+fieldName);
+		}
+	}
+	
+};
+
+},{"./StoreBuilder.js":16,"./transact.js":20}],16:[function(require,module,exports){
+/**
+ * @author William Lahti <wilahti@gmail.com>
+ * @copyright (C) 2015 William Lahti
+ * @module skate/StoreBuilder
  */
 
+/**
+ * Represents a data store being built (or reflected upon)
+ * 
+ * @class
+ * @param {SchemaBuilder} builder The SchemaBuilder instance which owns this StoreBuilder
+ * @param {String} name The name of the object store being built
+ * @param {String} id The name of the field which will represent the object store's primary key
+ * @returns {StoreBuilder} Allows for describing (and optionally applying chanages to) the schema of 
+ *			an IndexedDB object store.
+ */
 function StoreBuilder(builder, name, id) {
 	this.builder = builder;
 	this.store = {
 		primaryKey: id,
 		name: name,
-		fields: [],
+		fields: {},
 	};
 	
 	if (builder) {
@@ -3666,11 +4125,61 @@ function StoreBuilder(builder, name, id) {
 	}
 }; module.exports = StoreBuilder;
 
+/**
+ * Run an imperative migration block. The callback will only be executed
+ * if the builder is in live (modifying) mode. The transact injector is used
+ * to pass the dependencies which the function definition declares.
+ * 
+ * @param {function} callback The function to call 
+ */
 StoreBuilder.prototype.run = function(callback) {
 	if (this.builder)
 		return this.builder.run(callback);
 };
 
+/**
+ * Get all fields which are declared as foreign.
+ * 
+ * @returns {Array} An array of the matching fields.
+ */
+StoreBuilder.prototype.getForeignFields = function() {
+	var items = [];
+	
+	for (var i = 0, max = this.store.fields.length; i < max; ++i) {
+		var field = this.store.fields[i];
+		
+		if (field.references) {
+			items.add(field);
+		}
+	}
+	
+	return items;
+}
+
+/**
+ * Get all fields which are declared as oneToMany().
+ * 
+ * @returns {Array} An array of the matching fields.
+ */
+StoreBuilder.prototype.getOneToManyFields = function() {
+	var items = [];
+	
+	for (var i = 0, max = this.store.fields.length; i < max; ++i) {
+		var field = this.store.fields[i];
+		
+		if (field.references) {
+			items.add(field);
+		}
+	}
+	
+	return items;
+}
+		
+/**
+ * Create a new object store.
+ * 
+ * @param {String} name The name of the store to create
+ */
 StoreBuilder.prototype.createStore = function(name) {
 	if (!this.builder) {
 		throw {
@@ -3682,6 +4191,11 @@ StoreBuilder.prototype.createStore = function(name) {
 	return this.builder.createStore(name);
 };
 
+/**
+ * Retrieve an existing object store
+ * 
+ * @param {String} name The name of the store to retrieve
+ */
 StoreBuilder.prototype.getStore = function(name) {
 	if (!this.builder) {
 		throw {
@@ -3693,6 +4207,11 @@ StoreBuilder.prototype.getStore = function(name) {
 	return this.builder.getStore(name);
 };
 
+/**
+ * Retrieve an existing field
+ * 
+ * @param {String} name The name of the field to retrieve
+ */
 StoreBuilder.prototype.getField = function(name) {
 	if (!this.store.fields[name]) {
 		throw {
@@ -3704,16 +4223,32 @@ StoreBuilder.prototype.getField = function(name) {
 	return this.store.fields[name];
 };
 
+/**
+ * Add a new key field
+ * 
+ * @param {String} name The name of the new field
+ */
 StoreBuilder.prototype.key = function(name) {
 	this.addField(name, {key: true, index: name, name: name, unique: false});
 	return this;
 };
 
+/**
+ * Add a new generic field 
+ * 
+ * @param {String} name The name of the new field
+ */
 StoreBuilder.prototype.field = function(name) {
 	this.addField(name, {key: false, index: name, name: name, unique: false});
 	return this;
 };
 
+/**
+ * Allows for creating any type of field with a single API.
+ * 
+ * @param {String} name The name of the new field
+ * @param {String} data The metadata to save with the field definition
+ */
 StoreBuilder.prototype.addField = function(name, data) {
 	if (this.store.fields[name]) {
 		throw {
@@ -3736,11 +4271,21 @@ StoreBuilder.prototype.addField = function(name, data) {
 	return this;
 };
 
+/**
+ * Remove the given field
+ * 
+ * @param {String} name The name of the field to remove
+ */
 StoreBuilder.prototype.remove = function(name) {
 	this.removeField(name);
 	return this;
 }
 
+/**
+ * Alias for remove()
+ * 
+ * @param {String} name The name of the field to remove
+ */
 StoreBuilder.prototype.removeField = function(name) {
 	delete this.store.fields[name];
 	
@@ -3753,22 +4298,107 @@ StoreBuilder.prototype.removeField = function(name) {
 	return this;
 }
 
+/**
+ * Add the primary key field to this store
+ * 
+ * @param {String} name The name of the new field
+ */
 StoreBuilder.prototype.id = function(name) {
 	this.addField(name, {key: true, index: name, name: name, unique: true});
 	return this;
 };
 
+/**
+ * Adds a foreign key field to this store. This entity controls the relationship.
+ * The inverse of this relation is oneToMany().
+ * 
+ * @param {String} name The name of the new field
+ * @param {String} ref The field which this foreign field references (ie apples.id)
+ */
 StoreBuilder.prototype.foreign = function(name, ref) {
-	this.addField(name, {key: true, index: name, name: name, unique: false, references: ref});
+	this.addField(name, {
+		key: true, 
+		index: name, 
+		name: name, 
+		unique: false, 
+		references: ref,
+		referenceType: 'foreign'
+	});
+	
 	return this;
 };
 
+/**
+ * Adds a oneToMany field to this store. The association is maintained by the foreign 
+ * entity, and is thus owned there. This is the inverse of a foreign() assocation.
+ * 
+ * ```js
+ *     groupsStore.oneToMany(
+ *			'users',			// The local field
+ *			'users.groupID',	// The field on the foreign object store to link to
+ *	   )
+ * ```
+ * @param {String} name The name of the new field
+ * @param {String} ref The field which this field references (ie apples.id)
+ */
+StoreBuilder.prototype.oneToMany = function(name, ref) {
+	this.addField(name, {
+		key: true, 
+		index: name, 
+		name: name, 
+		unique: false, 
+		references: ref,
+		referenceType: 'oneToMany'
+	});
+	return this;
+};
+
+/**
+ * Adds a manyToMany field to this store. 
+ * It is many-to-many in the sense that there may be many 
+ * hosting entities which reference many foreign entities.
+ * 
+ * No linking table is used here, instead the declaring 
+ * object holds an array of the items. 
+ * 
+ * Thus there is no inverse field to be placed on the foreign entity, because querying for items
+ * which reference the other end of the association would be an unavoidable O(N) operation. 
+ * Instead, if you need easy two-way queryability, use an explicit linking object store with 
+ * foreign() fields on the linking object, so that it is easy to look up associations in both 
+ * directions. You can then use regular oneToMany associations on each of the linked entities
+ * to provide traversability from either side.
+ * 
+ * ```js
+ *     groupsStore.manyToMany(
+ *			'users',			// The local field being described, will store as users_ids
+ *			'users.id'			// The foreign object store and the key which should be used
+ *	   )
+ * ```
+ * @param {String} name The name of the new field
+ * @param {String} ref The field which this field references (ie apples.id)
+ */
+StoreBuilder.prototype.manyToMany = function(name, ref) {
+	this.addField(name, {
+		key: true, 
+		index: name, 
+		name: name, 
+		unique: false, 
+		references: ref,
+		referenceType: 'manyToMany'
+	});
+	return this;
+};
+
+/**
+ * Adds a unique key field to this store
+ * @param {String} name The name of the new field
+ */
 StoreBuilder.prototype.unique = function(name) {
 	this.addField(name, {key: true, index: name, name: name, unique: true});
 	return this;
 };
 
-},{}],15:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 
 // Standardize any prefixed implementations of IndexedDB
 
@@ -3779,12 +4409,27 @@ if (typeof window !== 'undefined') {
 	window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
 	window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
 }
-},{}],16:[function(require,module,exports){
-/**
- * / SKATE /
- * / AUTHOR: William Lahti <wilahti@gmail.com>
- * / (C) 2015 William Lahti
+},{}],18:[function(require,module,exports){
+/**  
+ * Skate is a high-level ORM framework on top of 
+ * HTML5 IndexedDB. 
  * 
+ * It can be used to dramatically simplify code which 
+ * uses IndexedDB to persist Javascript objects into the user's
+ * browser. 
+ * 
+ * ### Skate is:
+ * - A powerful migration management system which doubles as a 
+ *   description of the object schema for powering Skate's ORM features
+ * - An injection-driven way to express IndexedDB transactions
+ *   which dramatically simplifies using IndexedDB.
+ * - A rich repository layer that builds upon the capabilities of
+ *   IndexedDB object stores by providing more advanced query methods 
+ *   and a unified, terse way to consume the results of IndexedDB requests
+ *   
+ * @author William Lahti <wilahti@gmail.com>
+ * @copyright (C) 2015 William Lahti
+ * @module skate
  */
 
 
@@ -3795,21 +4440,19 @@ var StoreBuilder = require('./StoreBuilder.js');
 var Repository = require('./Repository.js');
 var transact = require('./transact.js');
 var Generator = require('es5-generators');
-
+var Database = require('./Database.js');
 // API
 
-var skate = {
-	version: '0.1',
-	
+/**
+ * @alias module:skate
+ * @type skate
+ */
+var skate = { 
 	/**
-	 * Exported classes
-	 */
-	classes: {
-		Repository: Repository,
-		SchemaBuilder: SchemaBuilder,
-		StoreBuilder: StoreBuilder,
-		Generator: Generator
-	},
+	 * Contains the version of the Skate library.
+	 * @type String
+	 */ 
+	version: '0.1',
 	
 	/**
 	 * Create a new repository object for the given database and object store.
@@ -3820,44 +4463,6 @@ var skate = {
 	 */
 	repository: function(db, storeName) {
 		return new Repository(db, storeName);
-	},
-	
-	/**
-	 * Start a Skate transaction on the given DB with the given function.
-	 * 
-	 * A dependency injection process similar to Angular's is done, 
-	 * except the injector is capable of providing transaction-related services
-	 * instead of user-interface ones.
-	 * 
-	 * The following services can be injected into the function you pass.
-	 * - db           - the current IDBDatabase 
-	 * - transaction  - the current IDBTransaction
-	 * - transact     - A function bound to the database which allows for starting
-	 *                  additional independent transactions
-	 * - <name>       - SkateRepository for the given IDB object store, by name
-	 * - $<name>      - IDBObjectStore instance for the given store.
-	 *                  Note that to do this you must use declarative (array-style)
-	 *                  injection.
-	 * 
-	 * The IDB transaction is created to involve all of the stores you specify within
-	 * your injection function. For instance, if you load the 'cars' and 'bikes' 
-	 * repositories, as in:
-	 *
-	 *     skate.transact(db, 'readwrite', function(transaction, cars, bikes) { })
-	 * 
-	 * Then the transaction passed into the function will be created to allow the cars and bikes
-	 * object stores, as if you had done the following stock IndexedDB call:
-	 * 
-	 *     var tx = db.transaction(['cars', 'bikes'], 'readwrite');
-	 *     var cars = tx.objectStore('cars');
-	 *     var bikes = tx.objectStore('bikes');
-	 * 
-	 * @param {type} db
-	 * @param {type} fn
-	 * @returns {undefined}
-	 */
-	transact: function(db, mode, fn) {
-		return transact(db, null, fn, mode);
 	},
 	
 	/**
@@ -3891,9 +4496,10 @@ var skate = {
 	 * Because of this, you should not attempt to do anything other than modify the 
 	 * schema using the SchemaBuilder instance you are given when you are outside of a run()
 	 * block!
-	 * 
+	 *  
 	 * Example:
 	 * 
+	 * ```js
 	 * skate.open('apples', {
 	 *		migrations: {
 	 *			'1': function(schema) {
@@ -3944,36 +4550,33 @@ var skate = {
 	 *			});
 	 *		})
 	 * });
+	 * ```
 	 * 
 	 * @param string dbName
-	 * @param {} options
+	 * @param object options
 	 * @returns {Promise|skate.open.ready}
 	 */
 	open: function(indexedDB, dbName, options) {
-		
 		// Process options
 		
 		var version = 1;
 		if (options.version)
 			version = options.version;
 		
-		var item = {
-			name: dbName,
-			options: options,
-			ready: null,
-		};
-		
 		// Ready promise
 		
 		var resolveReady;
 		var rejectReady;
+		
 		var ready = new Promise(function(resolve, reject) {
 			resolveReady = resolve;
 			rejectReady = reject;
 		});
 		
-		var schema = new SchemaBuilder();
-	
+		var schema = new SchemaBuilder(dbName, this);
+		var db = new Database(schema, null);
+		var migrated = false;
+		
 		// Open DB request
 		
 		var DBOpenRequest = indexedDB.open(dbName, version);
@@ -3984,7 +4587,17 @@ var skate = {
 		};
 
 		DBOpenRequest.onsuccess = function (event) {
-			resolveReady(DBOpenRequest.result);
+			var idb = event.target.result;
+			db.setIDB(idb);
+			 
+			// If we didn't migrate, populate the schema as necessary
+			if (!migrated && options.migrations) {
+				for (var v = 1; v <= version; ++v) {
+					options.migrations[v](schema);
+				}
+			}
+			
+			resolveReady(db);
 		};
 
 		// Construct the final schema
@@ -3994,20 +4607,31 @@ var skate = {
 		// window.indexedDB.open line above
 		//it is only implemented in recent browsers
 		DBOpenRequest.onupgradeneeded = function (event) {
-			var db = event.target.result;
+			migrated = true;
+			var idb = event.target.result;
+			
+			db.setIDB(idb);
+			schema.setDatabase(db, null);
+			
 			var oldVersion = event.oldVersion;
 			var newVersion = event.newVersion;
 			
 			//console.log('[skate] Schema update required from '+oldVersion+' to '+newVersion);
 			//console.log('[skate] Loading schema history...');
+
+			if (!options.migrations) {
+				throw "Cowardly refusing to upgrade when no migrations are specified.";
+			}
 			
 			for (var version = 1; version <= oldVersion; ++version) {
 				//console.log(' - Loading schema version #'+version+' (model-only)');
-				options.migrations[version](schema);
+				if (options.migrations[version])
+					options.migrations[version](schema);
 			}
 			
 			schema.setDatabase(db, event.currentTarget.transaction);
-			db.onerror = function (event) {
+			
+			idb.onerror = function (event) {
 				console.error('[skate] Error while building database schema');
 				console.log(event);
 			};
@@ -4017,18 +4641,18 @@ var skate = {
 				//console.log('[skate] - Applying schema version #'+version+' (live)');
 				options.migrations[version](schema);
 			}
-			
+			 
 			schema.disconnectDatabase();
 			//console.log('Schema updated successfully.');
 
-			db.onerror = null;
+			idb.onerror = null;
 		};
 		
 		return ready;
 	}
 }; module.exports = skate;
 
-},{"./Repository.js":12,"./SchemaBuilder.js":13,"./StoreBuilder.js":14,"./idbStandardize.js":15,"./transact.js":18,"es5-generators":2}],17:[function(require,module,exports){
+},{"./Database.js":11,"./Repository.js":14,"./SchemaBuilder.js":15,"./StoreBuilder.js":16,"./idbStandardize.js":17,"./transact.js":20,"es5-generators":2}],19:[function(require,module,exports){
 var deepcopy = require('deepcopy');
 
 function strip(obj) {
@@ -4063,22 +4687,33 @@ function stripCopy(obj) {
 };
 
 module.exports = stripCopy;
-},{"deepcopy":1}],18:[function(require,module,exports){
+},{"deepcopy":1}],20:[function(require,module,exports){
 /**
- * / SKATE /
- * / AUTHOR: William Lahti <wilahti@gmail.com>
- * / (C) 2015 William Lahti
  * 
- * Common implementation of transact()
+ * transact() is Skate's core implementation of IndexedDB transactional injection,
+ * which is the process of introspecting a function's parameters, creating a 
+ * transaction to suit them, and then calling the function, passing objects to the 
+ * function as it requested via naming.
  * 
- */
-
+ * This is function injection in a way popularized by the Angular.js framework.
+ * transact() is used internally within Skate in many places, including Database.transact(),
+ * SchemaBuilder.run() and Repository.hydrate().
+ *   
+ * @module skate/transact
+ * @author William Lahti <wilahti@gmail.com>
+ * @copyright (C) 2015 William Lahti    
+ */   
+ 
 var annotateFn = require('./utils/annotateFn.js');
 var injector = require('./utils/lightinjector.js');
 var Repository = require('./Repository.js');
 
+/**  
+ * @class
+ * @param {String} message The message for the exception
+ */
 function SkateUnknownStoreException(message) {
-	this.message = message;
+	this.message = message; 
 };
 
 /**
@@ -4087,19 +4722,37 @@ function SkateUnknownStoreException(message) {
  * If no transaction is passed, one is automatically created based on the repositories requested
  * by the given function.
  * 
- * @param {type} fn
- * @param {type} mode
- * @returns {undefined}
+ * @param {IDBTransaction|function} transactionOrFactory The transaction to use, 
+ *		or a function to construct a transaction from an array of object store names and a mode
+ *		(ie function(storeNames, mode))
+ * @param {function} repositoryFactory A function which creates a repository when given a db, name, and transaction
+ *		(ie function(db, name, tx)) or null to use the default factory
+ * @param {function} fn The function which should be introspected and run
+ * @param {String} mode The transaction mode ('readonly' or 'readwrite')
+ * @param {String} extraInjectables An object containing extra services which should be made available for injection
+ *		in addition to the standard ones
+ * 
+ * @returns {Promise} A promise to resolve once the transaction has fully completed.
  */
-function transact(db, transactionOrFactory, fn, mode) {
+function transact(db, transactionOrFactory, repositoryFactory, fn, mode, extraInjectables) {
 	var mode = mode || 'readonly';
+	var idb = db.idb();
 	
-	// Use LightInjector to inject the parameters dynamically.
-	// We'll use this to map in the database, a transaction,
-	// and repositories for any specifically named object stores.
+	if (!repositoryFactory) {
+		repositoryFactory = function(db, name, tx) {
+			return new Repository(db, name, tx);
+		};
+	}
 	
-	injector({
-		db: db,
+	var injectables = {
+		$db: db,
+		$$db: db.idb(),
+		$schema: db.getSchema(),
+		$transact: function() {
+			return function(mode, fn) {
+				transact(db, transactionOrFactory, repositoryFactory, fn, mode);
+			};
+		},
 		
 		/**
 		 * Traverse through the parameters given and decorate the map
@@ -4107,9 +4760,8 @@ function transact(db, transactionOrFactory, fn, mode) {
 		 * later maps parameters to injection assets.
 		 * 
 		 * @param {Array} params
-		 * @returns
 		 */
-		$populate: function(params) {
+		$populate$: function(params) {
 			var storeNames = [];
 			for (var i = 0, max = params.length; i < max; ++i) {
 				if (params[i] == 'db')
@@ -4119,11 +4771,11 @@ function transact(db, transactionOrFactory, fn, mode) {
 			}
 
 			if (transactionOrFactory == null) {
-				this.transaction = db.transaction(storeNames, mode);
+				this.$transaction = idb.transaction(storeNames, mode);
 			} else if (typeof transactionOrFactory === 'function') {
-				this.transaction = transactionOrFactory(storeNames, mode);
+				this.$transaction = transactionOrFactory(storeNames, mode);
 			} else {
-				this.transaction = transactionOrFactory;
+				this.$transaction = transactionOrFactory;
 			}
 			
 			var hydratedParams = [];
@@ -4133,6 +4785,26 @@ function transact(db, transactionOrFactory, fn, mode) {
 				// Skip predefined stuff
 				if (this[param])
 					continue;
+				
+				// Are we a promise?
+				if (param == 'resolve' || param == 'reject') {
+					
+					if (!promise) {
+						promise = new Promise(function(resolve, reject) {
+							promiseResolve = resolve;
+							promiseReject = reject;
+						});
+					}
+					
+					if (param == 'resolve')
+						this.resolve = promiseResolve;
+					
+					if (param == 'reject')
+						this.reject = promiseReject;
+					
+					continue;
+			
+				}
 				
 				var storeOnly = false;
 				var storeName = param;
@@ -4144,7 +4816,7 @@ function transact(db, transactionOrFactory, fn, mode) {
 				
 				var store;
 				try {
-					store = this.transaction.objectStore(storeName);
+					store = this.$transaction.objectStore(storeName);
 				} catch (e) {
 					throw new SkateUnknownStoreException('No such object store '+param);
 				}
@@ -4152,25 +4824,42 @@ function transact(db, transactionOrFactory, fn, mode) {
 				if (storeOnly) {
 					this[param] = store;
 				} else {
-					this[param] = new Repository(db, param, this.transaction);
+					this[param] = repositoryFactory(db, param, this.$transaction);
 				}
 			}
 		}
-	}, null, fn);
+	};
+	
+	if (extraInjectables) {
+		for (var name in extraInjectables) {
+			if (injectables[name])
+				continue;
+			injectables[name] = extraInjectables[name];
+		}
+	}
+	
+	// Use LightInjector to inject the parameters dynamically.
+	// We'll use this to map in the database, a transaction,
+	// and repositories for any specifically named object stores.
+	
+	var result = injector(injectables, null, fn);
+	
+	if (result && result.constructor && result.constructor.name == 'Promise') {
+		return result;
+	}
+	
+	return Promise.resolve(result);
 };
 
 module.exports = transact;
-},{"./Repository.js":12,"./utils/annotateFn.js":19,"./utils/lightinjector.js":20}],19:[function(require,module,exports){
+},{"./Repository.js":14,"./utils/annotateFn.js":21,"./utils/lightinjector.js":22}],21:[function(require,module,exports){
 /**
- * 
- * / ANNOTATEFN
- * /
- * / AUTHOR: William Lahti
- * / (C) 2015 William Lahti
- *
  * A light-weight Javascript function reflector, similar to the one found in Angular.js.
  * Also supports array-style annotations for mangler-friendly code.
  *
+ * @module skate/utils/annotateFn
+ * @author William Lahti <wilahti@gmail.com>
+ * @copyright (C) 2015 William Lahti  
  */
 
 
@@ -4179,6 +4868,12 @@ var FN_ARG_SPLIT = /,/;
 var FN_ARG = /^\s*(_?)(\S+?)\1\s*$/;
 var STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
 
+/**
+ * 
+ * @param {type} fn
+ * @returns {object} An object containing 'params' and 'fn'. 'params' is an array of strings (parameter names). 'fn'
+ *		will be the function that should be called.
+ */
 function annotateFn(fn) {
 
 	if (typeof fn === 'object' && fn.length !== undefined) {
@@ -4192,11 +4887,22 @@ function annotateFn(fn) {
 		};
 	}
 
+	if (typeof fn === 'string') {
+		console.log('A string was passed to annotateFn()');
+		throw 'A string was passed to annotateFn()';
+	}
+
 	var $params;
 	if (!($params = fn.$params)) {
 		$params = [];
 		var fnText = fn.toString().replace(STRIP_COMMENTS, '');
 		var argDecl = fnText.match(FN_ARGS);
+		
+		if (!argDecl) {
+			console.log("Failed to parse function declaration: "+fnText);
+			throw "Failed to parse function declaration: "+fnText;
+		}
+		
 		var parts = argDecl[1].split(FN_ARG_SPLIT);
 
 		for (var i = 0, max = parts.length; i < max; ++i) {
@@ -4214,16 +4920,13 @@ function annotateFn(fn) {
 		params: fn.$params
 	};
 }; module.exports = annotateFn;
-},{}],20:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 /**
- * 
- * / LIGHTINJECTOR
- * /
- * / AUTHOR: William Lahti
- * / (C) 2015 William Lahti
- *
  * A light-weight function dependency injector, similar to the one found in Angular.js
  *
+ * @module skate/utils/lightinjector
+ * @author William Lahti <wilahti@gmail.com>
+ * @copyright (C) 2015 William Lahti  
  */
 
 var annotateFn = require('./annotateFn.js');
@@ -4249,18 +4952,28 @@ function inject(map, self, fn) {
 	
 	var args = [];
 	
-	if (map.$populate) {
-		map.$populate(params);
+	if (map.$populate$) {
+		map.$populate$(params);
 	}
 	
 	for (var i = 0, max = params.length; i < max; ++i) {
 		var param = params[i];
 		var factory = map[param];
 		
+		// We want to be able to inject services with names containing $ at the beginning, middle
+		// or end as necessary, so we do not, as a matter of policy, inject any service that both 
+		// starts and ends with '$' such as '$populate$' or '$any$'. Naturally the injectables 
+		// object can make productive use of this fact to have 'private' methods.
+		
+		if (param.match(/\$.*\$$/)) {
+			args.push(null);
+			continue;
+		}
+		
 		if (typeof factory === 'undefined') {
 			
-			if (map.$any) {
-				factory = map.$any;
+			if (map.$any$) {
+				factory = map.$any$;
 			} else {
 				throw new InjectionException('No service factory for injected parameter '+param+' (Parameter must be a valid service)');
 			}	
@@ -4279,4 +4992,4 @@ function inject(map, self, fn) {
 
 inject.InjectionException = InjectionException;
 module.exports = inject;
-},{"./annotateFn.js":19}]},{},[16]);
+},{"./annotateFn.js":21}]},{},[18]);
