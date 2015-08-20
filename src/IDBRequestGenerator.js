@@ -1,4 +1,18 @@
+/**
+ * Module providing a class that converts an IDBRequest into a
+ * Generator.
+ *
+ * @module skate/IDBRequestGenerator
+ * @author William Lahti <wilahti@gmail.com>
+ * @copyright (C) 2015 William Lahti  
+ */
 
+/**
+ * Converts an IDBRequest into a Generator
+ * @class
+ * @param {IDBRequest} request
+ * @returns {Generator}
+ */
 function IDBRequestGenerator(request) {
 	var cancelled = false;
 	return new Generator(function(done, reject, emit) {

@@ -4,19 +4,21 @@ Provides a high-level API on top of IndexedDB.
 
 ### Installation
 
-Node (server-side):
+Node (server-side) and Browserify (client-side): 
 ```sh
-npm install skate
+npm install skate 
 ```
+ 
+Regardless of whether you are in Node or Browserify, you can use 
+```require('skate')``` to obtain the Skate API.
 
-Now use ```require('skate')``` to obtain the Skate API.
-
-Bower (client-side, browser):
+Bower (client-side): 
 ```sh
 bower install skate
 ```
 
-Now include ```bower_components/skate/dist/skate.min.js``` either directly on your page, within your Javascript build step, or using ```require('./bower_components/skate/dist/skate.min.js')``` if you are using Browserify.
+Now include ```bower_components/skate/dist/skate.min.js``` either directly on your page or within your 
+Javascript build step.
 
 Non-minified dist versions are also included.
 
@@ -42,7 +44,7 @@ skate.open(indexedDB, 'mydb', {
 	        .field('history');
       },
       "2": function(schema) {
-        schema.getSTore('apples')
+        schema.getStore('apples')
             .key('size');
       }
    }

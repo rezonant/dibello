@@ -1,12 +1,9 @@
 /**
- * 
- * / LIGHTINJECTOR
- * /
- * / AUTHOR: William Lahti
- * / (C) 2015 William Lahti
- *
  * A light-weight function dependency injector, similar to the one found in Angular.js
  *
+ * @module skate/utils/lightinjector
+ * @author William Lahti <wilahti@gmail.com>
+ * @copyright (C) 2015 William Lahti  
  */
 
 var annotateFn = require('./annotateFn.js');

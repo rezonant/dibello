@@ -1,13 +1,10 @@
 /**
- * 
- * / ANNOTATEFN
- * /
- * / AUTHOR: William Lahti
- * / (C) 2015 William Lahti
- *
  * A light-weight Javascript function reflector, similar to the one found in Angular.js.
  * Also supports array-style annotations for mangler-friendly code.
  *
+ * @module skate/utils/annotateFn
+ * @author William Lahti <wilahti@gmail.com>
+ * @copyright (C) 2015 William Lahti  
  */
 
 
@@ -16,6 +13,12 @@ var FN_ARG_SPLIT = /,/;
 var FN_ARG = /^\s*(_?)(\S+?)\1\s*$/;
 var STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
 
+/**
+ * 
+ * @param {type} fn
+ * @returns {object} An object containing 'params' and 'fn'. 'params' is an array of strings (parameter names). 'fn'
+ *		will be the function that should be called.
+ */
 function annotateFn(fn) {
 
 	if (typeof fn === 'object' && fn.length !== undefined) {

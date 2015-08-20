@@ -1,10 +1,11 @@
 /**
- * / SKATE /
- * / AUTHOR: William Lahti <wilahti@gmail.com>
- * / (C) 2015 William Lahti
+ * Module  which is providing a class which provides a high-level API on top
+ * of an IndexedDB object store (IDBObjectStore)
  * 
- * Repository class
- * 
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/IDBObjectStore MDN Reference - IDBObjectStore}
+ * @module skate/Repository 
+ * @author William Lahti <wilahti@gmail.com>
+ * @copyright (C) 2015 William Lahti 
  */
 
 var stripCopy = require('./stripCopy.js');
@@ -12,6 +13,17 @@ var Generator = require('es5-generators');
 var IDBRequestGenerator = require('./IDBRequestGenerator.js');
 var IDBCursorGenerator = require('./IDBCursorGenerator.js');
 
+/**
+ * 
+ * Provides a high-level API on top of an IndexedDB 
+ * object store (IDBObjectStore)
+ * 
+ * @class Repository
+ * @param {Database} db The database to associate the repository with
+ * @param {String} storeName The name of the store which this repository will represent
+ * @param {IDBTransaction} transaction The optional IDB transaction to associate with the new repository
+ * @returns {Repository}
+ */
 function Repository(db, storeName, transaction) {
 	var self = this;
 	
@@ -26,20 +38,62 @@ function Repository(db, storeName, transaction) {
 	
 }; module.exports = Repository;
 
-Repository.prototype.dehydrate = function(item) {};
-Repository.prototype.hydrate = function(item) { return Promise.resolve(item); };
-
-Repository.prototype.getStoreTransaction = function(db) {
-	if (this.transaction)
-		return this.transaction;
-	return db.transaction([this.storeName], 'readwrite');
-}
-
-if (window)
+if (typeof window !== 'undefined')
 	window.SkateRepository = Repository;
 
+/**
+ * Immediately dehydrates (flattens) the properties of the given object.
+ * This method can be overridden for a specific repository by using skate/Database.configRepository()
+ * 
+ * @param {type} item
+ * @see {@link module:skate/Database~Database#configRepository Database.configRepository}
+ * @see {@link module:skate/Database~Database#transact Database.transact}
+ * @returns {undefined}
+ */
+Repository.prototype.dehydrate = function(item) {};
+
+/** 
+ * Returns a promise to hydrate the properties of a given object.
+ * This function is called using skate/Database.transact(), so you can request
+ * repositories or other dependencies using Skate's function injection mechanism.
+ * 
+ * @see {@link module:skate/Database~Database#transact Database.transact} 
+ * @param {type} item In addition to the standard transact services, you may also inject 'item' which is the item being hydrated
+ * @returns {unresolved}
+ */
+Repository.prototype.hydrate = function(item) { return Promise.resolve(item); };
+
+/**
+ * Get an IndexedDB transaction (IDBTransaction) for only the store represented by 
+ * this repository. The resulting transaction cannot be used to access any other store.
+ * 
+ * @param {Database} idb The IDBDatabase instance
+ * @returns {type|IDBTransaction}
+ */
+Repository.prototype.getStoreTransaction = function(idb) {
+	if (this.transaction)
+		return this.transaction;
+	return idb.transaction([this.storeName], 'readwrite');
+}
+
+/*-*
+ * Return a promise to hydrate the given item by 
+ * transacting this repository's .hydrate() method.
+ * 
+ * @private
+ * @param {Database} db The {@link module:skate/Database~Database Database} instance
+ * @param {object} item The item being hydrated
+ */
 Repository.prototype._hydrateItem = function(db, item) {
-	var self = this;
+	var self = this; 
+	 
+	// Standard hydration
+	
+	var schema = db.getSchema();
+	var store = schema.getStore(self.storeName);
+	var foreignFields = store.getForeignFields();
+	
+	
 	return db._transact(db, null, function(db, name, transaction) {
 		return db.repository(name, transaction);
 	}, self.hydrate, 'readonly', {
@@ -47,6 +101,13 @@ Repository.prototype._hydrateItem = function(db, item) {
 	});
 };
 
+/*-*
+ * Dehydrate the given item.
+ * 
+ * @param {type} db
+ * @param {type} item
+ * @returns {unresolved}
+ */
 Repository.prototype._dehydrateItem = function(db, item) {
 	this.dehydrate(db, item);
 	
@@ -54,8 +115,12 @@ Repository.prototype._dehydrateItem = function(db, item) {
 	
 	return item;
 };
- 
-Repository.prototype.generateGuid = function() {
+
+/**
+ * Generate a GUID which may be used as the ID for a new object.
+ * @returns {String} The new GUID
+ */
+Repository.generateGuid = function() {
 	var result, i, j;
 	result = '';
 	for (j = 0; j < 32; j++) {
@@ -65,9 +130,7 @@ Repository.prototype.generateGuid = function() {
 		result = result + i;
 	}
 	return result;
-};
-
-Repository.generateGuid = Repository.prototype.generateGuid();
+}; Repository.prototype.generateGuid = Repository.generateGuid;
 
 /**
  * Set the transaction on this repository object so that future operations 
@@ -75,22 +138,32 @@ Repository.generateGuid = Repository.prototype.generateGuid();
  * calls to ensure that a new Repository will use the newly created transaction
  * (amongst other uses).
  * 
- * @param {IDBTransaction} tx
+ * @param {IDBTransaction} tx The {@link https://developer.mozilla.org/en-US/docs/Web/API/IDBTransaction IDBTransaction} to set
  */
 Repository.prototype.setTransaction = function(tx) {
 	this.transaction = tx;
 };
 
+/**
+ * On a transacted Repository instance, this method returns the underlying 
+ * object store instance (IDBObjectStore). If called on a non-transacted 
+ * Repository (ie one created with {@link module:skate/Database~Database#repository Database.repository()}),
+ * this method will throw an exception.
+ * 
+ * @returns {@link https://developer.mozilla.org/en-US/docs/Web/API/IDBObjectStore IDBObjectStore}
+ */
 Repository.prototype.getStore = function() {
 	if (!this.transaction) {
 		throw "Cannot get object store for a non-transaction repository";
 	}
+	
+	return 
 }
 
 /**
  * Clone the given item and then strip non-persistable fields.
  * 
- * @param {type} item
+ * @param {object} item The object which should be stripped
  * @returns {unresolved}
  */
 Repository.prototype.stripCopy = function(item) {
@@ -101,7 +174,7 @@ Repository.prototype.stripCopy = function(item) {
  * Persist the given item into the object store.
  * Return a promise to resolve once the operation is completed.
  * 
- * @param {object} item
+ * @param {object} item The object which should be persisted
  * @returns {Promise} Resolves once the operation is completed.
  */
 Repository.prototype.persist = function(item) {
@@ -126,10 +199,26 @@ Repository.prototype.persist = function(item) {
 	});
 };
 
+/**
+ * Returns a generator which wraps the given 
+ * {@link https://developer.mozilla.org/en-US/docs/Web/API/IDBCursor IDBCursor}, 
+ * hydrating the objects emitted using {@link module:skate/Repository~Repository#hydrate hydrate()}.
+ * 
+ * @param {IDBCursor} cursor The {@link https://developer.mozilla.org/en-US/docs/Web/API/IDBCursor IDBCursor} instance
+ * @returns {Generator} A generator which will emit each of the hydrated items emitted from the given cursor
+ */
 Repository.prototype.hydrateCursor = function(cursor) {
 	return this.hydrateGenerator(new IDBCursorGenerator(cursor));
 };
 
+/**
+ * Returns a generator which wraps the given generator, hydrating 
+ * the objects emitted using 
+ * {@link module:skate/Repository~Repository#hydrate hydrate()}.
+ * 
+ * @param {Generator} generator The generator whose items should be hydrated
+ * @returns {Generator} A generator which emits the hydrated items
+ */
 Repository.prototype.hydrateGenerator = function(generator) {
 	var self = this;	
 	return new Generator(function(done, reject, emit) {
@@ -155,8 +244,8 @@ Repository.prototype.hydrateGenerator = function(generator) {
 /**
  * Promises to return a single item.
  * 
- * @param {type} id
- * @returns {unresolved}
+ * @param {String} id The ID of the object to fetch
+ * @returns {Promise} A promise to return the item
  */
 Repository.prototype.get = function(id) {
 	var self = this;
@@ -194,8 +283,8 @@ Repository.prototype.all = function() {
 /**
  * Retrieve an index object which allows for querying a specific index.
  * 
- * @param {type} name
- * @returns {undefined}
+ * @param {String} name The name of the index to retrieve
+ * @returns {Index}
  */
 Repository.prototype.index = function(name) {
 	var repo = this;
@@ -300,6 +389,9 @@ Repository.prototype.index = function(name) {
 
 /**
  * Open a cursor on the main index of this object store
+ * 
+ * @param {IDBKeyRange} An optional {@link https://developer.mozilla.org/en-US/docs/Web/API/IDBKeyRange IDBKeyRange} 
+ *		instance specifying the range of the query
  */
 Repository.prototype.cursor = function(range) {
 	var self = this;
@@ -328,8 +420,8 @@ Repository.prototype.cursor = function(range) {
  * Result is a generator which will emit each of the items.
  * TODO: Can we do this using cursors and key ranges?
  * 
- * @param {type} ids
- * @returns {unresolved}
+ * @param {Array} ids An array of IDs which should be looked up
+ * @returns {Generator}
  */
 Repository.prototype.getMany = function(ids, includeNulls) {
 	var self = this;
@@ -381,8 +473,9 @@ Repository.prototype.getMany = function(ids, includeNulls) {
  * this query will be stored in memory, then all subsequent
  * keys will filter the result set until the final result is obtained.
  * 
- * @param {type} criteria
- * @returns {unresolved}
+ * @param {object} criteria An object containing key/value pairs to search for. The first 
+ *		key/value pair is used as an index.
+ * @returns {Promise} A promise to return the matching items
  */
 Repository.prototype.find = function(criteria) {
 	var self = this;
@@ -502,8 +595,8 @@ Repository.prototype.find = function(criteria) {
 /**
  * Promises to resolve once the item has been deleted.
  * 
- * @param {type} id
- * @returns {undefined}
+ * @param {String} id The ID of the object to delete
+ * @returns {Promise} A promise to resolve once the item has been deleted.
  */
 Repository.prototype.delete = function(id) {
 	var self = this;

@@ -1,15 +1,20 @@
 /**
- * / SKATE /
- * / AUTHOR: William Lahti <wilahti@gmail.com>
- * / (C) 2015 William Lahti
+ * Module providing the SchemaBuilder class.
  * 
- * SchemaBuilder class
- * 
+ * @module skate/SchemaBuilder 
+ * @author William Lahti <wilahti@gmail.com>
+ * @copyright (C) 2015 William Lahti 
  */
 
 var transact = require('./transact.js');
 var StoreBuilder = require('./StoreBuilder.js');
 
+/**
+ * @class
+ * @param {String} name The name of the IndexedDB database being defined
+ * @param {object} registry An object with a prepareRepository() method, or NULL
+ * @returns {SchemaBuilder}
+ */
 function SchemaBuilder(name, registry) {
 	this.name = name;
 	this.stores = {};
@@ -44,15 +49,12 @@ SchemaBuilder.prototype.disconnectDatabase = function() {
 /**
  * Create a new store
  * 
- * @param {type} name
+ * @param {String} name
  * @returns {StoreBuilder}
  */
 SchemaBuilder.prototype.createStore = function(name) {
 	if (this.stores[name]) {
-		throw {
-			error: 'StoreAlreadyExists',
-			message: 'A store with name \''+name+'\' already exists.'
-		};
+		throw 'store-already-exists: A store with name \''+name+'\' already exists.';
 	}
 	return new StoreBuilder(this, name);
 };
@@ -60,15 +62,12 @@ SchemaBuilder.prototype.createStore = function(name) {
 /**
  * Get an existing store so that you can modify it.
  * 
- * @param {type} name
- * @returns {Array}
+ * @param {String} name
+ * @returns {StoreBuilder} 
  */
 SchemaBuilder.prototype.getStore = function(name) {
 	if (!this.stores[name]) {
-		throw {
-			error: 'NoSuchStore',
-			message: 'A store with name \''+name+'\' could not be found.'
-		};
+		throw 'no-such-store: A store with name \''+name+'\' could not be found.';
 	}
 	
 	return this.stores[name];
@@ -77,8 +76,8 @@ SchemaBuilder.prototype.getStore = function(name) {
 /**
  * Migrate data imperatively. Only calls back if a migration is in progress.
  * 
- * @param {type} callback
- * @returns {SchemaBuilder.prototype}
+ * @param {function} callback
+ * @returns {SchemaBuilder}
  */
 SchemaBuilder.prototype.run = function(callback) {
 	if (this.transaction && this.db) {
@@ -96,6 +95,9 @@ SchemaBuilder.prototype.run = function(callback) {
 	return this;
 };
 
+/**
+ * Output the current schema to the console for debugging.
+ */
 SchemaBuilder.prototype.debug = function() {
 	console.log('Schema for database '+this.name);
 	

@@ -1,18 +1,29 @@
 /**
- * / SKATE /
- * / AUTHOR: William Lahti <wilahti@gmail.com>
- * / (C) 2015 William Lahti
  * 
- * Common implementation of transact()
+ * transact() is Skate's core implementation of IndexedDB transactional injection,
+ * which is the process of introspecting a function's parameters, creating a 
+ * transaction to suit them, and then calling the function, passing objects to the 
+ * function as it requested via naming.
  * 
- */
-
+ * This is function injection in a way popularized by the Angular.js framework.
+ * transact() is used internally within Skate in many places, including Database.transact(),
+ * SchemaBuilder.run() and Repository.hydrate().
+ *   
+ * @module skate/transact
+ * @author William Lahti <wilahti@gmail.com>
+ * @copyright (C) 2015 William Lahti    
+ */   
+ 
 var annotateFn = require('./utils/annotateFn.js');
 var injector = require('./utils/lightinjector.js');
 var Repository = require('./Repository.js');
 
+/**  
+ * @class
+ * @param {String} message The message for the exception
+ */
 function SkateUnknownStoreException(message) {
-	this.message = message;
+	this.message = message; 
 };
 
 /**
@@ -21,9 +32,17 @@ function SkateUnknownStoreException(message) {
  * If no transaction is passed, one is automatically created based on the repositories requested
  * by the given function.
  * 
- * @param {type} fn
- * @param {type} mode
- * @returns {undefined}
+ * @param {IDBTransaction|function} transactionOrFactory The transaction to use, 
+ *		or a function to construct a transaction from an array of object store names and a mode
+ *		(ie function(storeNames, mode))
+ * @param {function} repositoryFactory A function which creates a repository when given a db, name, and transaction
+ *		(ie function(db, name, tx)) or null to use the default factory
+ * @param {function} fn The function which should be introspected and run
+ * @param {String} mode The transaction mode ('readonly' or 'readwrite')
+ * @param {String} extraInjectables An object containing extra services which should be made available for injection
+ *		in addition to the standard ones
+ * 
+ * @returns {Promise} A promise to resolve once the transaction has fully completed.
  */
 function transact(db, transactionOrFactory, repositoryFactory, fn, mode, extraInjectables) {
 	var mode = mode || 'readonly';
@@ -51,7 +70,6 @@ function transact(db, transactionOrFactory, repositoryFactory, fn, mode, extraIn
 		 * later maps parameters to injection assets.
 		 * 
 		 * @param {Array} params
-		 * @returns
 		 */
 		$populate$: function(params) {
 			var storeNames = [];

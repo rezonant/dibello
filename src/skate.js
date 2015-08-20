@@ -1,8 +1,23 @@
-/**
- * / SKATE /
- * / AUTHOR: William Lahti <wilahti@gmail.com>
- * / (C) 2015 William Lahti
+/**  
+ * Skate! is a high-level ORM framework on top of 
+ * HTML5 IndexedDB. 
  * 
+ * It can be used to dramatically simplify code which 
+ * uses IndexedDB to persist Javascript objects into the user's
+ * browser. 
+ * 
+ * ### Skate is:
+ * - A powerful migration management system which doubles as a 
+ *   description of the object schema for powering Skate's ORM features
+ * - An injection-driven way to express IndexedDB transactions
+ *   which dramatically simplifies using IndexedDB.
+ * - A rich repository layer that builds upon the capabilities of
+ *   IndexedDB object stores by providing more advanced query methods 
+ *   and a unified, terse way to consume the results of IndexedDB requests
+ *   
+ * @author William Lahti <wilahti@gmail.com>
+ * @copyright (C) 2015 William Lahti
+ * @module skate
  */
 
 
@@ -16,18 +31,16 @@ var Generator = require('es5-generators');
 var Database = require('./Database.js');
 // API
 
-var skate = {
-	version: '0.1',
-	
+/**
+ * @alias module:skate
+ * @type skate
+ */
+var skate = { 
 	/**
-	 * Exported classes
-	 */
-	classes: {
-		Repository: Repository,
-		SchemaBuilder: SchemaBuilder,
-		StoreBuilder: StoreBuilder,
-		Generator: Generator
-	},
+	 * Contains the version of the Skate library.
+	 * @type String
+	 */ 
+	version: '0.1',
 	
 	/**
 	 * Create a new repository object for the given database and object store.
@@ -71,9 +84,10 @@ var skate = {
 	 * Because of this, you should not attempt to do anything other than modify the 
 	 * schema using the SchemaBuilder instance you are given when you are outside of a run()
 	 * block!
-	 * 
+	 *  
 	 * Example:
 	 * 
+	 * ```js
 	 * skate.open('apples', {
 	 *		migrations: {
 	 *			'1': function(schema) {
@@ -124,9 +138,10 @@ var skate = {
 	 *			});
 	 *		})
 	 * });
+	 * ```
 	 * 
 	 * @param string dbName
-	 * @param {} options
+	 * @param object options
 	 * @returns {Promise|skate.open.ready}
 	 */
 	open: function(indexedDB, dbName, options) {
@@ -214,7 +229,7 @@ var skate = {
 				//console.log('[skate] - Applying schema version #'+version+' (live)');
 				options.migrations[version](schema);
 			}
-			
+			 
 			schema.disconnectDatabase();
 			//console.log('Schema updated successfully.');
 

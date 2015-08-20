@@ -1,6 +1,7 @@
 module.exports = function(grunt) {
+ 
+  // Configuration
 
-  // Project configuration.
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
 
@@ -14,16 +15,32 @@ module.exports = function(grunt) {
 		}
     },
 
+	concurrent: {
+		dev: {
+			tasks: ['watch', 'karma:start'],
+			options: {
+				logConcurrentOutput: true
+			}
+		}
+	},
+
     watch: {
-    	main: {
-			files: [
-				'Gruntfile.js',
-				'**/*.js'
-			],
-			tasks: ['default'],
+   		gruntfile: {
+			files: ['Gruntfile.js'],
+			tasks: [],
 			options: {
 				reload: true
 			}
+		},
+
+		docs: {
+			files: [
+				'jsdoc.conf.json',
+				'src/**/*.js',
+				'test/**/*.js',
+				'README.md'
+			],
+			tasks: ['jsdoc', 'shell:docPerms']
 		}
     },
 
@@ -46,9 +63,30 @@ module.exports = function(grunt) {
 	  unit: {
         configFile: 'karma.conf.js',
 		singleRun: true
-      }
+      },
+	  start: {
+		configFile: 'karma.conf.js',
+		singleRun: false
+	  }
 	},
 
+	jsdoc: {
+        dist: {
+			src: [],
+            dest: 'doc', 
+			options: { 
+				configure: 'jsdoc.conf.json',
+				verbose: true
+			}
+        }
+    },
+
+	shell: { 
+		docPerms: {
+			command: 'chmod a+rX doc/ -Rf'
+		}
+	},
+	
     uglify: {
       options: {
         banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n',
@@ -66,16 +104,24 @@ module.exports = function(grunt) {
     }
   });
 
-  // Load the plugin that provides the "uglify" task.
+  // Plugins
+
   grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks('grunt-bump');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-karma');
+  grunt.loadNpmTasks('grunt-jsdoc');
+  grunt.loadNpmTasks('grunt-concurrent');
+  grunt.loadNpmTasks('grunt-shell');
 
-  // Default task(s).
-  grunt.registerTask('default', ['browserify', 'uglify']);
+  // Tasks
+
+  grunt.registerTask('default', ['dist', 'test']);
+  grunt.registerTask('dist', ['browserify', 'uglify']);
   grunt.registerTask('test', ['karma']);
+  grunt.registerTask('dev', ['concurrent:dev']);
+  // Release tasks
 
   grunt.registerTask('tag-patch', ['default', 'test', 'bump:patch']);
   grunt.registerTask('tag-minor', ['default', 'test', 'bump:minor']);

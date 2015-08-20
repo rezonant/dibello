@@ -1,5 +1,20 @@
+/**
+ * Module providing a class that converts an IDBCursor into a
+ * Generator.
+ *
+ * @module skate/IDBCursorGenerator
+ * @author William Lahti <wilahti@gmail.com>
+ * @copyright (C) 2015 William Lahti  
+ */
 
-function IDBCursorGenerator(request) {
+/**
+ * Converts an IDBCursor into a Generator
+ * @class
+ * @param {IDBCursor} cursor
+ * @returns {Generator}
+ */
+function IDBCursorGenerator(cursor) {
+	var request = cursor;
 	var cancelled = false;
 	return new Generator(function(done, reject, emit) {
 		
