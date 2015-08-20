@@ -125,6 +125,7 @@ describe('Repository.get()', function() {
 		
 	});
 });
+
 describe('Repository.all()', function() {
 	
 	it('should call the underlying store.openCursor() method', function(done) {

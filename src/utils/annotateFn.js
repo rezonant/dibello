@@ -21,6 +21,13 @@ var STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
  */
 function annotateFn(fn) {
 
+	if (typeof fn === 'undefined') {
+		return {
+			fn: function() { },
+			params: []
+		};
+	}
+	
 	if (typeof fn === 'object' && fn.length !== undefined) {
 		var params = fn;
 		fn = params[params.length - 1];

@@ -14,7 +14,6 @@
  * @copyright (C) 2015 William Lahti    
  */   
  
-var annotateFn = require('./utils/annotateFn.js');
 var injector = require('./utils/lightinjector.js');
 var Repository = require('./Repository.js');
 

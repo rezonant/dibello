@@ -23,6 +23,7 @@ function InjectionException(message) {
  * @returns mixed The result of the function once called
  */
 function inject(map, self, fn) {
+	
 	var meta = annotateFn(fn);
 	var params = meta.params;
 	fn = meta.fn;
@@ -57,7 +58,7 @@ function inject(map, self, fn) {
 		}
 		
 		if (typeof factory === 'function') {
-			args.push(factory(inject));
+			args.push(factory(param, inject));
 		} else {
 			args.push(factory);
 		}

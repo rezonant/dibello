@@ -34,6 +34,11 @@ function Database(schema, idb) {
  * @returns {Promise} A promise to resolve once the transaction has completed processing.
  */
 Database.prototype.transact = function(mode, fn) {
+	
+	if (typeof mode !== 'string') {
+		throw 'First parameter must be a mode string';
+	}
+	
 	var self = this;
 	return transact(this, null, function(db, name, transaction) {
 		return self.repository(name, transaction);
