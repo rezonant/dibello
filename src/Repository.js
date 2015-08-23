@@ -3,7 +3,6 @@
  * of an IndexedDB object store (IDBObjectStore)
  * 
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/IDBObjectStore MDN Reference - IDBObjectStore}
- * @module skate/Repository 
  * @author William Lahti <wilahti@gmail.com>
  * @copyright (C) 2015 William Lahti 
  */
@@ -12,13 +11,16 @@ var stripCopy = require('./stripCopy.js');
 var Generator = require('es5-generators');
 var IDBRequestGenerator = require('./IDBRequestGenerator.js');
 var IDBCursorGenerator = require('./IDBCursorGenerator.js');
+var Constraint = require('./Constraint.js');
+var transact = require('./transact.js');
 
 /**
  * 
  * Provides a high-level API on top of an IndexedDB 
  * object store (IDBObjectStore)
  * 
- * @class Repository
+ * @class
+ * @alias module:skate.Repository
  * @param {Database} db The database to associate the repository with
  * @param {String} storeName The name of the store which this repository will represent
  * @param {IDBTransaction} transaction The optional IDB transaction to associate with the new repository
@@ -70,10 +72,10 @@ Repository.prototype.hydrate = function(item) { return Promise.resolve(item); };
  * @param {Database} idb The IDBDatabase instance
  * @returns {type|IDBTransaction}
  */
-Repository.prototype.getStoreTransaction = function(idb) {
+Repository.prototype.getStoreTransaction = function(db) {
 	if (this.transaction)
-		return this.transaction;
-	return idb.transaction([this.storeName], 'readwrite');
+		return this.transaction; 
+	return db.idb().transaction([this.storeName], 'readwrite');
 }
 
 /*-*
@@ -81,7 +83,7 @@ Repository.prototype.getStoreTransaction = function(idb) {
  * transacting this repository's .hydrate() method.
  * 
  * @private
- * @param {Database} db The {@link module:skate/Database~Database Database} instance
+ * @param {module:skate.Database} db Database instance
  * @param {object} item The item being hydrated
  */
 Repository.prototype._hydrateItem = function(db, item) {
@@ -480,41 +482,216 @@ Repository.prototype.getMany = function(ids, includeNulls) {
 Repository.prototype.find = function(criteria) {
 	var self = this;
 
+	/**
+	 * Determine equivalence between the given two values 
+	 * including deep object equivalence
+	 * 
+	 * @param {type} criteriaValue
+	 * @param {type} realValue
+	 * @returns {Boolean}
+	 */
+	function isEquivalent(criteriaValue, realValue) {
+
+		if (criteriaValue == realValue)
+			return true;
+
+		if (typeof criteriaValue !== 'object')
+			return false;
+		
+		for (var key in criteriaValue) {
+			if (isEquivalent(criteriaValue[key], realValue[key]))
+				continue;
+			
+			return false;
+		}
+
+		return true;
+	};
+	
+	/**
+	 * Compile the given constraint, bestowing it with the _compiled section
+	 * and the proper operation function for use in checking values to see if 
+	 * they match.
+	 * 
+	 * @param {skate.Constraint} constraint
+	 * @returns {undefined}
+	 */
+	function compileConstraint(constraint) {
+		var factories = ['bound'];
+		var operations = {
+			'=': function(a, b) { return a == b; },
+			'>': function(a, b) { return a > b; },
+			'<': function(a, b) { return a < b; },
+			'>=': function(a, b) { return a >= b; },
+			'<=': function(a, b) { return a <= b; },
+			'in': function(a, b) { return b.indexOf(a) >= 0; },
+			'bound': function(constraint) {
+
+				var low = constraint.discriminant[0];
+				var high = constraint.discriminant[1];
+				var exclusiveLower = constraint.discriminant[2];
+				var exclusiveUpper = constraint.discriminant[3];
+
+				if (exclusiveLower === undefined)
+					exclusiveLower = false;
+				if (exclusiveUpper === undefined)
+					exclusiveUpper = false;
+				
+				// Function map to implement each type of bound.
+				// 'true' for exclusive on the low end and the high end.
+
+				var bounds = {
+					truetrue:   function(v, d) { return low <  v && v <  high; },
+					falsefalse: function(v, d) { return low <= v && v <= high; },
+					truefalse:  function(v, d) { return low <  v && v <= high; },
+					falsetrue:  function(v, d) { return low <= v && v <  high; },
+				};
+
+				return bounds[exclusiveLower+''+exclusiveUpper];
+			},
+			'compound': function(value, compoundConstraints) {
+				for (var fieldName in compoundConstraints) {
+					if (fieldName[0] === '$')
+						continue;
+					
+					var constraint = compoundConstraints[fieldName];
+					if (filterByConstraint([value], fieldName, constraint).length === 0)
+						return false;
+				}
+				
+				return true;
+			}
+		};
+
+		if (!operations[constraint.operator]) {
+			throw "Unsupported operator '"+constraint.operator+"'";
+		}
+
+		constraint._compiled.fn = operations[constraint.operator];
+
+		// A factory type (ie 'bound' above) will return the appropriate operation function
+		// based on the constraint instead of registering a single operation function
+
+		if (factories.indexOf(constraint.operator) >= 0)
+			constraint._compiled.fn = constraint._compiled.fn(constraint);	
+	}
+	
+	/**
+	 * Resolve the criteria object so that all fields contain skate.Constraint objects.
+	 * 
+	 * @param {} criteria
+	 * @returns {}
+	 */
+	function resolveCriteria(criteria) {
+		
+		if (criteria.$resolved) {
+			return criteria;
+		}
+			
+		for (var fieldName in criteria) {
+			if (fieldName[0] == '$')
+				continue;
+			
+			var fieldValue = criteria[fieldName];
+			var constraint = fieldValue;
+
+			if (fieldValue === null)
+				continue;
+
+			if (constraint && typeof constraint === 'object' && constraint.isConstraint)
+				continue;
+
+			// If the user provided a simple value, 
+			// convert it to a constraint...
+
+			if (constraint && typeof constraint === 'object') {
+				var compoundConstraints = resolveCriteria(constraint);
+				criteria[fieldName] = Constraint.compound(compoundConstraints);
+			} else {
+				criteria[fieldName] = Constraint.equalTo(constraint);
+			}
+		}	
+		
+		criteria.$resolved = true;
+		return criteria;
+	}
+	
+	/**
+	 * Implement filtering on the given items array by the given
+	 * constraint definition. 
+	 * 
+	 * @param {type} items
+	 * @param {type} constraint
+	 * @returns {undefined}
+	 */
+	function filterByConstraint(items, fieldName, constraint) {
+		
+		// Cache the operation function on the constraint object.
+
+		if (!constraint._compiled || !constraint._compiled.fn || constraint._compiled.operator != constraint.operator)
+			compileConstraint(constraint);
+
+		// Filter all items by our compiled operation function
+		// generating a fresh items array.
+		// We'll predefine our array and then chop off the unused
+		// indices once we are done filtering for optimal performance.
+		// Benchmark: http://jsfiddle.net/3t306zLa/5/
+		
+		var fn = constraint._compiled.fn;
+		var newItems = new Array(items.length);
+		var newIndex = 0;
+		
+		for (var i = 0, max = items.length; i < max; ++i) {
+			var item = items[i];
+			
+			if (!fn(item[fieldName], constraint.discriminant))
+				continue;
+			
+			newItems[newIndex++] = item;
+		}
+		
+		newItems.splice(newIndex, newItems.length - newIndex);
+		return newItems;
+	}
+
 	return new Generator(function(resolve, reject, emit) {
 		self.ready.then(function(db) {
-			var isEquivalent;
-			isEquivalent = function(criteriaValue, realValue) {
-
-				if (criteriaValue === realValue)
-					return true;
-
-				if (criteriaValue == realValue)
-					return true;
-
-				if (typeof criteriaValue == 'object') {
-					var good = true;
-					for (var key in criteriaValue) {
-						var value = criteriaValue[key];
-
-						if (!isEquivalent(criteriaValue[key], realValue[key])) {
-							good = false;
-							break;
-						}
+			
+			if (typeof criteria === 'function') {
+				
+				criteria = db._transact(db, null, function(db, name, transaction) {
+					return db.repository(name, transaction);
+				}, criteria, 'readonly', {
+					is: function() {
+						return Constraint;
 					}
+				});
+			}
+			
+			
+			// For transactable functions...
 
-					return good;
-				}
-
-				return false;
-			};
-
+			return Promise.all([
+				Promise.resolve(db),
+				Promise.resolve(criteria)
+			]);
+		}).then(function(results) {
+			
+			var db = results[0];
+			var criteria = results[1];
+			
+			
 			// Prepare a transaction (or use our existing one)
 			// and an object store
 
 			var tx = self.getStoreTransaction(db);
 			var store = tx.objectStore(self.storeName);
-			var items = null;
-			var promise = Promise.resolve();
+			var promise = Promise.resolve(null);
+
+			// Resolve the entire criteria object into the proper
+			// set of Criteria instances if they aren't already
+			
+			criteria = resolveCriteria(criteria);
 
 			// The first item will use an index filter.
 			// Subsequent criteria will filter using Javascript.
@@ -524,54 +701,55 @@ Repository.prototype.find = function(criteria) {
 			// asynchronously.
 
 			for (var fieldName in criteria) {
+				if (fieldName[0] == '$')
+					continue;
+				
 				!function(fieldName) {
-					promise = promise.then(function() {
-						var fieldValue = criteria[fieldName];
-
-						if (items === null) {
-							// Source
-
-							if (store.indexNames.contains(fieldName)) {
-								var index = store.index(fieldName);
-
-								return new Promise(function(resolve, reject) {
-									items = [];
-									new IDBCursorGenerator(index.openCursor(fieldValue))
-										.emit(function(item) {
-											items.push(item);
-										}).done(function() {
-											resolve();
-										});
-								});
-
-
-							} else {
-								return new Promise(function(resolve, reject) {
-									items = [];
-									new IDBCursorGenerator(store.openCursor())
-										.emit(function(item) {
-											items.push(item);
-										}).done(function() {
-											resolve();
-										});
-								});
-							}
-						} else {
-							// Filter
-
-							var newItems = [];
-
-							for (var i = 0, max = items.length; i < max; ++i) {
-								var item = items[i];
-
-								if (!isEquivalent(fieldValue, item[fieldName]))
-									continue;
-
-								newItems.push(item);
-							}
-
-							items = newItems;
+					promise = promise.then(function(items) {
+						var constraint = criteria[fieldName];
+						
+						// If this is not our first constraint, filter
+						// the items list with the constraint.
+						
+						if (items !== null) {
+							return filterByConstraint(items, fieldName, constraint);
 						}
+						
+						// If this is our first constraint, try to use any
+						// available index we might have for it
+						
+						return new Promise(function(resolve, reject) {
+							var sourceIndex = store;
+							var idbQuery = null;
+							
+							// If we have an index, we'll use IDB
+							// (Otherwise if idbQuery is null, the op is handled in JS)
+							
+							if (store.indexNames.contains(fieldName)) {
+								sourceIndex = store.index(fieldName);
+								idbQuery = constraint.idb;
+							}
+
+							var items = [];
+							new IDBCursorGenerator(sourceIndex.openCursor(idbQuery))
+								.emit(function(item) {
+									
+									// If we were properly constrained already...
+							
+									if (idbQuery !== null) {
+										items.push(item);
+										return;
+									}
+									
+									// Some operations must be handled in Javascript...
+									
+									if (filterByConstraint([item], fieldName, constraint).length >= 0)
+										items.push(item);
+									
+								}).done(function() {
+									resolve(items);
+								});
+						});
 					});
 				}(fieldName);
 			};
@@ -579,13 +757,13 @@ Repository.prototype.find = function(criteria) {
 			// Once the promise chain is finished, we'll finally resolve the
 			// promise given by this method.
 
-			promise.then(function() {
-				
+			promise.then(function(items) { 
+
 				// Since this implementation happens almost entirely in JS, we cannot
 				// actually stream the results, so we'll emulate that for now.
 				for (var i = 0, max = items.length; i < max; ++i)
-					emit(items[i]);
-				
+					emit(items[i]); 
+
 				resolve();
 			});
 		});

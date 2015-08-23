@@ -2,7 +2,6 @@
  * Module providing Skate's Database class which wraps an IndexedDB database to provide
  * access to Skate's features as well as the underlying IndexedDB features.
  * 
- * @module skate/Database
  * @author William Lahti <wilahti@gmail.com>
  * @copyright (C) 2015 William Lahti
  */
@@ -13,9 +12,9 @@ var Repository = require('./Repository.js');
  * Constructs a Database object which represents an IndexedDB database.
  * 
  * @class
- * @param {SchemaBuilder} schema
- * @param {IDBDatabase} idb
- * @returns {Database}
+ * @alias module:skate.Database
+ * @param {module:skate.SchemaBuilder} schema A representation of the database's intended schema
+ * @param {IDBDatabase} idb An opened IndexedDB database
  * 
  */
 function Database(schema, idb) {
@@ -58,7 +57,7 @@ Database.prototype.setIDB = function(idb) {
  * 
  * @param {String} name The name of the repository to retrieve
  * @param {type} tx An optional transaction which the repository should be associated with
- * @returns {skate/Repository~Repository} The new repository object
+ * @returns {module:skate.Repository} The new repository object
  */
 Database.prototype.repository = function(name, tx) {
 	var repo = new Repository(this.idb(), name, tx);
@@ -70,7 +69,7 @@ Database.prototype.repository = function(name, tx) {
  * Prepare the given Repository instance by calling any config functions
  * registered for its name.
  * 
- * @param {type} repository
+ * @param {module:skate.Repository} repository The repository which must be prepared
  */
 Database.prototype.prepareRepository = function(repository) {
 	if (this._repositoryConfigs[repository.storeName])
@@ -104,14 +103,14 @@ Database.prototype.configRepository = function(name, cb) {
  * it. This is mostly for use internally but can be useful for debugging (see 
  * SchemaBuilder.debug()).
  * 
- * @returns {SchemaBuilder} The SchemaBuilder containing this database's current schema
+ * @returns {module:skate.SchemaBuilder} The SchemaBuilder containing this database's current schema
  */
 Database.prototype.getSchema = function() {
 	return this._schema;
 }
 
 /**
- * Retrieve the underlying IDBDatabase instance 
+ * Retrieve the underlying {@link https://developer.mozilla.org/en-US/docs/Web/API/IDBDatabase IDBDatabase} instance 
  * @returns {IDBDatabase} The {@link https://developer.mozilla.org/en-US/docs/Web/API/IDBDatabase IDBDatabase} instance
  */
 Database.prototype.idb = function() {

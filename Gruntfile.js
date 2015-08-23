@@ -4,7 +4,7 @@ module.exports = function(grunt) {
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
-
+ 
     browserify: {
 		app: {
 			src: [
@@ -30,12 +30,13 @@ module.exports = function(grunt) {
 			tasks: [],
 			options: {
 				reload: true
-			}
+			} 
 		},
 
 		docs: {
 			files: [
 				'jsdoc.conf.json',
+				//'doc/template/template/tmpl/*.tmpl',
 				'src/**/*.js',
 				'test/**/*.js',
 				'README.md'

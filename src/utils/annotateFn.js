@@ -1,4 +1,6 @@
 /**
+ * # skate/utils/annotateFn
+ * 
  * A light-weight Javascript function reflector, similar to the one found in Angular.js.
  * Also supports array-style annotations for mangler-friendly code.
  *

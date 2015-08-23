@@ -1,4 +1,6 @@
 /**
+ * # skate/utils/lightinjector
+ * 
  * A light-weight function dependency injector, similar to the one found in Angular.js
  *
  * @module skate/utils/lightinjector

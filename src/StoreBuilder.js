@@ -1,17 +1,17 @@
 /**
  * @author William Lahti <wilahti@gmail.com>
  * @copyright (C) 2015 William Lahti
- * @module skate/StoreBuilder
  */
 
 /**
  * Represents a data store being built (or reflected upon)
  * 
  * @class
- * @param {SchemaBuilder} builder The SchemaBuilder instance which owns this StoreBuilder
+ * @alias module:skate.StoreBuilder
+ * @param {module:skate.SchemaBuilder} builder The SchemaBuilder instance which owns this StoreBuilder
  * @param {String} name The name of the object store being built
  * @param {String} id The name of the field which will represent the object store's primary key
- * @returns {StoreBuilder} Allows for describing (and optionally applying chanages to) the schema of 
+ * @returns {module:skate.StoreBuilder} Allows for describing (and optionally applying chanages to) the schema of 
  *			an IndexedDB object store.
  */
 function StoreBuilder(builder, name, id) {

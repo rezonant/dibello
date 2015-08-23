@@ -1,19 +1,19 @@
 /**
  * Module providing the SchemaBuilder class.
  * 
- * @module skate/SchemaBuilder 
  * @author William Lahti <wilahti@gmail.com>
  * @copyright (C) 2015 William Lahti 
  */
 
 var transact = require('./transact.js');
 var StoreBuilder = require('./StoreBuilder.js');
+var annotateFn = require('./utils/annotateFn.js');
 
 /**
  * @class
+ * @alias module:skate.SchemaBuilder
  * @param {String} name The name of the IndexedDB database being defined
  * @param {object} registry An object with a prepareRepository() method, or NULL
- * @returns {SchemaBuilder}
  */
 function SchemaBuilder(name, registry) {
 	this.name = name;
@@ -50,7 +50,7 @@ SchemaBuilder.prototype.disconnectDatabase = function() {
  * Create a new store
  * 
  * @param {String} name
- * @returns {StoreBuilder}
+ * @returns {module:skate.StoreBuilder}
  */
 SchemaBuilder.prototype.createStore = function(name) {
 	if (this.stores[name]) {
@@ -63,7 +63,7 @@ SchemaBuilder.prototype.createStore = function(name) {
  * Get an existing store so that you can modify it.
  * 
  * @param {String} name
- * @returns {StoreBuilder} 
+ * @returns {module:skate.StoreBuilder} 
  */
 SchemaBuilder.prototype.getStore = function(name) {
 	if (!this.stores[name]) {
@@ -77,20 +77,13 @@ SchemaBuilder.prototype.getStore = function(name) {
  * Migrate data imperatively. Only calls back if a migration is in progress.
  * 
  * @param {function} callback
- * @returns {SchemaBuilder}
+ * @returns {module:skate.SchemaBuilder}
  */
 SchemaBuilder.prototype.run = function(callback) {
 	if (this.transaction && this.db) {
-		var metadata = annotateFn(callback);
-		var fn = metadata.fn;
-		var params = metadata.params;
-		var self = this;
-		
 		transact(this.db, this.transaction, function(db, name, tx) {
-			var repo = new Repository(db, name, tx);
-			registry.prepareRepository(repo);
-			return repo;
-		}, fn, 'readwrite');
+			return db.repository(name, tx);
+		}, callback, 'readwrite');
 	}
 	return this;
 };

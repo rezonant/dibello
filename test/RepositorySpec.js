@@ -10,13 +10,40 @@ describe('Repository.getStoreTransaction()', function() {
 		idbMock.reset();
 		var dbRequest = idbMock.mock.open('somedb', 1);
 		dbRequest.onsuccess = function(ev) {
-			var db = ev.target.result;
-			var repo = new Repository(new Database(new SchemaBuilder('foo'), idbMock.mock), 'foo');
+			var idb = ev.target.result;
+			var db = new Database(new SchemaBuilder('foo'), idb);
+			var repo = new Repository(db, 'foo');
 			var tx = repo.getStoreTransaction(db, 'readwrite');
 
 			expect(tx._stores.length).toBe(1);
 			expect(tx._stores).toContain('foo'); 
 			expect(tx._mode).toBe('readwrite'); 
+			done();
+		};
+	});
+});
+
+describe('Repository.generateGuid()', function() {
+	it('should generate a decently long string', function() {
+		var guid = Repository.generateGuid();
+		expect (guid.length > 10).toBe(true);
+	});
+});
+
+describe('Repository.index()', function() {
+	it('should work', function() {
+		
+		idbMock.reset();
+		var dbRequest = idbMock.mock.open('somedb', 1);
+		dbRequest.onsuccess = function(ev) {
+			var idb = ev.target.result;
+			var db = new Database(new SchemaBuilder('foo'), idb);
+			var repo = new Repository(db, 'foo');
+			
+			var index = repo.index('foo'); 
+			
+			expect(typeof index).toBe('object');
+			
 			done();
 		};
 	});
@@ -41,8 +68,9 @@ describe('Repository.setTransaction()', function() {
 		idbMock.reset();
 		var dbRequest = idbMock.mock.open('somedb', 1);
 		dbRequest.onsuccess = function(ev) {
-			var db = ev.target.result;
-			var repo = new Repository(new Database(new SchemaBuilder('foo'), db), 'foo');
+			var idb = ev.target.result;
+			var db = new Database(new SchemaBuilder('foo'), db);
+			var repo = new Repository(db, 'foo');
 			var tx = {_stores: []};
 
 			repo.setTransaction(tx);
@@ -57,8 +85,9 @@ describe('Repository.persist()', function() {
 		idbMock.reset();
 		var dbRequest = idbMock.mock.open('somedb', 1);
 		dbRequest.onsuccess = function(ev) {
-			var db = ev.target.result;
-			var repo = new Repository(new Database(new SchemaBuilder('foo'), db), 'foo');
+			var idb = ev.target.result;
+			var db = new Database(new SchemaBuilder('foo'), idb);
+			var repo = new Repository(db, 'foo');
 			var tx = repo.getStoreTransaction(db);
 
 			repo.setTransaction(tx);	 
@@ -80,39 +109,58 @@ describe('Repository.get()', function() {
 		idbMock.reset();
 		var dbRequest = idbMock.mock.open('somedb', 1);
 		dbRequest.onsuccess = function(ev) {
-			var db = ev.target.result;
+			var idb = ev.target.result;
 			var schema = new SchemaBuilder('foo');
 			schema.createStore('foo');
-			var repo = new Repository(new Database(schema, db), 'foo');
+			var db = new Database(schema, idb);
+			var repo = new Repository(db, 'foo');
 			var tx = repo.getStoreTransaction(db);
-			var store = tx.objectStore('foo');
 			var getCalled = false;
 
-			store.get = function(key) {
+			tx.objectStore('foo').get = function(key) {
 				getCalled = true;
 				expect(key).toBe('123');
 
-				var request = {
-					onsuccess: function() { console.log('no one got it'); },
-					onerror: function() { console.log('no one got it'); }
-				};
+				return idbMock.request.success([
+					{ id: '123' }
+				], true);
+			};
 
-				setTimeout(function() {
-					var target = {
-						result: {
-							value: {
-								id: '123'
-							},
-							"continue": function() { }
-						}
-					};
-					request.onsuccess({
-						target: target,
-						currentTarget: target
-					});
-				}, 1);
+			repo.setTransaction(tx);	 
+			repo.get('123').then(function(item) {
+				expect(item.id).toBe('123');
+				expect(getCalled).toBe(true);
+				done();
+			});
+		};
+		
+	});
+});
 
-				return request;
+describe('Repository.index()', function() {
+	  
+	it('should call the underlying store.index() method', function(done) {
+		
+		done(); return; // TODO
+		
+		idbMock.reset();
+		var dbRequest = idbMock.mock.open('somedb', 1);
+		dbRequest.onsuccess = function(ev) {
+			var idb = ev.target.result;
+			var schema = new SchemaBuilder('foo');
+			schema.createStore('foo');
+			var db = new Database(schema, idb);
+			var repo = new Repository(db, 'foo');
+			var tx = repo.getStoreTransaction(db);
+			var getCalled = false;
+
+			tx.objectStore('foo').index = function(key) {
+				getCalled = true;
+				expect(key).toBe('123');
+
+				return idbMock.request.success([
+					{ id: '123' }
+				], true);
 			};
 
 			repo.setTransaction(tx);	 
@@ -133,10 +181,11 @@ describe('Repository.all()', function() {
 		idbMock.reset();
 		var dbRequest = idbMock.mock.open('somedb', 1);
 		dbRequest.onsuccess = function(ev) {
-			var db = ev.target.result;
+			var idb = ev.target.result;
 			var schema = new SchemaBuilder('foo');
 			schema.createStore('foo');
-			var repo = new Repository(new Database(schema, db), 'foo');
+			var db = new Database(schema, idb);
+			var repo = new Repository(db, 'foo');
 			var tx = repo.getStoreTransaction(db);
 			var store = tx.objectStore('foo');
 			var getCalled = false;
@@ -190,10 +239,11 @@ describe('Repository.getMany()', function() {
 		idbMock.reset();
 		var dbRequest = idbMock.mock.open('somedb', 1);
 		dbRequest.onsuccess = function(ev) {
-			var db = ev.target.result;
+			var idb = ev.target.result;
 			var schema = new SchemaBuilder('somedb');
 			schema.createStore('foo');
-			var repo = new Repository(new Database(schema, db), 'foo');
+			var db = new Database(schema, idb);
+			var repo = new Repository(db, 'foo');
 			var tx = repo.getStoreTransaction(db);
 			var store = tx.objectStore('foo');
 			var getCalled = false;
@@ -242,11 +292,11 @@ describe('Repository.cursor()', function() {
 		idbMock.reset();
 		var dbRequest = idbMock.mock.open('somedb', 1);
 		dbRequest.onsuccess = function(ev) {
-			var db = ev.target.result;
+			var idb = ev.target.result;
 			var schema = new SchemaBuilder('somedb');
 			schema.createStore('foo');
-
-			var repo = new Repository(new Database(schema, db), 'foo');
+			var db = new Database(schema, idb);
+			var repo = new Repository(db, 'foo');
 			var tx = repo.getStoreTransaction(db);
 			var store = tx.objectStore('foo');
 			var getCalled = false;
@@ -294,150 +344,311 @@ describe('Repository.cursor()', function() {
 
 describe('Repository.find()', function() {
 	
+	function mockFind(data, criteria) {
+	
+		return new Generator(function(done, reject, emit) {
+			idbMock.reset();
+			var dbRequest = idbMock.mock.open('somedb', 1);
+			dbRequest.onsuccess = function(ev) {
+				
+				var idb = ev.target.result;
+				var db = new Database(new SchemaBuilder('foo'), idb);
+				var repo = new Repository(db, 'foo'); 
+				var tx = repo.getStoreTransaction(db);
+				var store = tx.objectStore('foo');
+
+				repo.setTransaction(tx);
+					
+				store.indexNames = {
+					contains: function(field) {
+						return true;
+					}
+				}; 
+				
+				store.index = function(key) {
+					return {  
+						key: key,
+						openCursor: function(idb) {
+							for (var i = 0, max = data.length; i < max; ++i) {
+								data[i]._queriedKey = key;
+							}
+				
+							return idbMock.request.success(data);
+						}
+					};
+				};
+
+				repo.find(criteria).emit(function(item) {
+					emit(item);
+				}).done(function() {
+					done();
+				});
+			};	
+		});
+	}
+	
 	it('should get the underlying index and use openCursor()', function(done) {
 		
-		idbMock.reset();
-		var dbRequest = idbMock.mock.open('somedb', 1);
-		dbRequest.onsuccess = function(ev) {
-			var db = ev.target.result;
-			var repo = new Repository(new Database(new SchemaBuilder('foo'), db), 'foo'); 
-			var tx = repo.getStoreTransaction(db);
-			var store = tx.objectStore('foo');
-			var getCalled = false;
+		var count = 0;  
+		mockFind([
+			{id: 1, key: 123, thing: 321},
+			{id: 2, key: 123, thing: 111},
+			{id: 3, key: 123, thing: 321},
+			{id: 4, key: 123, thing: 111}
+		], {
+			key: 123
+		}).emit(function(item) { 
 
-			repo.setTransaction(tx);
+			expect(item.key).toBe(123);
+			expect(item._queriedKey).toBe('key');
+			++count;
 
-			store.indexNames = {
-				contains: function(field) {
-					return true;
-				}
-			};
-			store.index = function(key) {
-				return {
-					key: key,
-					openCursor: function(key) {
-						var request = {
-							onsuccess: function() { },
-							onerror: function() { },
-							_finishes: function() { 
-								var target = {
-									result: null
-								};
-								this.onsuccess({target: target, currentTarget: target});
-							}
-						};
+		}).done(function() {
+ 
+			expect(count).toBe(4);
+			done();
 
-						setTimeout(function() {
-							var target = {
-								result: {
-									value: {
-										id: 'foobar',
-										key: key
-									},
-									continue: function() { }
-								}
-							}
-							request.onsuccess({
-								target: target,
-								currentTarget: target
-							});
-
-							request._finishes();
-						}, 1);
-
-						return request;
-					}
-				};
-			}
-
-			repo.find({key:123}).emit(function(item) {
-				expect(item.key).toBe(123);
-			}).done(function() {
-				done();
-			});
-		};
+		});
 	});
-	it('should filter index results', function(done) {
+	
+	it('should do basic filtering on the IDB data set', function(done) {
 		
-		// setup 
+		var count = 0;
+		mockFind([
+			{id: 1, key: 123, thing: 321},
+			{id: 2, key: 123, thing: 111},
+			{id: 3, key: 123, thing: 321},
+			{id: 4, key: 123, thing: 111}
+		], {
+			_dummy: 0,
+			key: 123,
+			thing: 111
+		}).emit(function(item) {
+
+			expect(item.key).toBe(123);
+			expect(item.thing).toBe(111);
+			++count;
+
+		}).done(function() {
+
+			expect(count).toBe(2);
+			done();
+ 
+		});
+	});
+	
+	it('should implement greaterThan', function(done) {
+		var count = 0;
 		
-		idbMock.reset();
-		var dbRequest = idbMock.mock.open('somedb', 1);
-		dbRequest.onsuccess = function(ev) {
-			var db = ev.target.result;
-			var repo = new Repository(new Database(new SchemaBuilder('foo'), db), 'foo');
-			var tx = repo.getStoreTransaction(db);
-			var store = tx.objectStore('foo');
-			var getCalled = false;
-
-			repo.setTransaction(tx);
-
-			store.indexNames = {
-				contains: function(field) {
-					return true;
-				}
-			};
-			store.index = function(key) {
-				return {
-					key: key,
-					openCursor: function(key) {
-						var request = {
-							onsuccess: function() { },
-							onerror: function() { },
-							_finishes: function() { 
-								var target = { 
-									result: null
-								};
-								this.onsuccess({target: target, currentTarget: target});
-							}
-						};
-
-						setTimeout(function() {
-							var target = {
-								result: {
-									value: null,
-									continue: function() { }
-								}
-							};
-
-							target.result.value = {
-								id: 'asdf',
-								wombat: true,
-								key: 123
-							}
-							request.onsuccess({target:target,currentTarget:target});
-							target.result.value = {
-								id: 'foobar',
-								wombat: true,
-								nifty: true,
-								key: 123
-							}
-							request.onsuccess({target:target,currentTarget:target});
-							target.result.value = {
-								id: 'barfoo',
-								nifty: true,
-								key: 123
-							}
-							request.onsuccess({target:target,currentTarget:target});
-							request._finishes();
-						}, 1);
-
-						return request;
-					}
-				};
+		mockFind([
+			{	id: 'asdf', nifty: true, key: 10 }, 
+			{	id: 'foobar', nifty: true, key: 121 }, 
+			{	id: 'barfoo', nifty: true, key: 123 }
+		], 
+		function (is) {
+			return {
+				nifty: true,
+				key: is.greaterThan(100),
 			}
-
-			// act
-
-			repo.find({
-				key:123,
+		}).emit(function(item) {
+			expect(item.key > 100).toBe(true);
+			++count;
+		}).done(function() {
+			expect(count).toBe(2);
+			done();
+		});
+	});
+	
+	it('should implement lessThan', function(done) {
+		var count = 0;
+		
+		mockFind([
+			{	id: 'asdf', nifty: true, key: 10 }, 
+			{	id: 'foobar', nifty: true, key: 121 }, 
+			{	id: 'barfoo', nifty: true, key: 123 }
+		], 
+		function (is) {
+			return {
+				nifty: true,
+				key: is.lessThan(122),
+			}
+		}).emit(function(item) {
+			expect(item.key < 122).toBe(true);
+			++count;
+		}).done(function() {
+			expect(count).toBe(2);
+			done();
+		});
+	});
+	
+	it('should implement greaterThanOrEqualTo', function(done) {
+		var count = 0;
+		
+		mockFind([
+			{	id: 'asdf', nifty: true, key: 10 }, 
+			{	id: 'foobar', nifty: true, key: 121 }, 
+			{	id: 'barfoo', nifty: true, key: 123 }
+		], 
+		function (is) {
+			return {
+				nifty: true,
+				key: is.greaterThanOrEqualTo(121),
+			}
+		}).emit(function(item) {
+			expect(item.key >= 121).toBe(true);
+			++count;
+		}).done(function() {
+			expect(count).toBe(2);
+			done();
+		});
+	});
+	
+	it('should implement lessThanOrEqualTo', function(done) {
+		var count = 0;
+		
+		mockFind([
+			{	id: 'asdf', nifty: true, key: 10 }, 
+			{	id: 'foobar', nifty: true, key: 121 }, 
+			{	id: 'barfoo', nifty: true, key: 123 }
+		], 
+		function (is) {
+			return {
+				nifty: true,
+				key: is.lessThanOrEqualTo(121),
+			}
+		}).emit(function(item) {
+			expect(item.key <= 121).toBe(true);
+			++count;
+		}).done(function() {
+			expect(count).toBe(2);
+			done();
+		});
+	});
+	
+	it('should implement in()', function(done) {
+		var count = 0;
+		
+		mockFind([
+			{	id: 'asdf', nifty: true, key: 10 }, 
+			{	id: 'foobar', nifty: true, key: 121 }, 
+			{	id: 'barfoo', nifty: true, key: 123 }
+		], 
+		function (is) {
+			return {
+				nifty: true,
+				key: is.in([10, 123]),
+			}
+		}).emit(function(item) {
+			expect([10, 123].indexOf(item.key) >= 0).toBe(true);
+			++count;
+		}).done(function() {
+			expect(count).toBe(2);
+			done();
+		});
+	});
+	
+	it('should implement bound()', function(done) {
+		var count = 0;
+		
+		mockFind([
+			{	id: 'asdf', nifty: true, key: 10 }, 
+			{	id: 'foobar', nifty: true, key: 121 }, 
+			{	id: 'barfoo', nifty: true, key: 123 }
+		], 
+		function (is) {
+			return {
+				nifty: true,
+				key: is.inBounds(9, 122)
+			}
+		}).emit(function(item) {
+			expect([10, 121].indexOf(item.key) >= 0).toBe(true);
+			++count;
+		}).done(function() {
+			expect(count).toBe(2);
+			done();
+		});
+	});
+	
+	it('should implement simple compound filtering', function(done) {
+		var count = 0;
+		
+		mockFind([
+			{	id: 'asdf', nifty: true, key: 10, ala: { mode: 333 } }, 
+			{	id: 'foobar', nifty: true, key: 121, ala: {mode: 1 } }, 
+			{	id: 'barfoo', nifty: false, key: 123, ala: {mode: 1 } }
+		], 
+		function (is) {
+			return {
+				_dummy: 0,
+				nifty: true,
+				ala: {
+					mode: 1
+				} 
+			}
+		}).emit(function(item) {
+			expect(item.id).toBe('foobar');
+			++count;
+		}).done(function() {
+			expect(count).toBe(1);
+			done();
+		});
+	});
+	
+	it('should implement compound inner constraints', function(done) {
+		var count = 0;
+		
+		mockFind([
+			{	id: 'asdf', nifty: true, key: 10, ala: { mode: 333 } }, 
+			{	id: 'foobar', nifty: true, key: 121, ala: {mode: 111 } }, 
+			{	id: 'barfoo', nifty: false, key: 123, ala: {mode: 222 } }
+		], 
+		function (is) {
+			return {
+				_dummy: 0,
+				nifty: true,
+				ala: {
+					mode: is.greaterThanOrEqualTo(111)
+				} 
+			}
+		}).emit(function(item) {
+			expect(item.ala.mode >= 111).toBe(true);
+			++count;
+		}).done(function() {
+			expect(count).toBe(2);
+			done();
+		});
+	});
+	
+	it('should filter index results', function(done) {
+		var count = 0;
+		
+		mockFind([
+			{
+				id: 'asdf',
 				wombat: true,
-				nifty: true
-			}).emit(function(item) {
-				expect(item.id).toBe('foobar');
-			}).done(function() {
-				done();
-			});
-		};
+				key: 123
+			}, 
+			{
+				id: 'foobar',
+				wombat: true,
+				nifty: true,
+				key: 123
+			}, 
+			{
+				id: 'barfoo',
+				nifty: true,
+				key: 123
+			}
+		], {
+			key: 123,
+			wombat: true,
+			nifty: true
+		}).emit(function(item) {
+			expect(item.id).toBe('foobar');
+			++count;
+		}).done(function() {
+			expect(count).toBe(1);
+			done();
+		});
 	});
 });

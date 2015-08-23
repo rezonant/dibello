@@ -1,20 +1,8 @@
 /**  
- * Skate! is a high-level ORM framework on top of 
- * HTML5 IndexedDB. 
+ * # skate
  * 
- * It can be used to dramatically simplify code which 
- * uses IndexedDB to persist Javascript objects into the user's
- * browser. 
+ * The main module of Skate, an IndexedDB ORM library.
  * 
- * ### Skate is:
- * - A powerful migration management system which doubles as a 
- *   description of the object schema for powering Skate's ORM features
- * - An injection-driven way to express IndexedDB transactions
- *   which dramatically simplifies using IndexedDB.
- * - A rich repository layer that builds upon the capabilities of
- *   IndexedDB object stores by providing more advanced query methods 
- *   and a unified, terse way to consume the results of IndexedDB requests
- *   
  * @author William Lahti <wilahti@gmail.com>
  * @copyright (C) 2015 William Lahti
  * @module skate
@@ -29,6 +17,7 @@ var Repository = require('./Repository.js');
 var transact = require('./transact.js');
 var Generator = require('es5-generators');
 var Database = require('./Database.js');
+
 // API
 
 /**
@@ -45,9 +34,10 @@ var skate = {
 	/**
 	 * Create a new repository object for the given database and object store.
 	 * 
+	 * @static
 	 * @param {IDBDatabase} db
 	 * @param {type} storeName
-	 * @returns {Repository}
+	 * @returns {module:skate.Repository}
 	 */
 	repository: function(db, storeName) {
 		return new Repository(db, storeName);
@@ -61,12 +51,13 @@ var skate = {
 	 * using indexeddb-js, then you should pass the indexeddbjs.indexedDB instance you
 	 * normally construct.
 	 * 
-	 * When the promise resolves you will receive an IndexedDB IDBDatabase instance.
+	 * When the promise resolves you will receive a skate.Database instance.
 	 * 
 	 * In order for Skate to prepare the database, you must provide the desired IDB 
 	 * database name and a set of options.
 	 * 
-	 * MIGRATIONS
+	 * Migrations
+	 * 
 	 * The most important option is 'migrations', which must be an
 	 * object with numeric keys, one for each revision of the database.
 	 * The 'version' option chooses what version of the schema Skate 
@@ -140,9 +131,10 @@ var skate = {
 	 * });
 	 * ```
 	 * 
+	 * @static
 	 * @param string dbName
 	 * @param object options
-	 * @returns {Promise|skate.open.ready}
+	 * @returns {Promise|module:skate.Database}
 	 */
 	open: function(indexedDB, dbName, options) {
 		// Process options

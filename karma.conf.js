@@ -1,12 +1,13 @@
 // Karma configuration
 // Generated on Sun Jul 19 2015 15:38:35 GMT-0400 (EDT)
 
+var istanbul = require('browserify-istanbul');
+  
 module.exports = function(config) {
   config.set({
 
     // base path that will be used to resolve all patterns (eg. files, exclude)
     basePath: '',
-
 
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
@@ -15,7 +16,7 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'src/skate.js',
+      'src/**/*.js',
       'test/**/*Spec.js'
     ],
 
@@ -28,19 +29,26 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
-		'src/skate.js': [ 'browserify' ],
+		'src/**/*.js': [ 'browserify' ],
 		'test/**/*Spec.js': [ 'browserify' ]
     },
 	
 	browserify: {
-		debug: true
+		debug: true,
+		transform: [istanbul({
+			ignore: ['**/node_modules/**', '**/test/**'],
+		})],
 	},
 
     // test results reporter to use
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: ['progress'],
-
+    reporters: ['progress', 'coverage'],
+ 
+	coverageReporter: {
+		type: 'html',
+		dir: 'doc/coverage'
+	},
 
     // web server port
     port: 9876,

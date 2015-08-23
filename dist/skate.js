@@ -3150,12 +3150,15 @@ var Repository = require('./Repository.js');
  * Constructs a Database object which represents an IndexedDB database.
  * 
  * @class
+ * @alias module:skate.Database
  * @param {SchemaBuilder} schema
  * @param {IDBDatabase} idb
  * @returns {Database}
  * 
  */
 function Database(schema, idb) {
+	if (!schema)
+		throw "Must pass a SchemaBuilder as 'schema' to the skate.Database constructor";
 	this._schema = schema;
 	this._idb = idb;
 	this._repositoryConfigs = {};  
@@ -3169,6 +3172,11 @@ function Database(schema, idb) {
  * @returns {Promise} A promise to resolve once the transaction has completed processing.
  */
 Database.prototype.transact = function(mode, fn) {
+	
+	if (typeof mode !== 'string') {
+		throw 'First parameter must be a mode string';
+	}
+	
 	var self = this;
 	return transact(this, null, function(db, name, transaction) {
 		return self.repository(name, transaction);
@@ -3262,6 +3270,7 @@ Database.prototype.idb = function() {
 /**
  * Converts an IDBCursor into a Generator
  * @class
+ * @alias module:skate.IDBCursorGenerator
  * @param {IDBCursor} cursor
  * @returns {Generator}
  */
@@ -3323,6 +3332,7 @@ module.exports = IDBCursorGenerator;
 /**
  * Converts an IDBRequest into a Generator
  * @class
+ * @alias module:skate.IDBRequestGenerator
  * @param {IDBRequest} request
  * @returns {Generator}
  */
@@ -3352,7 +3362,7 @@ if (typeof window !== 'undefined') {
 module.exports = IDBRequestGenerator;
 },{}],14:[function(require,module,exports){
 /**
- * Module providing a class which provides a high-level API on top
+ * Module  which is providing a class which provides a high-level API on top
  * of an IndexedDB object store (IDBObjectStore)
  * 
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/IDBObjectStore MDN Reference - IDBObjectStore}
@@ -3371,7 +3381,8 @@ var IDBCursorGenerator = require('./IDBCursorGenerator.js');
  * Provides a high-level API on top of an IndexedDB 
  * object store (IDBObjectStore)
  * 
- * @class Repository
+ * @class
+ * @alias module:skate.Repository
  * @param {Database} db The database to associate the repository with
  * @param {String} storeName The name of the store which this repository will represent
  * @param {IDBTransaction} transaction The optional IDB transaction to associate with the new repository
@@ -3982,6 +3993,7 @@ var StoreBuilder = require('./StoreBuilder.js');
 
 /**
  * @class
+ * @alias module:skate.SchemaBuilder
  * @param {String} name The name of the IndexedDB database being defined
  * @param {object} registry An object with a prepareRepository() method, or NULL
  * @returns {SchemaBuilder}
@@ -4025,10 +4037,7 @@ SchemaBuilder.prototype.disconnectDatabase = function() {
  */
 SchemaBuilder.prototype.createStore = function(name) {
 	if (this.stores[name]) {
-		throw {
-			error: 'StoreAlreadyExists',
-			message: 'A store with name \''+name+'\' already exists.'
-		};
+		throw 'store-already-exists: A store with name \''+name+'\' already exists.';
 	}
 	return new StoreBuilder(this, name);
 };
@@ -4037,14 +4046,11 @@ SchemaBuilder.prototype.createStore = function(name) {
  * Get an existing store so that you can modify it.
  * 
  * @param {String} name
- * @returns {StoreBuilder}
+ * @returns {StoreBuilder} 
  */
 SchemaBuilder.prototype.getStore = function(name) {
 	if (!this.stores[name]) {
-		throw {
-			error: 'NoSuchStore',
-			message: 'A store with name \''+name+'\' could not be found.'
-		};
+		throw 'no-such-store: A store with name \''+name+'\' could not be found.';
 	}
 	
 	return this.stores[name];
@@ -4102,6 +4108,7 @@ SchemaBuilder.prototype.debug = function() {
  * Represents a data store being built (or reflected upon)
  * 
  * @class
+ * @alias module:skate.StoreBuilder
  * @param {SchemaBuilder} builder The SchemaBuilder instance which owns this StoreBuilder
  * @param {String} name The name of the object store being built
  * @param {String} id The name of the field which will represent the object store's primary key
@@ -4411,22 +4418,8 @@ if (typeof window !== 'undefined') {
 }
 },{}],18:[function(require,module,exports){
 /**  
- * Skate is a high-level ORM framework on top of 
- * HTML5 IndexedDB. 
+ * The main module of Skate, an IndexedDB ORM library.
  * 
- * It can be used to dramatically simplify code which 
- * uses IndexedDB to persist Javascript objects into the user's
- * browser. 
- * 
- * ### Skate is:
- * - A powerful migration management system which doubles as a 
- *   description of the object schema for powering Skate's ORM features
- * - An injection-driven way to express IndexedDB transactions
- *   which dramatically simplifies using IndexedDB.
- * - A rich repository layer that builds upon the capabilities of
- *   IndexedDB object stores by providing more advanced query methods 
- *   and a unified, terse way to consume the results of IndexedDB requests
- *   
  * @author William Lahti <wilahti@gmail.com>
  * @copyright (C) 2015 William Lahti
  * @module skate
@@ -4457,9 +4450,10 @@ var skate = {
 	/**
 	 * Create a new repository object for the given database and object store.
 	 * 
+	 * @static
 	 * @param {IDBDatabase} db
 	 * @param {type} storeName
-	 * @returns {Repository}
+	 * @returns {module:skate.Repository}
 	 */
 	repository: function(db, storeName) {
 		return new Repository(db, storeName);
@@ -4473,12 +4467,13 @@ var skate = {
 	 * using indexeddb-js, then you should pass the indexeddbjs.indexedDB instance you
 	 * normally construct.
 	 * 
-	 * When the promise resolves you will receive an IndexedDB IDBDatabase instance.
+	 * When the promise resolves you will receive a skate.Database instance.
 	 * 
 	 * In order for Skate to prepare the database, you must provide the desired IDB 
 	 * database name and a set of options.
 	 * 
-	 * MIGRATIONS
+	 * Migrations
+	 * 
 	 * The most important option is 'migrations', which must be an
 	 * object with numeric keys, one for each revision of the database.
 	 * The 'version' option chooses what version of the schema Skate 
@@ -4552,9 +4547,10 @@ var skate = {
 	 * });
 	 * ```
 	 * 
+	 * @static
 	 * @param string dbName
 	 * @param object options
-	 * @returns {Promise|skate.open.ready}
+	 * @returns {Promise|module:skate.Database}
 	 */
 	open: function(indexedDB, dbName, options) {
 		// Process options
@@ -4704,7 +4700,6 @@ module.exports = stripCopy;
  * @copyright (C) 2015 William Lahti    
  */   
  
-var annotateFn = require('./utils/annotateFn.js');
 var injector = require('./utils/lightinjector.js');
 var Repository = require('./Repository.js');
 
@@ -4852,7 +4847,7 @@ function transact(db, transactionOrFactory, repositoryFactory, fn, mode, extraIn
 };
 
 module.exports = transact;
-},{"./Repository.js":14,"./utils/annotateFn.js":21,"./utils/lightinjector.js":22}],21:[function(require,module,exports){
+},{"./Repository.js":14,"./utils/lightinjector.js":22}],21:[function(require,module,exports){
 /**
  * A light-weight Javascript function reflector, similar to the one found in Angular.js.
  * Also supports array-style annotations for mangler-friendly code.
@@ -4876,6 +4871,13 @@ var STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
  */
 function annotateFn(fn) {
 
+	if (typeof fn === 'undefined') {
+		return {
+			fn: function() { },
+			params: []
+		};
+	}
+	
 	if (typeof fn === 'object' && fn.length !== undefined) {
 		var params = fn;
 		fn = params[params.length - 1];
@@ -4946,6 +4948,7 @@ function InjectionException(message) {
  * @returns mixed The result of the function once called
  */
 function inject(map, self, fn) {
+	
 	var meta = annotateFn(fn);
 	var params = meta.params;
 	fn = meta.fn;
@@ -4980,7 +4983,7 @@ function inject(map, self, fn) {
 		}
 		
 		if (typeof factory === 'function') {
-			args.push(factory(inject));
+			args.push(factory(param, inject));
 		} else {
 			args.push(factory);
 		}

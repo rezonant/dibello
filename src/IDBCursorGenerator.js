@@ -2,16 +2,24 @@
  * Module providing a class that converts an IDBCursor into a
  * Generator.
  *
- * @module skate/IDBCursorGenerator
  * @author William Lahti <wilahti@gmail.com>
  * @copyright (C) 2015 William Lahti  
  */
 
 /**
- * Converts an IDBCursor into a Generator
+ * Converts an IndexedDB IDBCursor into an ES5 Generator
+ * (see es5-generators).
+ * 
+ * Using the resulting generator, you can attach .emit()
+ * and .done() events to the generator to be notified when
+ * a new item is received from IndexedDB and when the request
+ * has fully completed, respectively. Use .then() to get an
+ * array of all items which are emitted after registering,
+ * but this requires O(N) memory instead of O(1).
+ * 
  * @class
- * @param {IDBCursor} cursor
- * @returns {Generator}
+ * @alias module:skate.IDBCursorGenerator
+ * @param {IDBCursor} cursor The cursor to generate items with.
  */
 function IDBCursorGenerator(cursor) {
 	var request = cursor;

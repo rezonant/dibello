@@ -1,4 +1,5 @@
 /**
+ * # skate/transact
  * 
  * transact() is Skate's core implementation of IndexedDB transactional injection,
  * which is the process of introspecting a function's parameters, creating a 
@@ -8,8 +9,7 @@
  * This is function injection in a way popularized by the Angular.js framework.
  * transact() is used internally within Skate in many places, including Database.transact(),
  * SchemaBuilder.run() and Repository.hydrate().
- *   
- * @module skate/transact
+ * 
  * @author William Lahti <wilahti@gmail.com>
  * @copyright (C) 2015 William Lahti    
  */   
@@ -18,7 +18,6 @@ var injector = require('./utils/lightinjector.js');
 var Repository = require('./Repository.js');
 
 /**  
- * @class
  * @param {String} message The message for the exception
  */
 function SkateUnknownStoreException(message) {
@@ -95,26 +94,6 @@ function transact(db, transactionOrFactory, repositoryFactory, fn, mode, extraIn
 				if (this[param])
 					continue;
 				
-				// Are we a promise?
-				if (param == 'resolve' || param == 'reject') {
-					
-					if (!promise) {
-						promise = new Promise(function(resolve, reject) {
-							promiseResolve = resolve;
-							promiseReject = reject;
-						});
-					}
-					
-					if (param == 'resolve')
-						this.resolve = promiseResolve;
-					
-					if (param == 'reject')
-						this.reject = promiseReject;
-					
-					continue;
-			
-				}
-				
 				var storeOnly = false;
 				var storeName = param;
 				
@@ -127,7 +106,7 @@ function transact(db, transactionOrFactory, repositoryFactory, fn, mode, extraIn
 				try {
 					store = this.$transaction.objectStore(storeName);
 				} catch (e) {
-					throw new SkateUnknownStoreException('No such object store '+param);
+					throw 'No such object store \''+param+'\'';
 				}
 				
 				if (storeOnly) {
@@ -152,11 +131,6 @@ function transact(db, transactionOrFactory, repositoryFactory, fn, mode, extraIn
 	// and repositories for any specifically named object stores.
 	
 	var result = injector(injectables, null, fn);
-	
-	if (result && result.constructor && result.constructor.name == 'Promise') {
-		return result;
-	}
-	
 	return Promise.resolve(result);
 };
 
