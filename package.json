@@ -1,8 +1,8 @@
 {
-  "name": "skate",
+  "name": "dibello",
   "version": "0.3.2",
   "description": "A high-level API on top of IndexedDB",
-  "main": "src/skate.js",
+  "main": "src/dibello.js",
   "directories": {
     "test": "test"
   },
@@ -22,7 +22,7 @@
   "license": "MIT",
   "dependencies": {
     "deepcopy": "^0.5.0",
-    "es5generators": "0.0.1"
+    "es5-generators": "^1.1.0"
   },
   "devDependencies": {
     "brfs": "^1.4.1",
@@ -43,7 +43,6 @@
     "karma": "^0.13.3",
     "karma-browserify": "^4.2.1",
     "karma-chrome-launcher": "^0.2.0",
-    "karma-commonjs": "0.0.13",
     "karma-coverage": "^0.5.0",
     "karma-jasmine": "^0.3.6"
   }

@@ -9,7 +9,7 @@
 /**
  * Converts an IDBRequest into a Generator
  * @class
- * @alias module:skate.IDBRequestGenerator
+ * @alias module:dibello.IDBRequestGenerator
  * @param {IDBRequest} request
  * @returns {Generator}
  */

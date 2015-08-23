@@ -20,7 +20,7 @@ var transact = require('./transact.js');
  * object store (IDBObjectStore)
  * 
  * @class
- * @alias module:skate.Repository
+ * @alias module:dibello.Repository
  * @param {Database} db The database to associate the repository with
  * @param {String} storeName The name of the store which this repository will represent
  * @param {IDBTransaction} transaction The optional IDB transaction to associate with the new repository
@@ -48,8 +48,8 @@ if (typeof window !== 'undefined')
  * This method can be overridden for a specific repository by using skate/Database.configRepository()
  * 
  * @param {type} item
- * @see {@link module:skate/Database~Database#configRepository Database.configRepository}
- * @see {@link module:skate/Database~Database#transact Database.transact}
+ * @see {@link module:dibello/Database~Database#configRepository Database.configRepository}
+ * @see {@link module:dibello/Database~Database#transact Database.transact}
  * @returns {undefined}
  */
 Repository.prototype.dehydrate = function(item) {};
@@ -59,7 +59,7 @@ Repository.prototype.dehydrate = function(item) {};
  * This function is called using skate/Database.transact(), so you can request
  * repositories or other dependencies using Skate's function injection mechanism.
  * 
- * @see {@link module:skate/Database~Database#transact Database.transact} 
+ * @see {@link module:dibello/Database~Database#transact Database.transact} 
  * @param {type} item In addition to the standard transact services, you may also inject 'item' which is the item being hydrated
  * @returns {unresolved}
  */
@@ -83,7 +83,7 @@ Repository.prototype.getStoreTransaction = function(db) {
  * transacting this repository's .hydrate() method.
  * 
  * @private
- * @param {module:skate.Database} db Database instance
+ * @param {module:dibello.Database} db Database instance
  * @param {object} item The item being hydrated
  */
 Repository.prototype._hydrateItem = function(db, item) {
@@ -149,7 +149,7 @@ Repository.prototype.setTransaction = function(tx) {
 /**
  * On a transacted Repository instance, this method returns the underlying 
  * object store instance (IDBObjectStore). If called on a non-transacted 
- * Repository (ie one created with {@link module:skate/Database~Database#repository Database.repository()}),
+ * Repository (ie one created with {@link module:dibello/Database~Database#repository Database.repository()}),
  * this method will throw an exception.
  * 
  * @returns {@link https://developer.mozilla.org/en-US/docs/Web/API/IDBObjectStore IDBObjectStore}
@@ -204,7 +204,7 @@ Repository.prototype.persist = function(item) {
 /**
  * Returns a generator which wraps the given 
  * {@link https://developer.mozilla.org/en-US/docs/Web/API/IDBCursor IDBCursor}, 
- * hydrating the objects emitted using {@link module:skate/Repository~Repository#hydrate hydrate()}.
+ * hydrating the objects emitted using {@link module:dibello/Repository~Repository#hydrate hydrate()}.
  * 
  * @param {IDBCursor} cursor The {@link https://developer.mozilla.org/en-US/docs/Web/API/IDBCursor IDBCursor} instance
  * @returns {Generator} A generator which will emit each of the hydrated items emitted from the given cursor
@@ -213,10 +213,14 @@ Repository.prototype.hydrateCursor = function(cursor) {
 	return this.hydrateGenerator(new IDBCursorGenerator(cursor));
 };
 
+Repository.prototype.hydrateRequest = function(cursor) {
+	return this.hydrateGenerator(new IDBRequestGenerator(cursor));
+};
+
 /**
  * Returns a generator which wraps the given generator, hydrating 
  * the objects emitted using 
- * {@link module:skate/Repository~Repository#hydrate hydrate()}.
+ * {@link module:dibello/Repository~Repository#hydrate hydrate()}.
  * 
  * @param {Generator} generator The generator whose items should be hydrated
  * @returns {Generator} A generator which emits the hydrated items
@@ -255,7 +259,7 @@ Repository.prototype.get = function(id) {
 		return new Promise(function(resolve, reject) {
 			var tx = self.getStoreTransaction(db);
 			var store = tx.objectStore(self.storeName);
-			self.hydrateCursor(store.get(id)).emit(function(hydratedItem) {
+			self.hydrateRequest(store.get(id)).emit(function(hydratedItem) {
 				resolve(hydratedItem);
 			});
 		});

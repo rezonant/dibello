@@ -8,10 +8,10 @@ module.exports = function(grunt) {
     browserify: {
 		app: {
 			src: [
-				'src/skate.js'
+				'src/dibello.js'
 			],
 
-			dest: 'dist/skate.js'
+			dest: 'dist/dibello.js'
 		}
     },
 
@@ -49,7 +49,7 @@ module.exports = function(grunt) {
 		options: {
 			files: ["package.json", "bower.json"],
 			updateConfigs: ["pkg"],
-			commitFiles: ['package.json', 'bower.json', 'dist/skate.js', 'dist/skate.min.js'],
+			commitFiles: ['package.json', 'bower.json', 'dist/dibello.js', 'dist/dibello.min.js'],
 			commitMessage: 'Release v%VERSION%',
 			createTag: true,
 			tagName: 'v%VERSION%',
@@ -98,9 +98,9 @@ module.exports = function(grunt) {
 
       dist: {
         src: [
-            'dist/skate.js',
+            'dist/dibello.js',
         ],
-        dest: 'dist/skate.min.js'
+        dest: 'dist/dibello.min.js'
       }
     }
   });
@@ -118,9 +118,9 @@ module.exports = function(grunt) {
 
   // Tasks
 
-  grunt.registerTask('default', ['dist', 'test']);
+  grunt.registerTask('default', ['dist', 'test', 'jsdoc']);
   grunt.registerTask('dist', ['browserify', 'uglify']);
-  grunt.registerTask('test', ['karma']);
+  grunt.registerTask('test', ['karma:unit']);
   grunt.registerTask('dev', ['concurrent:dev']);
   // Release tasks
 

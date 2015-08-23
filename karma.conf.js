@@ -35,9 +35,9 @@ module.exports = function(config) {
 	
 	browserify: {
 		debug: true,
-		transform: [istanbul({
-			ignore: ['**/node_modules/**', '**/test/**'],
-		})],
+	//	transform: [istanbul({
+	//		ignore: ['**/node_modules/**', '**/test/**'],
+	//	})],
 	},
 
     // test results reporter to use

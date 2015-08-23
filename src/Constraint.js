@@ -2,7 +2,7 @@
 /**
  * Constructs a new skate.Constraint.
  * @class 
- * @alias module:skate.Constraint
+ * @alias module:dibello.Constraint
  * @param {String} operator
  * @param {} discriminant
  * @param {IDBKeyRange} idb
@@ -31,7 +31,7 @@ function isValidKey(value) {
  * Match values greater than the given value
  * @static
  * @param {type} value
- * @returns {module:skate.Constraint}
+ * @returns {module:dibello.Constraint}
  */
 Constraint.greaterThan = function(value) {
 	return new Constraint('>', value, !isValidKey(value)? null : IDBKeyRange.lowerBound(value));
@@ -41,7 +41,7 @@ Constraint.greaterThan = function(value) {
  * Match values greater than or equal to the given value
  * @static
  * @param {type} value
- * @returns {module:skate.Constraint}
+ * @returns {module:dibello.Constraint}
  */
 Constraint.greaterThanOrEqualTo = function(value) {
 	
@@ -53,7 +53,7 @@ Constraint.greaterThanOrEqualTo = function(value) {
 /**
  * @static
  * @param {type} value
- * @returns {module:skate.Constraint}
+ * @returns {module:dibello.Constraint}
  */
 Constraint.lessThan = function(value) {
 	return new Constraint('<', value, !isValidKey(value)? null : IDBKeyRange.upperBound(value));
@@ -66,7 +66,7 @@ Constraint.compound = function(object) {
 /**
  * @static
  * @param {type} value
- * @returns {module:skate.Constraint}
+ * @returns {module:dibello.Constraint}
  */
 Constraint.lessThanOrEqualTo = function(value) {
 	return new Constraint('<=', value, !isValidKey(value)? null : IDBKeyRange.upperBound(value));
@@ -76,7 +76,7 @@ Constraint.lessThanOrEqualTo = function(value) {
  * Match values equal to the given value
  * @static
  * @param {type} value
- * @returns {module:skate.Constraint}
+ * @returns {module:dibello.Constraint}
  */
 Constraint.equalTo = function(value) {
 	return new Constraint('=', value, !isValidKey(value)? null : IDBKeyRange.only(value));
@@ -86,7 +86,7 @@ Constraint.equalTo = function(value) {
  * Match values within the given bounds
  * @static
  * @param {type} value
- * @returns {module:skate.Constraint}
+ * @returns {module:dibello.Constraint}
  */
 Constraint.inBounds = function(lower, upper, exclusiveLower, exclusiveUpper) {
 	return new Constraint(
@@ -100,7 +100,7 @@ Constraint.inBounds = function(lower, upper, exclusiveLower, exclusiveUpper) {
  * Match values which fall within the given array of values
  * @static
  * @param {type} value
- * @returns {module:skate.Constraint}
+ * @returns {module:dibello.Constraint}
  */
 Constraint.in = function(value) {
 	return new Constraint('in', value, null);

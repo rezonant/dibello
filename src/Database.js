@@ -12,8 +12,8 @@ var Repository = require('./Repository.js');
  * Constructs a Database object which represents an IndexedDB database.
  * 
  * @class
- * @alias module:skate.Database
- * @param {module:skate.SchemaBuilder} schema A representation of the database's intended schema
+ * @alias module:dibello.Database
+ * @param {module:dibello.SchemaBuilder} schema A representation of the database's intended schema
  * @param {IDBDatabase} idb An opened IndexedDB database
  * 
  */
@@ -57,7 +57,7 @@ Database.prototype.setIDB = function(idb) {
  * 
  * @param {String} name The name of the repository to retrieve
  * @param {type} tx An optional transaction which the repository should be associated with
- * @returns {module:skate.Repository} The new repository object
+ * @returns {module:dibello.Repository} The new repository object
  */
 Database.prototype.repository = function(name, tx) {
 	var repo = new Repository(this.idb(), name, tx);
@@ -69,7 +69,7 @@ Database.prototype.repository = function(name, tx) {
  * Prepare the given Repository instance by calling any config functions
  * registered for its name.
  * 
- * @param {module:skate.Repository} repository The repository which must be prepared
+ * @param {module:dibello.Repository} repository The repository which must be prepared
  */
 Database.prototype.prepareRepository = function(repository) {
 	if (this._repositoryConfigs[repository.storeName])
@@ -103,7 +103,7 @@ Database.prototype.configRepository = function(name, cb) {
  * it. This is mostly for use internally but can be useful for debugging (see 
  * SchemaBuilder.debug()).
  * 
- * @returns {module:skate.SchemaBuilder} The SchemaBuilder containing this database's current schema
+ * @returns {module:dibello.SchemaBuilder} The SchemaBuilder containing this database's current schema
  */
 Database.prototype.getSchema = function() {
 	return this._schema;

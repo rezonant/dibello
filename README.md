@@ -1,13 +1,13 @@
 Provides an ORM library built on top of IndexedDB.
 
-Skate is a high-level ORM framework on top of 
+Dibello is a high-level ORM framework on top of 
 HTML5 IndexedDB. It can be used to dramatically simplify code which 
 uses IndexedDB to persist and query for Javascript objects within the 
 browser's local storage. 
 
 ### What is this?
 - A powerful migration management system which doubles as a 
-  description of the object schema for powering Skate's ORM features
+  description of the object schema for powering Dibello's ORM features
 - A DI-based mechanism for expressing IndexedDB transactions
   which dramatically simplifies building IDB applications.
 - A rich repository layer that builds upon the capabilities of
@@ -22,26 +22,26 @@ This software is provided under the terms of the MIT License. See COPYING for de
 
 Node (server-side) and Browserify (client-side): 
 ```sh
-npm install skate 
+npm install dibello
 ```
  
 Regardless of whether you are in Node or Browserify, you can use 
-```require('skate')``` to obtain the Skate API.
+```require('dibello')``` to obtain the Dibello API.
 
 Bower (client-side): 
 ```sh
-bower install skate
+bower install dibello
 ```
 
-Now include ```bower_components/skate/dist/skate.min.js``` either directly on your page or within your 
+Now include ```bower_components/dibello/dist/dibello.min.js``` either directly on your page or within your 
 Javascript build step.
 
 Non-minified dist versions are also included.
 
 ### Opening a Database
 
-First, you should open a connection to an IndexedDB database using Skate.
-You must pass the indexedDB API since Skate can be used with many different IDB
+First, you should open a connection to an IndexedDB database using Dibello.
+You must pass the indexedDB API since Dibello can be used with many different IDB
 implementations (not just the native browser one). Along with the database name,
 you must also pass an options object which specifies the current schema version
 of the database, and a set of migrations which are run to compute the schema of the
@@ -49,8 +49,8 @@ database. More about migrations later.
 
 
 ```js
-var skate = require('skate');
-skate.open(indexedDB, 'mydb', {
+var dibello = require('dibello');
+dibello.open(indexedDB, 'mydb', {
    version: 2
    migrations: {
       "1": function(schema) {
@@ -65,13 +65,13 @@ skate.open(indexedDB, 'mydb', {
       }
    }
 }).then(function(db) {
-    // hey, we have a database (skate.Database)
+    // hey, we have a database (dibello.Database)
 	// if we need to do low-level stuff, we can 
 	// get the IDBDatabase with .idb()
 	var idb = db.idb();
 
 	// but there are better ways to 
-	// use a skate.Database...
+	// use a dibello.Database...
 });
 
 ```
@@ -82,7 +82,7 @@ Once you have a database instance, you can transact.
 ```js
 db.transact('readonly', function(apples) {
 
-    // apples is a skate.Repository which wraps the 'apples' IDBObjectStore,
+    // apples is a dibello.Repository which wraps the 'apples' IDBObjectStore,
 	// and repositories use promises :-)
 
     apples.get('someappleid').then(function(item) {
@@ -202,12 +202,12 @@ function getPhonesForUser(db, username) {
 ```
 
 You would be crazy to use vanilla IndexedDB without some kind of layer above it.
-Let's see what using Skate above IndexedDB would look like.
+Let's see what using Dibello above IndexedDB would look like.
 
 ```js
-function getPhonesForUser(skateDb, username) {
+function getPhonesForUser(dibelloDb, username) {
 	return new Promise(function(resolve, reject) {
-		skateDb.transact(function(users, phones) {
+		dibelloDb.transact(function(users, phones) {
 			users.get(username).then(function(user) {
 				phones.index(user.id).then(function(foundNumbers) {
 					resolve(foundNumbers);
@@ -222,9 +222,9 @@ When transact() creates the IndexedDB transaction, it will look at the services 
 have requested and authorize only the object stores of the repositories you have requested. That is to say,
 if you request:
 ```js
-skateDb.transact('readwrite', function(apples, oranges) {});
+dibelloDb.transact('readwrite', function(apples, oranges) {});
 ```
-Then skate.transact() will call the IndexedDB method
+Then the following IndexedDB call is made:
 ```js
 idbDatabase.transaction(['apples', 'oranges'], 'readwrite');
 ```
@@ -234,12 +234,12 @@ use them to interact with it.
 
 ### More injectable services
 
-You might want to inject more than just skate repositories. You can request the 
-skate.Database instance using $db. You can request the skate.Transaction instance 
+You might want to inject more than just dibello repositories. You can request the 
+dibello.Database instance using $db. You can request the dibello.Transaction instance 
 representing your transaction with $transaction:
 
 ```js
-skateDb.transact(function($db, $transaction, users) {
+dibelloDb.transact(function($db, $transaction, users) {
 
 	doSomethingImportantToDatabase();
 
@@ -260,12 +260,12 @@ skateDb.transact(function($db, $transaction, users) {
 });
 ```
 
-You might need to access the IndexedDB objects which underpin skate.Databse and
-skate.Transaction (IDBDatabase, IDBTransaction, respectively).
+You might need to access the IndexedDB objects which underpin dibello.Databse and
+dibello.Transaction (IDBDatabase, IDBTransaction, respectively).
 transact() provides these using the $$db and $$transaction services
 
 ```js
-skateDb.transact(function($$db, $$transaction) {
+dibelloDb.transact(function($$db, $$transaction) {
 	var fruit = $$transaction.objectStore('fruit');
 	fruit.put({ variant: 'apple' });
 
@@ -276,10 +276,10 @@ skateDb.transact(function($$db, $$transaction) {
 ```
 
 You might even want to retrieve just the IDBObjectStore object
-instead of a skate.Repository:
+instead of a dibello.Repository:
 
 ```js
-skateDb.transact(function($apples) {
+dibelloDb.transact(function($apples) {
 	$apples.get(9001).onsuccess = function(event) {
 		// well, you get the picture
 	};
@@ -294,12 +294,12 @@ the requested version is higher than the current version, IndexedDB will emit an
 upgrade event.
 
 Many IndexedDB libraries provide a layer above this which allows you to specify your 
-schema in steps as it progresses through time. Skate is no different. Let's return to 
+schema in steps as it progresses through time. Dibello is no different. Let's return to 
 our first code example:
 
 ```js
-var skate = require('skate');
-skate.open(indexedDB, 'mydb', {
+var dibello = require('dibello');
+dibello.open(indexedDB, 'mydb', {
    version: 2
    migrations: {
       "1": function(schema) {
@@ -323,13 +323,13 @@ Note that during a migration, migration functions are run from the very first up
 the outstanding ones. All migration functions are run regardless of whether that particular
 migration needs to be applied to the database the application is running on. This is to 
 allow the SchemaBuilder to generate a complete and correct view of the schema based on your 
-migrations. Skate simply puts the migration engine in "neutral" while running migration 
+migrations. Dibello simply puts the migration engine in "neutral" while running migration 
 functions which represent schema changes already present in the database.
 
 This is why within migration functions you can only interact with and modify 
 the database schema, *not* the actual data. To do that you must use a 
 .run() block. Parameters for run() blocks are dynamically injected just like 
-skate.transact() calls, meaning you can request any of the services described above.
+dibello.transact() calls, meaning you can request any of the services described above.
 
 ```js
 "1": function(schema) {
@@ -344,7 +344,7 @@ skate.transact() calls, meaning you can request any of the services described ab
 
 ### Getting results as they arrive
 
-When you request more than one item within Skate, you will receive a Promise-like object
+When you request more than one item within Dibello, you will receive a Promise-like object
 with .then() and .catch() methods. The promise will be resolved once all item events have been
 received from IndexedDB, and the array of those items will be provided as the value of the promise.
 However, such requests also have an .emit() function which allows you to receive items as 
@@ -366,13 +366,13 @@ any data from the request.
 
 This type of generator is provided by the es5-generators NPM package. They are similar to 
 ES6 generators without needing runtime-level support for co-routines, because they are 
-built similarly to ES5 promises. A future version of Skate will support ES6 generators 
+built similarly to ES5 promises. A future version of Dibello will support ES6 generators 
 directly. For more on es5-generators, 
 visit [github.com/rezonant/es5-generators](http://github.com/rezonant/es5-generators)
 
 ### Repositories
 
-Most importantly, Skate's repositories provide a much more terse pattern of interaction with 
+Most importantly, Dibello's repositories provide a much more terse pattern of interaction with 
 IndexedDB object stores than the vanilla APIs:
 
 ```js
@@ -418,12 +418,12 @@ apples.find(function(is, orchards) {
 });
 ```
 
-We're excited to see what you can make using Skate. So npm install
+We're excited to see what you can make using Dibello. So npm install
 and get started! 
 
 ### Contributing
 
-Fork us on [Github](http://github.com/rezonant/skate). Please use 
+Fork us on [Github](http://github.com/rezonant/dibello). Please use 
 the Github workflow (ie use feature-specific branches and send 
 pull requests). Please only send PRs to the master branch unless 
 absolutely necessary.

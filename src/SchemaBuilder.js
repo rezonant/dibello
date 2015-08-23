@@ -11,7 +11,7 @@ var annotateFn = require('./utils/annotateFn.js');
 
 /**
  * @class
- * @alias module:skate.SchemaBuilder
+ * @alias module:dibello.SchemaBuilder
  * @param {String} name The name of the IndexedDB database being defined
  * @param {object} registry An object with a prepareRepository() method, or NULL
  */
@@ -50,7 +50,7 @@ SchemaBuilder.prototype.disconnectDatabase = function() {
  * Create a new store
  * 
  * @param {String} name
- * @returns {module:skate.StoreBuilder}
+ * @returns {module:dibello.StoreBuilder}
  */
 SchemaBuilder.prototype.createStore = function(name) {
 	if (this.stores[name]) {
@@ -63,7 +63,7 @@ SchemaBuilder.prototype.createStore = function(name) {
  * Get an existing store so that you can modify it.
  * 
  * @param {String} name
- * @returns {module:skate.StoreBuilder} 
+ * @returns {module:dibello.StoreBuilder} 
  */
 SchemaBuilder.prototype.getStore = function(name) {
 	if (!this.stores[name]) {
@@ -77,7 +77,7 @@ SchemaBuilder.prototype.getStore = function(name) {
  * Migrate data imperatively. Only calls back if a migration is in progress.
  * 
  * @param {function} callback
- * @returns {module:skate.SchemaBuilder}
+ * @returns {module:dibello.SchemaBuilder}
  */
 SchemaBuilder.prototype.run = function(callback) {
 	if (this.transaction && this.db) {

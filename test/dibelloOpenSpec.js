@@ -1,5 +1,5 @@
 
-var skate = require('../src/skate.js');
+var skate = require('../src/dibello.js');
 var idbMock = require('indexeddb-mock');
 
 describe("skate.open()", function() {

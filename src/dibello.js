@@ -1,7 +1,7 @@
 /**  
  * # skate
  * 
- * The main module of Skate, an IndexedDB ORM library.
+ * The main module of Dibello, an IndexedDB ORM library.
  * 
  * @author William Lahti <wilahti@gmail.com>
  * @copyright (C) 2015 William Lahti
@@ -21,7 +21,7 @@ var Database = require('./Database.js');
 // API
 
 /**
- * @alias module:skate
+ * @alias module:dibello
  * @type skate
  */
 var skate = { 
@@ -37,7 +37,7 @@ var skate = {
 	 * @static
 	 * @param {IDBDatabase} db
 	 * @param {type} storeName
-	 * @returns {module:skate.Repository}
+	 * @returns {module:dibello.Repository}
 	 */
 	repository: function(db, storeName) {
 		return new Repository(db, storeName);
@@ -134,7 +134,7 @@ var skate = {
 	 * @static
 	 * @param string dbName
 	 * @param object options
-	 * @returns {Promise|module:skate.Database}
+	 * @returns {Promise|module:dibello.Database}
 	 */
 	open: function(indexedDB, dbName, options) {
 		// Process options

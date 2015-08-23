@@ -18,7 +18,7 @@
  * but this requires O(N) memory instead of O(1).
  * 
  * @class
- * @alias module:skate.IDBCursorGenerator
+ * @alias module:dibello.IDBCursorGenerator
  * @param {IDBCursor} cursor The cursor to generate items with.
  */
 function IDBCursorGenerator(cursor) {

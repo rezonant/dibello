@@ -103,8 +103,8 @@ describe('Repository.persist()', function() {
 		
 	});
 });
-describe('Repository.get()', function() {
-	  
+
+describe('Repository.get()', function() {	  
 	it('should call the underlying store.get() method', function(done) {
 		idbMock.reset();
 		var dbRequest = idbMock.mock.open('somedb', 1);
@@ -121,9 +121,8 @@ describe('Repository.get()', function() {
 				getCalled = true;
 				expect(key).toBe('123');
 
-				return idbMock.request.success([
-					{ id: '123' }
-				], true);
+				return idbMock.request.success(
+					{ id: '123' }, true);
 			};
 
 			repo.setTransaction(tx);	 
