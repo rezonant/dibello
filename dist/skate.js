@@ -3135,11 +3135,119 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./support/isBuffer":9,"_process":8,"inherits":7}],11:[function(require,module,exports){
+
+/**
+ * Constructs a new skate.Constraint.
+ * @class 
+ * @alias module:skate.Constraint
+ * @param {String} operator
+ * @param {} discriminant
+ * @param {IDBKeyRange} idb
+ */
+var Constraint = function(operator, discriminant, idb) {
+	this.isConstraint = true;
+	this.operator = operator;
+	this.discriminant = discriminant;
+	this.idb = idb;
+	this._compiled = {
+		operator: ''
+	};
+}; module.exports = Constraint;
+
+function isValidKey(value) {
+	if (value === undefined || value === null)
+		return false;
+	
+	if (value === true || value === false)
+		return false;
+	
+	return true;
+}
+
+/**
+ * Match values greater than the given value
+ * @static
+ * @param {type} value
+ * @returns {module:skate.Constraint}
+ */
+Constraint.greaterThan = function(value) {
+	return new Constraint('>', value, !isValidKey(value)? null : IDBKeyRange.lowerBound(value));
+};
+
+/**
+ * Match values greater than or equal to the given value
+ * @static
+ * @param {type} value
+ * @returns {module:skate.Constraint}
+ */
+Constraint.greaterThanOrEqualTo = function(value) {
+	
+	
+	
+	return new Constraint('>=', value, !isValidKey(value)? null : IDBKeyRange.lowerBound(value));
+};
+
+/**
+ * @static
+ * @param {type} value
+ * @returns {module:skate.Constraint}
+ */
+Constraint.lessThan = function(value) {
+	return new Constraint('<', value, !isValidKey(value)? null : IDBKeyRange.upperBound(value));
+};
+
+Constraint.compound = function(object) {
+	return new Constraint('compound', object, null);
+}
+
+/**
+ * @static
+ * @param {type} value
+ * @returns {module:skate.Constraint}
+ */
+Constraint.lessThanOrEqualTo = function(value) {
+	return new Constraint('<=', value, !isValidKey(value)? null : IDBKeyRange.upperBound(value));
+};
+
+/**
+ * Match values equal to the given value
+ * @static
+ * @param {type} value
+ * @returns {module:skate.Constraint}
+ */
+Constraint.equalTo = function(value) {
+	return new Constraint('=', value, !isValidKey(value)? null : IDBKeyRange.only(value));
+};
+
+/**
+ * Match values within the given bounds
+ * @static
+ * @param {type} value
+ * @returns {module:skate.Constraint}
+ */
+Constraint.inBounds = function(lower, upper, exclusiveLower, exclusiveUpper) {
+	return new Constraint(
+		'bound', 
+		[lower, upper, exclusiveLower, exclusiveUpper], 
+		IDBKeyRange.bound(lower, upper, exclusiveLower, exclusiveUpper)
+	);
+};
+
+/**
+ * Match values which fall within the given array of values
+ * @static
+ * @param {type} value
+ * @returns {module:skate.Constraint}
+ */
+Constraint.in = function(value) {
+	return new Constraint('in', value, null);
+};
+
+},{}],12:[function(require,module,exports){
 /**
  * Module providing Skate's Database class which wraps an IndexedDB database to provide
  * access to Skate's features as well as the underlying IndexedDB features.
  * 
- * @module skate/Database
  * @author William Lahti <wilahti@gmail.com>
  * @copyright (C) 2015 William Lahti
  */
@@ -3151,9 +3259,8 @@ var Repository = require('./Repository.js');
  * 
  * @class
  * @alias module:skate.Database
- * @param {SchemaBuilder} schema
- * @param {IDBDatabase} idb
- * @returns {Database}
+ * @param {module:skate.SchemaBuilder} schema A representation of the database's intended schema
+ * @param {IDBDatabase} idb An opened IndexedDB database
  * 
  */
 function Database(schema, idb) {
@@ -3196,7 +3303,7 @@ Database.prototype.setIDB = function(idb) {
  * 
  * @param {String} name The name of the repository to retrieve
  * @param {type} tx An optional transaction which the repository should be associated with
- * @returns {skate/Repository~Repository} The new repository object
+ * @returns {module:skate.Repository} The new repository object
  */
 Database.prototype.repository = function(name, tx) {
 	var repo = new Repository(this.idb(), name, tx);
@@ -3208,7 +3315,7 @@ Database.prototype.repository = function(name, tx) {
  * Prepare the given Repository instance by calling any config functions
  * registered for its name.
  * 
- * @param {type} repository
+ * @param {module:skate.Repository} repository The repository which must be prepared
  */
 Database.prototype.prepareRepository = function(repository) {
 	if (this._repositoryConfigs[repository.storeName])
@@ -3242,14 +3349,14 @@ Database.prototype.configRepository = function(name, cb) {
  * it. This is mostly for use internally but can be useful for debugging (see 
  * SchemaBuilder.debug()).
  * 
- * @returns {SchemaBuilder} The SchemaBuilder containing this database's current schema
+ * @returns {module:skate.SchemaBuilder} The SchemaBuilder containing this database's current schema
  */
 Database.prototype.getSchema = function() {
 	return this._schema;
 }
 
 /**
- * Retrieve the underlying IDBDatabase instance 
+ * Retrieve the underlying {@link https://developer.mozilla.org/en-US/docs/Web/API/IDBDatabase IDBDatabase} instance 
  * @returns {IDBDatabase} The {@link https://developer.mozilla.org/en-US/docs/Web/API/IDBDatabase IDBDatabase} instance
  */
 Database.prototype.idb = function() {
@@ -3257,22 +3364,29 @@ Database.prototype.idb = function() {
 };
 
 
-},{"./Repository.js":14,"./transact.js":20}],12:[function(require,module,exports){
+},{"./Repository.js":15,"./transact.js":21}],13:[function(require,module,exports){
 /**
  * Module providing a class that converts an IDBCursor into a
  * Generator.
  *
- * @module skate/IDBCursorGenerator
  * @author William Lahti <wilahti@gmail.com>
  * @copyright (C) 2015 William Lahti  
  */
 
 /**
- * Converts an IDBCursor into a Generator
+ * Converts an IndexedDB IDBCursor into an ES5 Generator
+ * (see es5-generators).
+ * 
+ * Using the resulting generator, you can attach .emit()
+ * and .done() events to the generator to be notified when
+ * a new item is received from IndexedDB and when the request
+ * has fully completed, respectively. Use .then() to get an
+ * array of all items which are emitted after registering,
+ * but this requires O(N) memory instead of O(1).
+ * 
  * @class
  * @alias module:skate.IDBCursorGenerator
- * @param {IDBCursor} cursor
- * @returns {Generator}
+ * @param {IDBCursor} cursor The cursor to generate items with.
  */
 function IDBCursorGenerator(cursor) {
 	var request = cursor;
@@ -3319,12 +3433,11 @@ if (typeof window !== 'undefined') {
 }
 
 module.exports = IDBCursorGenerator;
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 /**
  * Module providing a class that converts an IDBRequest into a
  * Generator.
  *
- * @module skate/IDBRequestGenerator
  * @author William Lahti <wilahti@gmail.com>
  * @copyright (C) 2015 William Lahti  
  */
@@ -3360,13 +3473,12 @@ if (typeof window !== 'undefined') {
 }
 
 module.exports = IDBRequestGenerator;
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 /**
  * Module  which is providing a class which provides a high-level API on top
  * of an IndexedDB object store (IDBObjectStore)
  * 
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/IDBObjectStore MDN Reference - IDBObjectStore}
- * @module skate/Repository 
  * @author William Lahti <wilahti@gmail.com>
  * @copyright (C) 2015 William Lahti 
  */
@@ -3375,6 +3487,8 @@ var stripCopy = require('./stripCopy.js');
 var Generator = require('es5-generators');
 var IDBRequestGenerator = require('./IDBRequestGenerator.js');
 var IDBCursorGenerator = require('./IDBCursorGenerator.js');
+var Constraint = require('./Constraint.js');
+var transact = require('./transact.js');
 
 /**
  * 
@@ -3434,10 +3548,10 @@ Repository.prototype.hydrate = function(item) { return Promise.resolve(item); };
  * @param {Database} idb The IDBDatabase instance
  * @returns {type|IDBTransaction}
  */
-Repository.prototype.getStoreTransaction = function(idb) {
+Repository.prototype.getStoreTransaction = function(db) {
 	if (this.transaction)
-		return this.transaction;
-	return idb.transaction([this.storeName], 'readwrite');
+		return this.transaction; 
+	return db.idb().transaction([this.storeName], 'readwrite');
 }
 
 /*-*
@@ -3445,7 +3559,7 @@ Repository.prototype.getStoreTransaction = function(idb) {
  * transacting this repository's .hydrate() method.
  * 
  * @private
- * @param {Database} db The {@link module:skate/Database~Database Database} instance
+ * @param {module:skate.Database} db Database instance
  * @param {object} item The item being hydrated
  */
 Repository.prototype._hydrateItem = function(db, item) {
@@ -3844,41 +3958,216 @@ Repository.prototype.getMany = function(ids, includeNulls) {
 Repository.prototype.find = function(criteria) {
 	var self = this;
 
+	/**
+	 * Determine equivalence between the given two values 
+	 * including deep object equivalence
+	 * 
+	 * @param {type} criteriaValue
+	 * @param {type} realValue
+	 * @returns {Boolean}
+	 */
+	function isEquivalent(criteriaValue, realValue) {
+
+		if (criteriaValue == realValue)
+			return true;
+
+		if (typeof criteriaValue !== 'object')
+			return false;
+		
+		for (var key in criteriaValue) {
+			if (isEquivalent(criteriaValue[key], realValue[key]))
+				continue;
+			
+			return false;
+		}
+
+		return true;
+	};
+	
+	/**
+	 * Compile the given constraint, bestowing it with the _compiled section
+	 * and the proper operation function for use in checking values to see if 
+	 * they match.
+	 * 
+	 * @param {skate.Constraint} constraint
+	 * @returns {undefined}
+	 */
+	function compileConstraint(constraint) {
+		var factories = ['bound'];
+		var operations = {
+			'=': function(a, b) { return a == b; },
+			'>': function(a, b) { return a > b; },
+			'<': function(a, b) { return a < b; },
+			'>=': function(a, b) { return a >= b; },
+			'<=': function(a, b) { return a <= b; },
+			'in': function(a, b) { return b.indexOf(a) >= 0; },
+			'bound': function(constraint) {
+
+				var low = constraint.discriminant[0];
+				var high = constraint.discriminant[1];
+				var exclusiveLower = constraint.discriminant[2];
+				var exclusiveUpper = constraint.discriminant[3];
+
+				if (exclusiveLower === undefined)
+					exclusiveLower = false;
+				if (exclusiveUpper === undefined)
+					exclusiveUpper = false;
+				
+				// Function map to implement each type of bound.
+				// 'true' for exclusive on the low end and the high end.
+
+				var bounds = {
+					truetrue:   function(v, d) { return low <  v && v <  high; },
+					falsefalse: function(v, d) { return low <= v && v <= high; },
+					truefalse:  function(v, d) { return low <  v && v <= high; },
+					falsetrue:  function(v, d) { return low <= v && v <  high; },
+				};
+
+				return bounds[exclusiveLower+''+exclusiveUpper];
+			},
+			'compound': function(value, compoundConstraints) {
+				for (var fieldName in compoundConstraints) {
+					if (fieldName[0] === '$')
+						continue;
+					
+					var constraint = compoundConstraints[fieldName];
+					if (filterByConstraint([value], fieldName, constraint).length === 0)
+						return false;
+				}
+				
+				return true;
+			}
+		};
+
+		if (!operations[constraint.operator]) {
+			throw "Unsupported operator '"+constraint.operator+"'";
+		}
+
+		constraint._compiled.fn = operations[constraint.operator];
+
+		// A factory type (ie 'bound' above) will return the appropriate operation function
+		// based on the constraint instead of registering a single operation function
+
+		if (factories.indexOf(constraint.operator) >= 0)
+			constraint._compiled.fn = constraint._compiled.fn(constraint);	
+	}
+	
+	/**
+	 * Resolve the criteria object so that all fields contain skate.Constraint objects.
+	 * 
+	 * @param {} criteria
+	 * @returns {}
+	 */
+	function resolveCriteria(criteria) {
+		
+		if (criteria.$resolved) {
+			return criteria;
+		}
+			
+		for (var fieldName in criteria) {
+			if (fieldName[0] == '$')
+				continue;
+			
+			var fieldValue = criteria[fieldName];
+			var constraint = fieldValue;
+
+			if (fieldValue === null)
+				continue;
+
+			if (constraint && typeof constraint === 'object' && constraint.isConstraint)
+				continue;
+
+			// If the user provided a simple value, 
+			// convert it to a constraint...
+
+			if (constraint && typeof constraint === 'object') {
+				var compoundConstraints = resolveCriteria(constraint);
+				criteria[fieldName] = Constraint.compound(compoundConstraints);
+			} else {
+				criteria[fieldName] = Constraint.equalTo(constraint);
+			}
+		}	
+		
+		criteria.$resolved = true;
+		return criteria;
+	}
+	
+	/**
+	 * Implement filtering on the given items array by the given
+	 * constraint definition. 
+	 * 
+	 * @param {type} items
+	 * @param {type} constraint
+	 * @returns {undefined}
+	 */
+	function filterByConstraint(items, fieldName, constraint) {
+		
+		// Cache the operation function on the constraint object.
+
+		if (!constraint._compiled || !constraint._compiled.fn || constraint._compiled.operator != constraint.operator)
+			compileConstraint(constraint);
+
+		// Filter all items by our compiled operation function
+		// generating a fresh items array.
+		// We'll predefine our array and then chop off the unused
+		// indices once we are done filtering for optimal performance.
+		// Benchmark: http://jsfiddle.net/3t306zLa/5/
+		
+		var fn = constraint._compiled.fn;
+		var newItems = new Array(items.length);
+		var newIndex = 0;
+		
+		for (var i = 0, max = items.length; i < max; ++i) {
+			var item = items[i];
+			
+			if (!fn(item[fieldName], constraint.discriminant))
+				continue;
+			
+			newItems[newIndex++] = item;
+		}
+		
+		newItems.splice(newIndex, newItems.length - newIndex);
+		return newItems;
+	}
+
 	return new Generator(function(resolve, reject, emit) {
 		self.ready.then(function(db) {
-			var isEquivalent;
-			isEquivalent = function(criteriaValue, realValue) {
-
-				if (criteriaValue === realValue)
-					return true;
-
-				if (criteriaValue == realValue)
-					return true;
-
-				if (typeof criteriaValue == 'object') {
-					var good = true;
-					for (var key in criteriaValue) {
-						var value = criteriaValue[key];
-
-						if (!isEquivalent(criteriaValue[key], realValue[key])) {
-							good = false;
-							break;
-						}
+			
+			if (typeof criteria === 'function') {
+				
+				criteria = db._transact(db, null, function(db, name, transaction) {
+					return db.repository(name, transaction);
+				}, criteria, 'readonly', {
+					is: function() {
+						return Constraint;
 					}
+				});
+			}
+			
+			
+			// For transactable functions...
 
-					return good;
-				}
-
-				return false;
-			};
-
+			return Promise.all([
+				Promise.resolve(db),
+				Promise.resolve(criteria)
+			]);
+		}).then(function(results) {
+			
+			var db = results[0];
+			var criteria = results[1];
+			
+			
 			// Prepare a transaction (or use our existing one)
 			// and an object store
 
 			var tx = self.getStoreTransaction(db);
 			var store = tx.objectStore(self.storeName);
-			var items = null;
-			var promise = Promise.resolve();
+			var promise = Promise.resolve(null);
+
+			// Resolve the entire criteria object into the proper
+			// set of Criteria instances if they aren't already
+			
+			criteria = resolveCriteria(criteria);
 
 			// The first item will use an index filter.
 			// Subsequent criteria will filter using Javascript.
@@ -3888,54 +4177,55 @@ Repository.prototype.find = function(criteria) {
 			// asynchronously.
 
 			for (var fieldName in criteria) {
+				if (fieldName[0] == '$')
+					continue;
+				
 				!function(fieldName) {
-					promise = promise.then(function() {
-						var fieldValue = criteria[fieldName];
-
-						if (items === null) {
-							// Source
-
-							if (store.indexNames.contains(fieldName)) {
-								var index = store.index(fieldName);
-
-								return new Promise(function(resolve, reject) {
-									items = [];
-									new IDBCursorGenerator(index.openCursor(fieldValue))
-										.emit(function(item) {
-											items.push(item);
-										}).done(function() {
-											resolve();
-										});
-								});
-
-
-							} else {
-								return new Promise(function(resolve, reject) {
-									items = [];
-									new IDBCursorGenerator(store.openCursor())
-										.emit(function(item) {
-											items.push(item);
-										}).done(function() {
-											resolve();
-										});
-								});
-							}
-						} else {
-							// Filter
-
-							var newItems = [];
-
-							for (var i = 0, max = items.length; i < max; ++i) {
-								var item = items[i];
-
-								if (!isEquivalent(fieldValue, item[fieldName]))
-									continue;
-
-								newItems.push(item);
-							}
-
-							items = newItems;
+					promise = promise.then(function(items) {
+						var constraint = criteria[fieldName];
+						
+						// If this is not our first constraint, filter
+						// the items list with the constraint.
+						
+						if (items !== null) {
+							return filterByConstraint(items, fieldName, constraint);
 						}
+						
+						// If this is our first constraint, try to use any
+						// available index we might have for it
+						
+						return new Promise(function(resolve, reject) {
+							var sourceIndex = store;
+							var idbQuery = null;
+							
+							// If we have an index, we'll use IDB
+							// (Otherwise if idbQuery is null, the op is handled in JS)
+							
+							if (store.indexNames.contains(fieldName)) {
+								sourceIndex = store.index(fieldName);
+								idbQuery = constraint.idb;
+							}
+
+							var items = [];
+							new IDBCursorGenerator(sourceIndex.openCursor(idbQuery))
+								.emit(function(item) {
+									
+									// If we were properly constrained already...
+							
+									if (idbQuery !== null) {
+										items.push(item);
+										return;
+									}
+									
+									// Some operations must be handled in Javascript...
+									
+									if (filterByConstraint([item], fieldName, constraint).length >= 0)
+										items.push(item);
+									
+								}).done(function() {
+									resolve(items);
+								});
+						});
 					});
 				}(fieldName);
 			};
@@ -3943,13 +4233,13 @@ Repository.prototype.find = function(criteria) {
 			// Once the promise chain is finished, we'll finally resolve the
 			// promise given by this method.
 
-			promise.then(function() {
-				
+			promise.then(function(items) { 
+
 				// Since this implementation happens almost entirely in JS, we cannot
 				// actually stream the results, so we'll emulate that for now.
 				for (var i = 0, max = items.length; i < max; ++i)
-					emit(items[i]);
-				
+					emit(items[i]); 
+
 				resolve();
 			});
 		});
@@ -3979,24 +4269,23 @@ Repository.prototype.delete = function(id) {
 };
 
 
-},{"./IDBCursorGenerator.js":12,"./IDBRequestGenerator.js":13,"./stripCopy.js":19,"es5-generators":2}],15:[function(require,module,exports){
+},{"./Constraint.js":11,"./IDBCursorGenerator.js":13,"./IDBRequestGenerator.js":14,"./stripCopy.js":20,"./transact.js":21,"es5-generators":2}],16:[function(require,module,exports){
 /**
  * Module providing the SchemaBuilder class.
  * 
- * @module skate/SchemaBuilder 
  * @author William Lahti <wilahti@gmail.com>
  * @copyright (C) 2015 William Lahti 
  */
 
 var transact = require('./transact.js');
 var StoreBuilder = require('./StoreBuilder.js');
+var annotateFn = require('./utils/annotateFn.js');
 
 /**
  * @class
  * @alias module:skate.SchemaBuilder
  * @param {String} name The name of the IndexedDB database being defined
  * @param {object} registry An object with a prepareRepository() method, or NULL
- * @returns {SchemaBuilder}
  */
 function SchemaBuilder(name, registry) {
 	this.name = name;
@@ -4033,7 +4322,7 @@ SchemaBuilder.prototype.disconnectDatabase = function() {
  * Create a new store
  * 
  * @param {String} name
- * @returns {StoreBuilder}
+ * @returns {module:skate.StoreBuilder}
  */
 SchemaBuilder.prototype.createStore = function(name) {
 	if (this.stores[name]) {
@@ -4046,7 +4335,7 @@ SchemaBuilder.prototype.createStore = function(name) {
  * Get an existing store so that you can modify it.
  * 
  * @param {String} name
- * @returns {StoreBuilder} 
+ * @returns {module:skate.StoreBuilder} 
  */
 SchemaBuilder.prototype.getStore = function(name) {
 	if (!this.stores[name]) {
@@ -4060,20 +4349,13 @@ SchemaBuilder.prototype.getStore = function(name) {
  * Migrate data imperatively. Only calls back if a migration is in progress.
  * 
  * @param {function} callback
- * @returns {SchemaBuilder}
+ * @returns {module:skate.SchemaBuilder}
  */
 SchemaBuilder.prototype.run = function(callback) {
 	if (this.transaction && this.db) {
-		var metadata = annotateFn(callback);
-		var fn = metadata.fn;
-		var params = metadata.params;
-		var self = this;
-		
 		transact(this.db, this.transaction, function(db, name, tx) {
-			var repo = new Repository(db, name, tx);
-			registry.prepareRepository(repo);
-			return repo;
-		}, fn, 'readwrite');
+			return db.repository(name, tx);
+		}, callback, 'readwrite');
 	}
 	return this;
 };
@@ -4097,11 +4379,10 @@ SchemaBuilder.prototype.debug = function() {
 	
 };
 
-},{"./StoreBuilder.js":16,"./transact.js":20}],16:[function(require,module,exports){
+},{"./StoreBuilder.js":17,"./transact.js":21,"./utils/annotateFn.js":22}],17:[function(require,module,exports){
 /**
  * @author William Lahti <wilahti@gmail.com>
  * @copyright (C) 2015 William Lahti
- * @module skate/StoreBuilder
  */
 
 /**
@@ -4109,10 +4390,10 @@ SchemaBuilder.prototype.debug = function() {
  * 
  * @class
  * @alias module:skate.StoreBuilder
- * @param {SchemaBuilder} builder The SchemaBuilder instance which owns this StoreBuilder
+ * @param {module:skate.SchemaBuilder} builder The SchemaBuilder instance which owns this StoreBuilder
  * @param {String} name The name of the object store being built
  * @param {String} id The name of the field which will represent the object store's primary key
- * @returns {StoreBuilder} Allows for describing (and optionally applying chanages to) the schema of 
+ * @returns {module:skate.StoreBuilder} Allows for describing (and optionally applying chanages to) the schema of 
  *			an IndexedDB object store.
  */
 function StoreBuilder(builder, name, id) {
@@ -4405,7 +4686,7 @@ StoreBuilder.prototype.unique = function(name) {
 	return this;
 };
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 
 // Standardize any prefixed implementations of IndexedDB
 
@@ -4416,8 +4697,10 @@ if (typeof window !== 'undefined') {
 	window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
 	window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
 }
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 /**  
+ * # skate
+ * 
  * The main module of Skate, an IndexedDB ORM library.
  * 
  * @author William Lahti <wilahti@gmail.com>
@@ -4434,6 +4717,7 @@ var Repository = require('./Repository.js');
 var transact = require('./transact.js');
 var Generator = require('es5-generators');
 var Database = require('./Database.js');
+
 // API
 
 /**
@@ -4648,7 +4932,7 @@ var skate = {
 	}
 }; module.exports = skate;
 
-},{"./Database.js":11,"./Repository.js":14,"./SchemaBuilder.js":15,"./StoreBuilder.js":16,"./idbStandardize.js":17,"./transact.js":20,"es5-generators":2}],19:[function(require,module,exports){
+},{"./Database.js":12,"./Repository.js":15,"./SchemaBuilder.js":16,"./StoreBuilder.js":17,"./idbStandardize.js":18,"./transact.js":21,"es5-generators":2}],20:[function(require,module,exports){
 var deepcopy = require('deepcopy');
 
 function strip(obj) {
@@ -4683,8 +4967,9 @@ function stripCopy(obj) {
 };
 
 module.exports = stripCopy;
-},{"deepcopy":1}],20:[function(require,module,exports){
+},{"deepcopy":1}],21:[function(require,module,exports){
 /**
+ * # skate/transact
  * 
  * transact() is Skate's core implementation of IndexedDB transactional injection,
  * which is the process of introspecting a function's parameters, creating a 
@@ -4694,8 +4979,7 @@ module.exports = stripCopy;
  * This is function injection in a way popularized by the Angular.js framework.
  * transact() is used internally within Skate in many places, including Database.transact(),
  * SchemaBuilder.run() and Repository.hydrate().
- *   
- * @module skate/transact
+ * 
  * @author William Lahti <wilahti@gmail.com>
  * @copyright (C) 2015 William Lahti    
  */   
@@ -4704,7 +4988,6 @@ var injector = require('./utils/lightinjector.js');
 var Repository = require('./Repository.js');
 
 /**  
- * @class
  * @param {String} message The message for the exception
  */
 function SkateUnknownStoreException(message) {
@@ -4781,26 +5064,6 @@ function transact(db, transactionOrFactory, repositoryFactory, fn, mode, extraIn
 				if (this[param])
 					continue;
 				
-				// Are we a promise?
-				if (param == 'resolve' || param == 'reject') {
-					
-					if (!promise) {
-						promise = new Promise(function(resolve, reject) {
-							promiseResolve = resolve;
-							promiseReject = reject;
-						});
-					}
-					
-					if (param == 'resolve')
-						this.resolve = promiseResolve;
-					
-					if (param == 'reject')
-						this.reject = promiseReject;
-					
-					continue;
-			
-				}
-				
 				var storeOnly = false;
 				var storeName = param;
 				
@@ -4813,7 +5076,7 @@ function transact(db, transactionOrFactory, repositoryFactory, fn, mode, extraIn
 				try {
 					store = this.$transaction.objectStore(storeName);
 				} catch (e) {
-					throw new SkateUnknownStoreException('No such object store '+param);
+					throw 'No such object store \''+param+'\'';
 				}
 				
 				if (storeOnly) {
@@ -4838,17 +5101,14 @@ function transact(db, transactionOrFactory, repositoryFactory, fn, mode, extraIn
 	// and repositories for any specifically named object stores.
 	
 	var result = injector(injectables, null, fn);
-	
-	if (result && result.constructor && result.constructor.name == 'Promise') {
-		return result;
-	}
-	
 	return Promise.resolve(result);
 };
 
 module.exports = transact;
-},{"./Repository.js":14,"./utils/lightinjector.js":22}],21:[function(require,module,exports){
+},{"./Repository.js":15,"./utils/lightinjector.js":23}],22:[function(require,module,exports){
 /**
+ * # skate/utils/annotateFn
+ * 
  * A light-weight Javascript function reflector, similar to the one found in Angular.js.
  * Also supports array-style annotations for mangler-friendly code.
  *
@@ -4922,8 +5182,10 @@ function annotateFn(fn) {
 		params: fn.$params
 	};
 }; module.exports = annotateFn;
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 /**
+ * # skate/utils/lightinjector
+ * 
  * A light-weight function dependency injector, similar to the one found in Angular.js
  *
  * @module skate/utils/lightinjector
@@ -4995,4 +5257,4 @@ function inject(map, self, fn) {
 
 inject.InjectionException = InjectionException;
 module.exports = inject;
-},{"./annotateFn.js":21}]},{},[18]);
+},{"./annotateFn.js":22}]},{},[19]);

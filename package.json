@@ -1,6 +1,6 @@
 {
   "name": "skate",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "A high-level API on top of IndexedDB",
   "main": "src/skate.js",
   "directories": {
