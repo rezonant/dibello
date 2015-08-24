@@ -134,7 +134,7 @@ function getPhonesForUser(db, username) {
 		request.onerror = handleError('retrieving user');
 		request.onsuccess = function(event) {
 			var item = event.target.result;
-			var request = phones.index('userID').openCursor(username);
+			var request = phones.index('userID').openCursor(user.id);
 			request.onsuccess = function(event) {
 				var cursor = event.target.cursor;
 				if (!cursor) {
@@ -184,7 +184,7 @@ function getPhonesForUser(db, username) {
 			return new Promise(function(resolve, reject) {
 				var foundNumbers = [];
 
-				var request = phones.index('userID').openCursor(username);
+				var request = phones.index('userID').openCursor(user.id);
 				request.onsuccess = function(event) {
 					var cursor = event.target.cursor;
 					if (!cursor) {
