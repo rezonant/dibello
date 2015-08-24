@@ -1,1 +1,554 @@
-First 
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>dibello.js Index</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+
+	<!--[if lt IE 9]>
+	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link type="text/css" rel="stylesheet" href="styles/sunlight.default.css">
+	<link type="text/css" rel="stylesheet" href="styles/site.yeti.css">
+	<link type="text/css" rel="stylesheet" href="styles/skate.css">
+</head>
+
+<body class="loading">
+
+<div class="navbar navbar-default navbar-fixed-top navbar-inverse">
+<div class="container">
+	<div class="navbar-header">
+		<a class="navbar-brand" href="index.html">dibello.js</a>
+	</div>
+	<div class="navbar-collapse">
+		<ul class="nav navbar-nav">
+			
+			<li class="dropdown">
+				<a href="modules.list.html" class="dropdown-toggle" data-toggle="dropdown">Modules<b class="caret"></b></a>
+				<ul class="dropdown-menu inline">
+					<li><a href="module-skate.html">skate</a></li><li><a href="module-skate_utils_annotateFn.html">skate/utils/annotateFn</a></li><li><a href="module-skate_utils_lightinjector.html">skate/utils/lightinjector</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
+				<ul class="dropdown-menu inline">
+					<li><a href="module-dibello.Constraint.html">dibello.Constraint</a></li><li><a href="module-dibello.Database.html">dibello.Database</a></li><li><a href="module-dibello.IDBCursorGenerator.html">dibello.IDBCursorGenerator</a></li><li><a href="module-dibello.IDBRequestGenerator.html">dibello.IDBRequestGenerator</a></li><li><a href="module-dibello.Repository.html">dibello.Repository</a></li><li><a href="module-dibello.SchemaBuilder.html">dibello.SchemaBuilder</a></li><li><a href="module-dibello.StoreBuilder.html">dibello.StoreBuilder</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
+				<ul class="dropdown-menu inline">
+					<li><a href="global.html#injector">injector</a></li><li><a href="global.html#SkateUnknownStoreException">SkateUnknownStoreException</a></li><li><a href="global.html#stripCopy">stripCopy</a></li><li><a href="global.html#transact">transact</a></li>
+				</ul>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+</div>
+
+
+<div class="container">
+<div class="row">
+
+	
+		<div class="col-md-3">
+			<div id="toc" class="col-md-3"></div>
+		</div>
+	
+
+	<div class="clearfix"></div>
+
+	
+	<div class="col-md-8">
+	
+		<div id="main">
+			
+
+	
+
+
+    <h3>dibello 0.3.2</h3>
+
+
+
+
+
+
+
+
+
+	
+
+
+
+
+    <section class="readme-section">
+        <article><p>Provides an ORM library built on top of IndexedDB.</p>
+<p>Dibello is a high-level ORM framework on top of 
+HTML5 IndexedDB. It can be used to dramatically simplify code which 
+uses IndexedDB to persist and query for Javascript objects within the 
+browser's local storage. </p>
+<h3>What is this?</h3><ul>
+<li>A powerful migration management system which doubles as a 
+description of the object schema for powering Dibello's ORM features</li>
+<li>A DI-based mechanism for expressing IndexedDB transactions
+which dramatically simplifies building IDB applications.</li>
+<li>A rich repository layer that builds upon the capabilities of
+IndexedDB object stores by providing more advanced query methods 
+and a unified, terse way to interact with IndexedDB requests</li>
+</ul>
+<h3>License</h3><p>This software is provided under the terms of the MIT License. See COPYING for details.</p>
+<h3>Installation</h3><p>Node (server-side) and Browserify (client-side): </p>
+<pre class="prettyprint source lang-sh"><code>npm install dibello</code></pre><p>Regardless of whether you are in Node or Browserify, you can use 
+<code>require('dibello')</code> to obtain the Dibello API.</p>
+<p>Bower (client-side): </p>
+<pre class="prettyprint source lang-sh"><code>bower install dibello</code></pre><p>Now include <code>bower_components/dibello/dist/dibello.min.js</code> either directly on your page or within your 
+Javascript build step.</p>
+<p>Non-minified dist versions are also included.</p>
+<h3>Opening a Database</h3><p>First, you should open a connection to an IndexedDB database using Dibello.
+You must pass the indexedDB API since Dibello can be used with many different IDB
+implementations (not just the native browser one). Along with the database name,
+you must also pass an options object which specifies the current schema version
+of the database, and a set of migrations which are run to compute the schema of the
+database. More about migrations later.</p>
+<pre class="prettyprint source lang-js"><code>var dibello = require('dibello');
+dibello.open(indexedDB, 'mydb', {
+   version: 2
+   migrations: {
+      &quot;1&quot;: function(schema) {
+        schema.createStore('apples')
+            .id('id'),
+            .key('color')
+            .field('history');
+      },
+      &quot;2&quot;: function(schema) {
+        schema.getStore('apples')
+            .key('size');
+      }
+   }
+}).then(function(db) {
+    // hey, we have a database (dibello.Database)
+    // if we need to do low-level stuff, we can 
+    // get the IDBDatabase with .idb()
+    var idb = db.idb();
+
+    // but there are better ways to 
+    // use a dibello.Database...
+});</code></pre><h3>Transactions</h3><p>Once you have a database instance, you can transact.</p>
+<pre class="prettyprint source lang-js"><code>db.transact('readonly', function(apples) {
+
+    // apples is a dibello.Repository which wraps the 'apples' IDBObjectStore,
+    // and repositories use promises :-)
+
+    apples.get('someappleid').then(function(item) {
+        console.log('found my apple: '+item.name);
+    });
+});</code></pre><p>The transact function uses an injector mechanism similar to that of Angular and 
+other dependency injection frameworks. You can specify service parameters in 
+any order, and transact() will provide the correct services to those parameters.</p>
+<p>If you haven't used IndexedDB yet, you might wonder why this introduction starts
+with transactions. Traditional IndexedDB requires the use of transactions for any
+task which interacts with stored data. From the Mozilla Developer Network:</p>
+<blockquote>
+<p>IndexedDB is built on a transactional database model. Everything you do in 
+IndexedDB always happens in the context of a transaction. The IndexedDB 
+API provides lots of objects that represent indexes, tables, cursors, 
+and so on, but each of these is tied to a particular transaction. 
+Thus, you cannot execute commands or open cursors outside of a transaction. 
+Transactions have a well-defined lifetime, so attempting to use a transaction 
+after it has completed throws exceptions. Also, transactions auto-commit 
+and cannot be committed manually.</p>
+</blockquote>
+<p>We like transactions, but the API for using them is very verbose.
+Code for getting all phone numbers for a user might
+look like the following in vanilla IndexedDB:</p>
+<pre class="prettyprint source lang-js"><code>function getPhonesForUser(db, username) {
+    return new Promise(function(resolve, reject) {
+        function handleError(message) {
+            return function(event) {
+                console.log('Encountered an error while '+message);
+                reject(event);
+            }
+        }
+
+        var tx = db.transaction(['users', 'phoneNumbers'], 'readonly');
+        var users = tx.objectStore('users');
+        var phones = tx.objectStore('phones');
+
+        var foundNumbers = [];
+        var request = users.index('username').openCursor(username);
+
+        request.onerror = handleError('retrieving user');
+        request.onsuccess = function(event) {
+            var item = event.target.result;
+            var request = phones.index('userID').openCursor(username);
+            request.onsuccess = function(event) {
+                var cursor = event.target.cursor;
+                if (!cursor) {
+                    resolve(foundNumbers);
+                    return;
+                }
+
+                var phoneNumberRecord = cursor.value;
+                foundNumbers.push(phoneNumberRecord);
+
+                cursor.continue();
+            };
+
+        };
+    });
+}</code></pre><p>If you read that and didn't have the urge to convert it to use ES6 Promises, then you probably don't know about them 
+yet. Though this function is simple and doesn't benefit much from their use, promises can help prevent deeply nested
+code and allow you to work with asynchronous operations much more smoothly. But in the case of vanilla IndexeDB, 
+promises don't reduce the lines of code...</p>
+<pre class="prettyprint source lang-js"><code>function getPhonesForUser(db, username) {
+    return new Promise(function(resolveMain, rejectMain) {
+        function handleError(message) {
+            return function(event) {
+                console.log('Encountered an error while '+message);
+                rejectMain(event);
+            }
+        }
+
+        var tx = db.transaction(['users', 'phoneNumbers'], 'readonly');
+        var users = tx.objectStore('users');
+        var phones = tx.objectStore('phones');
+
+        new Promise(function(resolve, reject) {
+            var request = users.index('username').openCursor(username);
+
+            request.onerror = handleError('retrieving user');
+            request.onsuccess = function(event) {
+                var item = event.target.result;
+                resolve(item);
+            };
+        }).then(function(user) {
+            return new Promise(function(resolve, reject) {
+                var foundNumbers = [];
+
+                var request = phones.index('userID').openCursor(username);
+                request.onsuccess = function(event) {
+                    var cursor = event.target.cursor;
+                    if (!cursor) {
+                        resolve(foundNumbers);
+                        return;
+                    }
+
+                    var phoneNumberRecord = cursor.value;
+                    foundNumbers.push(phoneNumberRecord);
+
+                    cursor.continue();
+                };
+            });
+        });
+    });
+}</code></pre><p>You would be crazy to use vanilla IndexedDB without some kind of layer above it.
+Let's see what using Dibello above IndexedDB would look like.</p>
+<pre class="prettyprint source lang-js"><code>function getPhonesForUser(dibelloDb, username) {
+    return new Promise(function(resolve, reject) {
+        dibelloDb.transact(function(users, phones) {
+            users.get(username).then(function(user) {
+                phones.index(user.id).then(function(foundNumbers) {
+                    resolve(foundNumbers);
+                });
+            });
+        });
+    });
+}</code></pre><p>When transact() creates the IndexedDB transaction, it will look at the services you
+have requested and authorize only the object stores of the repositories you have requested. That is to say,
+if you request:</p>
+<pre class="prettyprint source lang-js"><code>dibelloDb.transact('readwrite', function(apples, oranges) {});</code></pre><p>Then the following IndexedDB call is made:</p>
+<pre class="prettyprint source lang-js"><code>idbDatabase.transaction(['apples', 'oranges'], 'readwrite');</code></pre><p>...in order to construct the transaction. The repositories passed for 'apples' 
+and 'oranges' will be specifically associated with this transaction so you may
+use them to interact with it. </p>
+<h3>More injectable services</h3><p>You might want to inject more than just dibello repositories. You can request the 
+dibello.Database instance using $db. You can request the dibello.Transaction instance 
+representing your transaction with $transaction:</p>
+<pre class="prettyprint source lang-js"><code>dibelloDb.transact(function($db, $transaction, users) {
+
+    doSomethingImportantToDatabase();
+
+    if (badThingsHappened) {
+        // Uh oh, this transaction is bad.
+        $transaction.abort();
+
+        // Well, we can't use it anymore but we need to do 
+        // other things with the database. Let's start an 
+        // independent transaction and carry on...
+        $db.transact(function(logs) {
+            logs.put({
+                date: new Date(),
+                message: 'Things broke and we had to abort the transaction'
+            });
+        });
+    }
+});</code></pre><p>You might need to access the IndexedDB objects which underpin dibello.Databse and
+dibello.Transaction (IDBDatabase, IDBTransaction, respectively).
+transact() provides these using the $$db and $$transaction services</p>
+<pre class="prettyprint source lang-js"><code>dibelloDb.transact(function($$db, $$transaction) {
+    var fruit = $$transaction.objectStore('fruit');
+    fruit.put({ variant: 'apple' });
+
+    var tx = $$db.transaction(['pies', 'cakes'], 'readonly');
+    var pies = tx.objectStore('pies');
+    // ....
+});</code></pre><p>You might even want to retrieve just the IDBObjectStore object
+instead of a dibello.Repository:</p>
+<pre class="prettyprint source lang-js"><code>dibelloDb.transact(function($apples) {
+    $apples.get(9001).onsuccess = function(event) {
+        // well, you get the picture
+    };
+});</code></pre><h3>Migrations</h3><p>IndexedDB has the concept of migrations built in. All IndexedDB databases have a 
+current version number, and when the application requests to open the database and 
+the requested version is higher than the current version, IndexedDB will emit an
+upgrade event.</p>
+<p>Many IndexedDB libraries provide a layer above this which allows you to specify your 
+schema in steps as it progresses through time. Dibello is no different. Let's return to 
+our first code example:</p>
+<pre class="prettyprint source lang-js"><code>var dibello = require('dibello');
+dibello.open(indexedDB, 'mydb', {
+   version: 2
+   migrations: {
+      &quot;1&quot;: function(schema) {
+        schema.createStore('apples')
+            .id('id'),
+            .key('color')
+            .field('history');
+      },
+      &quot;2&quot;: function(schema) {
+        schema.getStore('apples')
+            .key('size');
+      }
+   }
+}).then(function(db) {
+    // ok we're ready!
+});</code></pre><p>Note that during a migration, migration functions are run from the very first up to 
+the outstanding ones. All migration functions are run regardless of whether that particular
+migration needs to be applied to the database the application is running on. This is to 
+allow the SchemaBuilder to generate a complete and correct view of the schema based on your 
+migrations. Dibello simply puts the migration engine in &quot;neutral&quot; while running migration 
+functions which represent schema changes already present in the database.</p>
+<p>This is why within migration functions you can only interact with and modify 
+the database schema, <em>not</em> the actual data. To do that you must use a 
+.run() block. Parameters for run() blocks are dynamically injected just like 
+dibello.transact() calls, meaning you can request any of the services described above.</p>
+<pre class="prettyprint source lang-js"><code>&quot;1&quot;: function(schema) {
+    schema.run(function(db, transaction, apples) {
+        apples.all().emit(function(apple) {
+            // perhaps modify 'apple' in some way 
+            apples.persist(apple);
+        });
+    })
+}</code></pre><h3>Getting results as they arrive</h3><p>When you request more than one item within Dibello, you will receive a Promise-like object
+with .then() and .catch() methods. The promise will be resolved once all item events have been
+received from IndexedDB, and the array of those items will be provided as the value of the promise.
+However, such requests also have an .emit() function which allows you to receive items as 
+they are emitted from the IndexedDB API. You can then provide a function to .done() to be 
+notified when the request has fully completed.</p>
+<pre class="prettyprint source lang-js"><code>applesRepo.all().emit(function(apple) {
+    eatApple(apple);
+}).done(function() {
+    burp();
+});</code></pre><p><strong>Note</strong> that .then() will cause all items emitted subsequently to be stored into an array (so that they
+can be returned when the function provided to .then() is called).  For large datasets this may have 
+performance implications. The .done() method does not have this effect, as .done() does not receive 
+any data from the request.</p>
+<p>This type of generator is provided by the es5-generators NPM package. They are similar to 
+ES6 generators without needing runtime-level support for co-routines, because they are 
+built similarly to ES5 promises. A future version of Dibello will support ES6 generators 
+directly. For more on es5-generators, 
+visit <a href="http://github.com/rezonant/es5-generators">github.com/rezonant/es5-generators</a></p>
+<h3>Repositories</h3><p>Most importantly, Dibello's repositories provide a much more terse pattern of interaction with 
+IndexedDB object stores than the vanilla APIs:</p>
+<pre class="prettyprint source lang-js"><code>apples
+    .index('size').cursor().above(5).emit(function(apple) {
+        recognizeBigness(apple);
+    });</code></pre><p>You also have access to more sophisticated query mechanisms:</p>
+<pre class="prettyprint source lang-js"><code>apples.find({
+    color: 'green',
+    size: 5
+}).then(function(apple) {
+    eatSizeFiveGreenApple(apple);
+}</code></pre><p>And .find() isn't just for exact matches:</p>
+<pre class="prettyprint source lang-js"><code>apples.find(function(is) {
+    return {
+        color: 'green',
+        size: is.greaterThan(5)
+    }
+});</code></pre><p>Did you see this coming? .find() is also injectable,
+and you can use other queries without waiting for them
+to finish first.</p>
+<pre class="prettyprint source lang-js"><code>apples.find(function(is, orchards) {
+    return {
+        orchard: is.in(orchards.find({
+            city: 'Marquette'
+        }))
+    };
+});</code></pre><p>We're excited to see what you can make using Dibello. So npm install
+and get started! </p>
+<h3>Contributing</h3><p>Fork us on <a href="http://github.com/rezonant/dibello">Github</a>. Please use 
+the Github workflow (ie use feature-specific branches and send 
+pull requests). Please only send PRs to the master branch unless 
+absolutely necessary.</p>
+<h3>Testing</h3><p>To test this package using Karma run:</p>
+<p><code>npm test</code></p>
+<h3>Authors</h3><ul>
+<li>William Lahti <a href="&#x6d;&#97;&#x69;&#x6c;&#x74;&#111;&#x3a;&#60;&#119;&#x69;&#108;&#97;&#x68;&#116;&#x69;&#64;&#103;&#109;&#x61;&#105;&#108;&#46;&#x63;&#111;&#109;">&#60;&#119;&#x69;&#108;&#97;&#x68;&#116;&#x69;&#64;&#103;&#109;&#x61;&#105;&#108;&#46;&#x63;&#111;&#109;</a>&gt;</li>
+</ul></article>
+    </section>
+
+
+
+
+
+
+
+		</div>
+	</div>
+
+
+</div>
+</div>
+
+
+<footer>
+
+	&nbsp;&nbsp;&nbsp;Thanks for reading this far!
+	<br />
+
+
+	<span class="copyright">
+	Copyright © 2015 The contributors to the Skate project
+	</span>
+	<br />
+
+<span class="jsdoc-message">
+	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.2</a>
+	on Mon Aug 24th 2015 using the <a
+	href="https://github.com/terryweiss/docstrap">DocStrap template</a>.
+</span>
+</footer>
+
+<!--<script src="scripts/sunlight.js"></script>-->
+<script src="scripts/docstrap.lib.js"></script>
+<script src="scripts/bootstrap-dropdown.js"></script>
+<script src="scripts/toc.js"></script>
+
+<script>
+$( function () {
+	$( "[id*='$']" ).each( function () {
+		var $this = $( this );
+
+		$this.attr( "id", $this.attr( "id" ).replace( "$", "__" ) );
+	} );
+
+	$( "#toc" ).toc( {
+		anchorName  : function ( i, heading, prefix ) {
+			return $( heading ).attr( "id" ) || ( prefix + i );
+		},
+		selectors   : "h1,h2,h3,h4",
+		showAndHide : false,
+		scrollTo    : "100px"
+	} );
+
+	$( "#toc>ul" ).addClass( "nav nav-pills nav-stacked" );
+	$( "#main span[id^='toc']" ).addClass( "toc-shim" );
+	$( '.dropdown-toggle' ).dropdown();
+	//			$( ".tutorial-section pre, .readme-section pre" ).addClass( "sunlight-highlight-javascript" ).addClass( "linenums" );
+
+	$( ".tutorial-section pre, .readme-section pre" ).each( function () {
+		var $this = $( this );
+
+		var example = $this.find( "code" );
+		exampleText = example.html();
+		var lang = /{@lang (.*?)}/.exec( exampleText );
+		if ( lang && lang[1] ) {
+			exampleText = exampleText.replace( lang[0], "" );
+			example.html( exampleText );
+			lang = lang[1];
+		} else {
+			lang = "javascript";
+		}
+
+		if ( lang ) {
+
+			$this
+			.addClass( "sunlight-highlight-" + lang )
+			.addClass( "linenums" )
+			.html( example.html() );
+
+		}
+	} );
+
+	Sunlight.highlightAll( {
+		lineNumbers : true,
+		showMenu : true,
+		enableDoclinks : true
+	} );
+} );
+</script>
+
+
+
+<!--Navigation and Symbol Display-->
+
+<script>
+	$( function () {
+		$( '#main' ).localScroll( {
+			offset : { top : 60 } //offset by the height of your header (give or take a few px, see what works for you)
+		} );
+		$( "dt.name" ).each( function () {
+			var $this = $( this ).find("h4");
+			var icon = $( "<i/>" ).addClass( "icon-plus-sign" ).addClass( "pull-right" ).addClass( "icon-white" );
+			var dt = $(this);
+			var children = dt.next( "dd" );
+
+			dt.prepend( icon ).css( {cursor : "pointer"} );
+			dt.addClass( "member-collapsed" ).addClass( "member" );
+
+
+			children.hide();
+
+			dt.children().on( "click", function () {
+				children = dt.next( "dd" );
+				children.slideToggle( "fast", function () {
+
+					if ( children.is( ":visible" ) ) {
+						icon.addClass( "icon-minus-sign" ).removeClass( "icon-plus-sign" ).removeClass( "icon-white" );
+						dt.addClass( "member-open" ).animate( "member-collapsed" );
+					} else {
+						icon.addClass( "icon-plus-sign" ).removeClass( "icon-minus-sign" ).addClass( "icon-white" );
+						dt.addClass( "member-collapsed" ).removeClass( "member-open" );
+					}
+				} );
+			} );
+
+		} );
+	} );
+</script>
+
+<script>
+	$(function () {
+
+		$('a[href^="module-"]').each(function() {
+			var text = $(this).text();
+			text = text.replace(/module:/g, '');
+ 
+			$(this).css('margin', '0 0.2em');
+			$(this).text(text);
+		});
+
+		$('body').removeClass('loading');
+	});
+</script>
+
+<!--Google Analytics-->
+
+
+</body>
+</html>

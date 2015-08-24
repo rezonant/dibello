@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>dibello.js Global</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+
+	<!--[if lt IE 9]>
+	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link type="text/css" rel="stylesheet" href="styles/sunlight.default.css">
+	<link type="text/css" rel="stylesheet" href="styles/site.yeti.css">
+	<link type="text/css" rel="stylesheet" href="styles/skate.css">
+</head>
+
+<body class="loading">
+
+<div class="navbar navbar-default navbar-fixed-top navbar-inverse">
+<div class="container">
+	<div class="navbar-header">
+		<a class="navbar-brand" href="index.html">dibello.js</a>
+	</div>
+	<div class="navbar-collapse">
+		<ul class="nav navbar-nav">
+			
+			<li class="dropdown">
+				<a href="modules.list.html" class="dropdown-toggle" data-toggle="dropdown">Modules<b class="caret"></b></a>
+				<ul class="dropdown-menu inline">
+					<li><a href="module-skate.html">skate</a></li><li><a href="module-skate_utils_annotateFn.html">skate/utils/annotateFn</a></li><li><a href="module-skate_utils_lightinjector.html">skate/utils/lightinjector</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
+				<ul class="dropdown-menu inline">
+					<li><a href="module-dibello.Constraint.html">dibello.Constraint</a></li><li><a href="module-dibello.Database.html">dibello.Database</a></li><li><a href="module-dibello.IDBCursorGenerator.html">dibello.IDBCursorGenerator</a></li><li><a href="module-dibello.IDBRequestGenerator.html">dibello.IDBRequestGenerator</a></li><li><a href="module-dibello.Repository.html">dibello.Repository</a></li><li><a href="module-dibello.SchemaBuilder.html">dibello.SchemaBuilder</a></li><li><a href="module-dibello.StoreBuilder.html">dibello.StoreBuilder</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
+				<ul class="dropdown-menu inline">
+					<li><a href="global.html#injector">injector</a></li><li><a href="global.html#SkateUnknownStoreException">SkateUnknownStoreException</a></li><li><a href="global.html#stripCopy">stripCopy</a></li><li><a href="global.html#transact">transact</a></li>
+				</ul>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+</div>
+
+
+<div class="container">
+<div class="row">
+
+	
+		<div class="col-md-3">
+			<div id="toc" class="col-md-3"></div>
+		</div>
+	
+
+	<div class="clearfix"></div>
+
+	
+	<div class="col-md-8">
+	
+		<div id="main">
+			
+
+<section>
+
+<header>
+    
+        <h2>
+        
+        </h2>
+        
+    
+</header>
+
+
+<article>
+    <div class="container-overview">
+    
+        
+
+        
+<dl class="details">
+	
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+        
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Members</h3>
+
+        <dl>
+            
+<dt class="name" id="injector">
+    <h4><span class="type-signature"></span>injector<span class="type-signature"></span></h4>
+
+    
+</dt>
+<dd>
+    
+    <div class="description">
+        <h1>skate/transact</h1><p>transact() is Skate's core implementation of IndexedDB transactional injection,
+which is the process of introspecting a function's parameters, creating a 
+transaction to suit them, and then calling the function, passing objects to the 
+function as it requested via naming.</p>
+<p>This is function injection in a way popularized by the Angular.js framework.
+transact() is used internally within Skate in many places, including Database.transact(),
+SchemaBuilder.run() and Repository.hydrate().</p>
+    </div>
+    
+
+    
+
+    
+<dl class="details">
+	
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+	<dt class="tag-author">Author:</dt>
+	<dd class="tag-author">
+		<ul>
+			<li><a href="mailto:wilahti@gmail.com">William Lahti</a></li>
+			</ul>
+	</dd>
+	
+
+	
+	<dt class="tag-copyright">Copyright:</dt>
+	<dd class="tag-copyright">
+		<ul class="dummy">
+			<li>(C) 2015 William Lahti</li>
+		</ul>
+	</dd>
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+</dd>
+
+        
+            
+<dt class="name" id="module:dibello">
+    <h4><span class="type-signature"></span>module:dibello<span class="type-signature"> :skate</span></h4>
+
+    
+</dt>
+<dd>
+    
+
+    
+        <h5>Type:</h5>
+        <ul>
+            <li>
+                
+<span class="param-type">skate</span>
+ 
+    
+            </li>
+        </ul>
+    
+
+    
+<dl class="details">
+	
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+</dd>
+
+        
+            
+<dt class="name" id="stripCopy">
+    <h4><span class="type-signature"></span>stripCopy<span class="type-signature"></span></h4>
+
+    
+</dt>
+<dd>
+    
+    <div class="description">
+        <p>Module  which is providing a class which provides a high-level API on top
+of an IndexedDB object store (IDBObjectStore)</p>
+    </div>
+    
+
+    
+
+    
+<dl class="details">
+	
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+	<dt class="tag-author">Author:</dt>
+	<dd class="tag-author">
+		<ul>
+			<li><a href="mailto:wilahti@gmail.com">William Lahti</a></li>
+			</ul>
+	</dd>
+	
+
+	
+	<dt class="tag-copyright">Copyright:</dt>
+	<dd class="tag-copyright">
+		<ul class="dummy">
+			<li>(C) 2015 William Lahti</li>
+		</ul>
+	</dd>
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+	<dt class="tag-see">See:</dt>
+	<dd class="tag-see">
+		<ul>
+			<li><a href="https://developer.mozilla.org/en-US/docs/Web/API/IDBObjectStore">MDN Reference - IDBObjectStore</a></li>
+			</ul>
+	</dd>
+	
+
+	
+</dl>
+
+
+    
+</dd>
+
+        
+            
+<dt class="name" id="transact">
+    <h4><span class="type-signature"></span>transact<span class="type-signature"></span></h4>
+
+    
+</dt>
+<dd>
+    
+    <div class="description">
+        <p>Module providing the SchemaBuilder class.</p>
+    </div>
+    
+
+    
+
+    
+<dl class="details">
+	
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+	<dt class="tag-author">Author:</dt>
+	<dd class="tag-author">
+		<ul>
+			<li><a href="mailto:wilahti@gmail.com">William Lahti</a></li>
+			</ul>
+	</dd>
+	
+
+	
+	<dt class="tag-copyright">Copyright:</dt>
+	<dd class="tag-copyright">
+		<ul class="dummy">
+			<li>(C) 2015 William Lahti</li>
+		</ul>
+	</dd>
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+</dd>
+
+        
+            
+<dt class="name" id="transact">
+    <h4><span class="type-signature"></span>transact<span class="type-signature"></span></h4>
+
+    
+</dt>
+<dd>
+    
+    <div class="description">
+        <p>Module providing Skate's Database class which wraps an IndexedDB database to provide
+access to Skate's features as well as the underlying IndexedDB features.</p>
+    </div>
+    
+
+    
+
+    
+<dl class="details">
+	
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+	<dt class="tag-author">Author:</dt>
+	<dd class="tag-author">
+		<ul>
+			<li><a href="mailto:wilahti@gmail.com">William Lahti</a></li>
+			</ul>
+	</dd>
+	
+
+	
+	<dt class="tag-copyright">Copyright:</dt>
+	<dd class="tag-copyright">
+		<ul class="dummy">
+			<li>(C) 2015 William Lahti</li>
+		</ul>
+	</dd>
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+</dd>
+
+        </dl>
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        <dl>
+            
+<dt>
+    <h4 class="name" id="SkateUnknownStoreException"><span class="type-signature"></span> SkateUnknownStoreException<span class="signature">(message)</span><span class="type-signature"></span></h4>
+    
+    
+</dt>
+<dd>
+    
+    
+
+    
+
+    
+    
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<div class="params-mobile">
+	
+			<div style="margin-left:0.5em;border-left:5px solid #ccc;margin-bottom:0.5em;">
+				<label class="columnar"><code>message</code></label>
+				
+					<span style="display:inline-block;margin-left:0.25em;">
+						
+<span class="param-type">String</span>
+ 
+    
+					</span>
+				
+
+				
+
+				
+
+				<div style="margin-left:1em;margin-top:0.25em;">
+					<p>The message for the exception</p>
+				</div>
+				
+				</div>
+			
+		<br/>
+</div>
+<table class="params table table-striped">
+    <thead>
+	<tr>
+		
+		<th>Name</th>
+		
+
+		<th>Type</th>
+
+		
+
+		
+
+		<th class="last">Description</th>
+	</tr>
+	</thead>
+
+	<tbody>
+	
+
+        <tr>
+            
+                <td class="name"><code>message</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+ 
+    
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The message for the exception</p></td>
+        </tr>
+
+	
+	</tbody>
+</table>
+
+    
+    
+    
+<dl class="details">
+	
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+    
+    
+
+    
+
+    
+
+    
+    
+    
+    
+    
+    
+    
+</dd>
+
+        
+            
+<dt>
+    <h4 class="name" id="transact"><span class="type-signature"></span> transact<span class="signature">(transactionOrFactory, repositoryFactory, fn, mode, extraInjectables)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
+    
+    
+</dt>
+<dd>
+    
+    
+    <div class="description">
+        <p>Calls a function, injecting the proper repositories and related services (db, transaction),
+for the given transaction (or the transaction created by a factory function).
+If no transaction is passed, one is automatically created based on the repositories requested
+by the given function.</p>
+    </div>
+    
+
+    
+
+    
+    
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<div class="params-mobile">
+	
+			<div style="margin-left:0.5em;border-left:5px solid #ccc;margin-bottom:0.5em;">
+				<label class="columnar"><code>transactionOrFactory</code></label>
+				
+					<span style="display:inline-block;margin-left:0.25em;">
+						
+<span class="param-type">IDBTransaction</span>
+| 
+
+<span class="param-type">function</span>
+ 
+    
+					</span>
+				
+
+				
+
+				
+
+				<div style="margin-left:1em;margin-top:0.25em;">
+					<p>The transaction to use, 
+        or a function to construct a transaction from an array of object store names and a mode
+        (ie function(storeNames, mode))</p>
+				</div>
+				
+				</div>
+			
+			<div style="margin-left:0.5em;border-left:5px solid #ccc;margin-bottom:0.5em;">
+				<label class="columnar"><code>repositoryFactory</code></label>
+				
+					<span style="display:inline-block;margin-left:0.25em;">
+						
+<span class="param-type">function</span>
+ 
+    
+					</span>
+				
+
+				
+
+				
+
+				<div style="margin-left:1em;margin-top:0.25em;">
+					<p>A function which creates a repository when given a db, name, and transaction
+        (ie function(db, name, tx)) or null to use the default factory</p>
+				</div>
+				
+				</div>
+			
+			<div style="margin-left:0.5em;border-left:5px solid #ccc;margin-bottom:0.5em;">
+				<label class="columnar"><code>fn</code></label>
+				
+					<span style="display:inline-block;margin-left:0.25em;">
+						
+<span class="param-type">function</span>
+ 
+    
+					</span>
+				
+
+				
+
+				
+
+				<div style="margin-left:1em;margin-top:0.25em;">
+					<p>The function which should be introspected and run</p>
+				</div>
+				
+				</div>
+			
+			<div style="margin-left:0.5em;border-left:5px solid #ccc;margin-bottom:0.5em;">
+				<label class="columnar"><code>mode</code></label>
+				
+					<span style="display:inline-block;margin-left:0.25em;">
+						
+<span class="param-type">String</span>
+ 
+    
+					</span>
+				
+
+				
+
+				
+
+				<div style="margin-left:1em;margin-top:0.25em;">
+					<p>The transaction mode ('readonly' or 'readwrite')</p>
+				</div>
+				
+				</div>
+			
+			<div style="margin-left:0.5em;border-left:5px solid #ccc;margin-bottom:0.5em;">
+				<label class="columnar"><code>extraInjectables</code></label>
+				
+					<span style="display:inline-block;margin-left:0.25em;">
+						
+<span class="param-type">String</span>
+ 
+    
+					</span>
+				
+
+				
+
+				
+
+				<div style="margin-left:1em;margin-top:0.25em;">
+					<p>An object containing extra services which should be made available for injection
+        in addition to the standard ones</p>
+				</div>
+				
+				</div>
+			
+		<br/>
+</div>
+<table class="params table table-striped">
+    <thead>
+	<tr>
+		
+		<th>Name</th>
+		
+
+		<th>Type</th>
+
+		
+
+		
+
+		<th class="last">Description</th>
+	</tr>
+	</thead>
+
+	<tbody>
+	
+
+        <tr>
+            
+                <td class="name"><code>transactionOrFactory</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">IDBTransaction</span>
+| 
+
+<span class="param-type">function</span>
+ 
+    
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The transaction to use, 
+        or a function to construct a transaction from an array of object store names and a mode
+        (ie function(storeNames, mode))</p></td>
+        </tr>
+
+	
+
+        <tr>
+            
+                <td class="name"><code>repositoryFactory</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+ 
+    
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>A function which creates a repository when given a db, name, and transaction
+        (ie function(db, name, tx)) or null to use the default factory</p></td>
+        </tr>
+
+	
+
+        <tr>
+            
+                <td class="name"><code>fn</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+ 
+    
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The function which should be introspected and run</p></td>
+        </tr>
+
+	
+
+        <tr>
+            
+                <td class="name"><code>mode</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+ 
+    
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The transaction mode ('readonly' or 'readwrite')</p></td>
+        </tr>
+
+	
+
+        <tr>
+            
+                <td class="name"><code>extraInjectables</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+ 
+    
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>An object containing extra services which should be made available for injection
+        in addition to the standard ones</p></td>
+        </tr>
+
+	
+	</tbody>
+</table>
+
+    
+    
+    
+<dl class="details">
+	
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+    
+    
+
+    
+
+    
+
+    
+    
+    
+    
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    <p>A promise to resolve once the transaction has fully completed.</p>
+</div>
+
+
+
+<dl>
+	<dt>
+		Type
+	</dt>
+	<dd>
+		
+<span class="param-type">Promise</span>
+ 
+    
+	</dd>
+</dl>
+
+
+        
+    
+    
+</dd>
+
+        </dl>
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+		</div>
+	</div>
+
+
+</div>
+</div>
+
+
+<footer>
+
+	&nbsp;&nbsp;&nbsp;Thanks for reading this far!
+	<br />
+
+
+	<span class="copyright">
+	Copyright © 2015 The contributors to the Skate project
+	</span>
+	<br />
+
+<span class="jsdoc-message">
+	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.2</a>
+	on Mon Aug 24th 2015 using the <a
+	href="https://github.com/terryweiss/docstrap">DocStrap template</a>.
+</span>
+</footer>
+
+<!--<script src="scripts/sunlight.js"></script>-->
+<script src="scripts/docstrap.lib.js"></script>
+<script src="scripts/bootstrap-dropdown.js"></script>
+<script src="scripts/toc.js"></script>
+
+<script>
+$( function () {
+	$( "[id*='$']" ).each( function () {
+		var $this = $( this );
+
+		$this.attr( "id", $this.attr( "id" ).replace( "$", "__" ) );
+	} );
+
+	$( "#toc" ).toc( {
+		anchorName  : function ( i, heading, prefix ) {
+			return $( heading ).attr( "id" ) || ( prefix + i );
+		},
+		selectors   : "h1,h2,h3,h4",
+		showAndHide : false,
+		scrollTo    : "100px"
+	} );
+
+	$( "#toc>ul" ).addClass( "nav nav-pills nav-stacked" );
+	$( "#main span[id^='toc']" ).addClass( "toc-shim" );
+	$( '.dropdown-toggle' ).dropdown();
+	//			$( ".tutorial-section pre, .readme-section pre" ).addClass( "sunlight-highlight-javascript" ).addClass( "linenums" );
+
+	$( ".tutorial-section pre, .readme-section pre" ).each( function () {
+		var $this = $( this );
+
+		var example = $this.find( "code" );
+		exampleText = example.html();
+		var lang = /{@lang (.*?)}/.exec( exampleText );
+		if ( lang && lang[1] ) {
+			exampleText = exampleText.replace( lang[0], "" );
+			example.html( exampleText );
+			lang = lang[1];
+		} else {
+			lang = "javascript";
+		}
+
+		if ( lang ) {
+
+			$this
+			.addClass( "sunlight-highlight-" + lang )
+			.addClass( "linenums" )
+			.html( example.html() );
+
+		}
+	} );
+
+	Sunlight.highlightAll( {
+		lineNumbers : true,
+		showMenu : true,
+		enableDoclinks : true
+	} );
+} );
+</script>
+
+
+
+<!--Navigation and Symbol Display-->
+
+<script>
+	$( function () {
+		$( '#main' ).localScroll( {
+			offset : { top : 60 } //offset by the height of your header (give or take a few px, see what works for you)
+		} );
+		$( "dt.name" ).each( function () {
+			var $this = $( this ).find("h4");
+			var icon = $( "<i/>" ).addClass( "icon-plus-sign" ).addClass( "pull-right" ).addClass( "icon-white" );
+			var dt = $(this);
+			var children = dt.next( "dd" );
+
+			dt.prepend( icon ).css( {cursor : "pointer"} );
+			dt.addClass( "member-collapsed" ).addClass( "member" );
+
+
+			children.hide();
+
+			dt.children().on( "click", function () {
+				children = dt.next( "dd" );
+				children.slideToggle( "fast", function () {
+
+					if ( children.is( ":visible" ) ) {
+						icon.addClass( "icon-minus-sign" ).removeClass( "icon-plus-sign" ).removeClass( "icon-white" );
+						dt.addClass( "member-open" ).animate( "member-collapsed" );
+					} else {
+						icon.addClass( "icon-plus-sign" ).removeClass( "icon-minus-sign" ).addClass( "icon-white" );
+						dt.addClass( "member-collapsed" ).removeClass( "member-open" );
+					}
+				} );
+			} );
+
+		} );
+	} );
+</script>
+
+<script>
+	$(function () {
+
+		$('a[href^="module-"]').each(function() {
+			var text = $(this).text();
+			text = text.replace(/module:/g, '');
+ 
+			$(this).css('margin', '0 0.2em');
+			$(this).text(text);
+		});
+
+		$('body').removeClass('loading');
+	});
+</script>
+
+<!--Google Analytics-->
+
+
+</body>
+</html>

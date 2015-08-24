@@ -1,0 +1,1480 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>dibello.js Class: Database</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+
+	<!--[if lt IE 9]>
+	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link type="text/css" rel="stylesheet" href="styles/sunlight.default.css">
+	<link type="text/css" rel="stylesheet" href="styles/site.yeti.css">
+	<link type="text/css" rel="stylesheet" href="styles/skate.css">
+</head>
+
+<body class="loading">
+
+<div class="navbar navbar-default navbar-fixed-top navbar-inverse">
+<div class="container">
+	<div class="navbar-header">
+		<a class="navbar-brand" href="index.html">dibello.js</a>
+	</div>
+	<div class="navbar-collapse">
+		<ul class="nav navbar-nav">
+			
+			<li class="dropdown">
+				<a href="modules.list.html" class="dropdown-toggle" data-toggle="dropdown">Modules<b class="caret"></b></a>
+				<ul class="dropdown-menu inline">
+					<li><a href="module-skate.html">skate</a></li><li><a href="module-skate_utils_annotateFn.html">skate/utils/annotateFn</a></li><li><a href="module-skate_utils_lightinjector.html">skate/utils/lightinjector</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
+				<ul class="dropdown-menu inline">
+					<li><a href="module-dibello.Constraint.html">dibello.Constraint</a></li><li><a href="module-dibello.Database.html">dibello.Database</a></li><li><a href="module-dibello.IDBCursorGenerator.html">dibello.IDBCursorGenerator</a></li><li><a href="module-dibello.IDBRequestGenerator.html">dibello.IDBRequestGenerator</a></li><li><a href="module-dibello.Repository.html">dibello.Repository</a></li><li><a href="module-dibello.SchemaBuilder.html">dibello.SchemaBuilder</a></li><li><a href="module-dibello.StoreBuilder.html">dibello.StoreBuilder</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
+				<ul class="dropdown-menu inline">
+					<li><a href="global.html#injector">injector</a></li><li><a href="global.html#SkateUnknownStoreException">SkateUnknownStoreException</a></li><li><a href="global.html#stripCopy">stripCopy</a></li><li><a href="global.html#transact">transact</a></li>
+				</ul>
+			</li>
+			
+		</ul>
+	</div>
+</div>
+</div>
+
+
+<div class="container">
+<div class="row">
+
+	
+		<div class="col-md-3">
+			<div id="toc" class="col-md-3"></div>
+		</div>
+	
+
+	<div class="clearfix"></div>
+
+	
+	<div class="col-md-8">
+	
+		<div id="main">
+			
+
+<section>
+
+<header>
+    
+        <h2>
+            <span class="ancestors"><a href="module-dibello.html">module:dibello</a>.</span>
+        
+        Database
+        </h2>
+        
+    
+</header>
+
+
+<article>
+    <div class="container-overview">
+    
+        
+<dt>
+    <h4 class="name" id="Database"><span class="type-signature"></span> new Database<span class="signature">(schema, idb)</span><span class="type-signature"></span></h4>
+    
+    
+</dt>
+<dd>
+    
+    
+    <div class="description">
+        <p>Constructs a Database object which represents an IndexedDB database.</p>
+    </div>
+    
+
+    
+
+    
+    
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<div class="params-mobile">
+	
+			<div style="margin-left:0.5em;border-left:5px solid #ccc;margin-bottom:0.5em;">
+				<label class="columnar"><code>schema</code></label>
+				
+					<span style="display:inline-block;margin-left:0.25em;">
+						
+<span class="param-type"><a href="module-dibello.SchemaBuilder.html">module:dibello.SchemaBuilder</a></span>
+ 
+    
+					</span>
+				
+
+				
+
+				
+
+				<div style="margin-left:1em;margin-top:0.25em;">
+					<p>A representation of the database's intended schema</p>
+				</div>
+				
+				</div>
+			
+			<div style="margin-left:0.5em;border-left:5px solid #ccc;margin-bottom:0.5em;">
+				<label class="columnar"><code>idb</code></label>
+				
+					<span style="display:inline-block;margin-left:0.25em;">
+						
+<span class="param-type">IDBDatabase</span>
+ 
+    
+					</span>
+				
+
+				
+
+				
+
+				<div style="margin-left:1em;margin-top:0.25em;">
+					<p>An opened IndexedDB database</p>
+				</div>
+				
+				</div>
+			
+		<br/>
+</div>
+<table class="params table table-striped">
+    <thead>
+	<tr>
+		
+		<th>Name</th>
+		
+
+		<th>Type</th>
+
+		
+
+		
+
+		<th class="last">Description</th>
+	</tr>
+	</thead>
+
+	<tbody>
+	
+
+        <tr>
+            
+                <td class="name"><code>schema</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-dibello.SchemaBuilder.html">module:dibello.SchemaBuilder</a></span>
+ 
+    
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>A representation of the database's intended schema</p></td>
+        </tr>
+
+	
+
+        <tr>
+            
+                <td class="name"><code>idb</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">IDBDatabase</span>
+ 
+    
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>An opened IndexedDB database</p></td>
+        </tr>
+
+	
+	</tbody>
+</table>
+
+    
+    
+    
+<dl class="details">
+	
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+    
+    
+
+    
+
+    
+
+    
+    
+    
+    
+    
+    
+    
+</dd>
+
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        <dl>
+            
+<dt>
+    <h4 class="name" id="configRepository"><span class="type-signature"></span> configRepository<span class="signature">(name, cb)</span><span class="type-signature"></span></h4>
+    
+    
+</dt>
+<dd>
+    
+    
+    <div class="description">
+        <p>Registers a configuration function. Whenever a repository of this 
+type needs to be made, the given function will be called. 
+It is possible to have multiple configurers, but should be avoided 
+for simplicity.</p>
+    </div>
+    
+
+    
+
+    
+    
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<div class="params-mobile">
+	
+			<div style="margin-left:0.5em;border-left:5px solid #ccc;margin-bottom:0.5em;">
+				<label class="columnar"><code>name</code></label>
+				
+					<span style="display:inline-block;margin-left:0.25em;">
+						
+<span class="param-type">String</span>
+ 
+    
+					</span>
+				
+
+				
+
+				
+
+				<div style="margin-left:1em;margin-top:0.25em;">
+					<p>The name of the repository to configure</p>
+				</div>
+				
+				</div>
+			
+			<div style="margin-left:0.5em;border-left:5px solid #ccc;margin-bottom:0.5em;">
+				<label class="columnar"><code>cb</code></label>
+				
+					<span style="display:inline-block;margin-left:0.25em;">
+						
+<span class="param-type">function</span>
+ 
+    
+					</span>
+				
+
+				
+
+				
+
+				<div style="margin-left:1em;margin-top:0.25em;">
+					<p>A callback which will be called for each 
+        instance of the desired repository which is created</p>
+				</div>
+				
+				</div>
+			
+		<br/>
+</div>
+<table class="params table table-striped">
+    <thead>
+	<tr>
+		
+		<th>Name</th>
+		
+
+		<th>Type</th>
+
+		
+
+		
+
+		<th class="last">Description</th>
+	</tr>
+	</thead>
+
+	<tbody>
+	
+
+        <tr>
+            
+                <td class="name"><code>name</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+ 
+    
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The name of the repository to configure</p></td>
+        </tr>
+
+	
+
+        <tr>
+            
+                <td class="name"><code>cb</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+ 
+    
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>A callback which will be called for each 
+        instance of the desired repository which is created</p></td>
+        </tr>
+
+	
+	</tbody>
+</table>
+
+    
+    
+    
+<dl class="details">
+	
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+    
+    
+
+    
+
+    
+
+    
+    
+    
+    
+    
+    
+    
+</dd>
+
+        
+            
+<dt>
+    <h4 class="name" id="getSchema"><span class="type-signature"></span> getSchema<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="module-dibello.SchemaBuilder.html">module:dibello.SchemaBuilder</a>}</span></h4>
+    
+    
+</dt>
+<dd>
+    
+    
+    <div class="description">
+        <p>Get the schema of this database, as determined by the migrations which initialized 
+it. This is mostly for use internally but can be useful for debugging (see 
+SchemaBuilder.debug()).</p>
+    </div>
+    
+
+    
+
+    
+    
+    
+    
+    
+    
+<dl class="details">
+	
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+    
+    
+
+    
+
+    
+
+    
+    
+    
+    
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    <p>The SchemaBuilder containing this database's current schema</p>
+</div>
+
+
+
+<dl>
+	<dt>
+		Type
+	</dt>
+	<dd>
+		
+<span class="param-type"><a href="module-dibello.SchemaBuilder.html">module:dibello.SchemaBuilder</a></span>
+ 
+    
+	</dd>
+</dl>
+
+
+        
+    
+    
+</dd>
+
+        
+            
+<dt>
+    <h4 class="name" id="idb"><span class="type-signature"></span> idb<span class="signature">()</span><span class="type-signature"> &rarr; {IDBDatabase}</span></h4>
+    
+    
+</dt>
+<dd>
+    
+    
+    <div class="description">
+        <p>Retrieve the underlying <a href="https://developer.mozilla.org/en-US/docs/Web/API/IDBDatabase">IDBDatabase</a> instance</p>
+    </div>
+    
+
+    
+
+    
+    
+    
+    
+    
+    
+<dl class="details">
+	
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+    
+    
+
+    
+
+    
+
+    
+    
+    
+    
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    <p>The <a href="https://developer.mozilla.org/en-US/docs/Web/API/IDBDatabase">IDBDatabase</a> instance</p>
+</div>
+
+
+
+<dl>
+	<dt>
+		Type
+	</dt>
+	<dd>
+		
+<span class="param-type">IDBDatabase</span>
+ 
+    
+	</dd>
+</dl>
+
+
+        
+    
+    
+</dd>
+
+        
+            
+<dt>
+    <h4 class="name" id="prepareRepository"><span class="type-signature"></span> prepareRepository<span class="signature">(repository)</span><span class="type-signature"></span></h4>
+    
+    
+</dt>
+<dd>
+    
+    
+    <div class="description">
+        <p>Prepare the given Repository instance by calling any config functions
+registered for its name.</p>
+    </div>
+    
+
+    
+
+    
+    
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<div class="params-mobile">
+	
+			<div style="margin-left:0.5em;border-left:5px solid #ccc;margin-bottom:0.5em;">
+				<label class="columnar"><code>repository</code></label>
+				
+					<span style="display:inline-block;margin-left:0.25em;">
+						
+<span class="param-type"><a href="module-dibello.Repository.html">module:dibello.Repository</a></span>
+ 
+    
+					</span>
+				
+
+				
+
+				
+
+				<div style="margin-left:1em;margin-top:0.25em;">
+					<p>The repository which must be prepared</p>
+				</div>
+				
+				</div>
+			
+		<br/>
+</div>
+<table class="params table table-striped">
+    <thead>
+	<tr>
+		
+		<th>Name</th>
+		
+
+		<th>Type</th>
+
+		
+
+		
+
+		<th class="last">Description</th>
+	</tr>
+	</thead>
+
+	<tbody>
+	
+
+        <tr>
+            
+                <td class="name"><code>repository</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-dibello.Repository.html">module:dibello.Repository</a></span>
+ 
+    
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The repository which must be prepared</p></td>
+        </tr>
+
+	
+	</tbody>
+</table>
+
+    
+    
+    
+<dl class="details">
+	
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+    
+    
+
+    
+
+    
+
+    
+    
+    
+    
+    
+    
+    
+</dd>
+
+        
+            
+<dt>
+    <h4 class="name" id="repository"><span class="type-signature"></span> repository<span class="signature">(name, tx)</span><span class="type-signature"> &rarr; {<a href="module-dibello.Repository.html">module:dibello.Repository</a>}</span></h4>
+    
+    
+</dt>
+<dd>
+    
+    
+    <div class="description">
+        <p>Retrieve a repository</p>
+    </div>
+    
+
+    
+
+    
+    
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<div class="params-mobile">
+	
+			<div style="margin-left:0.5em;border-left:5px solid #ccc;margin-bottom:0.5em;">
+				<label class="columnar"><code>name</code></label>
+				
+					<span style="display:inline-block;margin-left:0.25em;">
+						
+<span class="param-type">String</span>
+ 
+    
+					</span>
+				
+
+				
+
+				
+
+				<div style="margin-left:1em;margin-top:0.25em;">
+					<p>The name of the repository to retrieve</p>
+				</div>
+				
+				</div>
+			
+			<div style="margin-left:0.5em;border-left:5px solid #ccc;margin-bottom:0.5em;">
+				<label class="columnar"><code>tx</code></label>
+				
+					<span style="display:inline-block;margin-left:0.25em;">
+						
+<span class="param-type">type</span>
+ 
+    
+					</span>
+				
+
+				
+
+				
+
+				<div style="margin-left:1em;margin-top:0.25em;">
+					<p>An optional transaction which the repository should be associated with</p>
+				</div>
+				
+				</div>
+			
+		<br/>
+</div>
+<table class="params table table-striped">
+    <thead>
+	<tr>
+		
+		<th>Name</th>
+		
+
+		<th>Type</th>
+
+		
+
+		
+
+		<th class="last">Description</th>
+	</tr>
+	</thead>
+
+	<tbody>
+	
+
+        <tr>
+            
+                <td class="name"><code>name</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+ 
+    
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The name of the repository to retrieve</p></td>
+        </tr>
+
+	
+
+        <tr>
+            
+                <td class="name"><code>tx</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">type</span>
+ 
+    
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>An optional transaction which the repository should be associated with</p></td>
+        </tr>
+
+	
+	</tbody>
+</table>
+
+    
+    
+    
+<dl class="details">
+	
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+    
+    
+
+    
+
+    
+
+    
+    
+    
+    
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    <p>The new repository object</p>
+</div>
+
+
+
+<dl>
+	<dt>
+		Type
+	</dt>
+	<dd>
+		
+<span class="param-type"><a href="module-dibello.Repository.html">module:dibello.Repository</a></span>
+ 
+    
+	</dd>
+</dl>
+
+
+        
+    
+    
+</dd>
+
+        
+            
+<dt>
+    <h4 class="name" id="setIDB"><span class="type-signature"></span> setIDB<span class="signature">(idb)</span><span class="type-signature"></span></h4>
+    
+    
+</dt>
+<dd>
+    
+    
+    <div class="description">
+        <p>Set the IDBDatabase instance held by this Database instance</p>
+    </div>
+    
+
+    
+
+    
+    
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<div class="params-mobile">
+	
+			<div style="margin-left:0.5em;border-left:5px solid #ccc;margin-bottom:0.5em;">
+				<label class="columnar"><code>idb</code></label>
+				
+					<span style="display:inline-block;margin-left:0.25em;">
+						
+<span class="param-type">IDBDatabase</span>
+ 
+    
+					</span>
+				
+
+				
+
+				
+
+				<div style="margin-left:1em;margin-top:0.25em;">
+					<p>The <a href="https://developer.mozilla.org/en-US/docs/Web/API/IDBDatabase">IDBDatabase</a> instance</p>
+				</div>
+				
+				</div>
+			
+		<br/>
+</div>
+<table class="params table table-striped">
+    <thead>
+	<tr>
+		
+		<th>Name</th>
+		
+
+		<th>Type</th>
+
+		
+
+		
+
+		<th class="last">Description</th>
+	</tr>
+	</thead>
+
+	<tbody>
+	
+
+        <tr>
+            
+                <td class="name"><code>idb</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">IDBDatabase</span>
+ 
+    
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The <a href="https://developer.mozilla.org/en-US/docs/Web/API/IDBDatabase">IDBDatabase</a> instance</p></td>
+        </tr>
+
+	
+	</tbody>
+</table>
+
+    
+    
+    
+<dl class="details">
+	
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+    
+    
+
+    
+
+    
+
+    
+    
+    
+    
+    
+    
+    
+</dd>
+
+        
+            
+<dt>
+    <h4 class="name" id="transact"><span class="type-signature"></span> transact<span class="signature">()</span><span class="type-signature"> &rarr; {Promise}</span></h4>
+    
+    
+</dt>
+<dd>
+    
+    
+    <div class="description">
+        <p>Start a transaction.</p>
+    </div>
+    
+
+    
+
+    
+    
+    
+    
+    
+    
+<dl class="details">
+	
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+    
+    
+
+    
+
+    
+
+    
+    
+    
+    
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    <p>A promise to resolve once the transaction has completed processing.</p>
+</div>
+
+
+
+<dl>
+	<dt>
+		Type
+	</dt>
+	<dd>
+		
+<span class="param-type">Promise</span>
+ 
+    
+	</dd>
+</dl>
+
+
+        
+    
+    
+</dd>
+
+        </dl>
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+		</div>
+	</div>
+
+
+</div>
+</div>
+
+
+<footer>
+
+	&nbsp;&nbsp;&nbsp;Thanks for reading this far!
+	<br />
+
+
+	<span class="copyright">
+	Copyright © 2015 The contributors to the Skate project
+	</span>
+	<br />
+
+<span class="jsdoc-message">
+	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.2</a>
+	on Mon Aug 24th 2015 using the <a
+	href="https://github.com/terryweiss/docstrap">DocStrap template</a>.
+</span>
+</footer>
+
+<!--<script src="scripts/sunlight.js"></script>-->
+<script src="scripts/docstrap.lib.js"></script>
+<script src="scripts/bootstrap-dropdown.js"></script>
+<script src="scripts/toc.js"></script>
+
+<script>
+$( function () {
+	$( "[id*='$']" ).each( function () {
+		var $this = $( this );
+
+		$this.attr( "id", $this.attr( "id" ).replace( "$", "__" ) );
+	} );
+
+	$( "#toc" ).toc( {
+		anchorName  : function ( i, heading, prefix ) {
+			return $( heading ).attr( "id" ) || ( prefix + i );
+		},
+		selectors   : "h1,h2,h3,h4",
+		showAndHide : false,
+		scrollTo    : "100px"
+	} );
+
+	$( "#toc>ul" ).addClass( "nav nav-pills nav-stacked" );
+	$( "#main span[id^='toc']" ).addClass( "toc-shim" );
+	$( '.dropdown-toggle' ).dropdown();
+	//			$( ".tutorial-section pre, .readme-section pre" ).addClass( "sunlight-highlight-javascript" ).addClass( "linenums" );
+
+	$( ".tutorial-section pre, .readme-section pre" ).each( function () {
+		var $this = $( this );
+
+		var example = $this.find( "code" );
+		exampleText = example.html();
+		var lang = /{@lang (.*?)}/.exec( exampleText );
+		if ( lang && lang[1] ) {
+			exampleText = exampleText.replace( lang[0], "" );
+			example.html( exampleText );
+			lang = lang[1];
+		} else {
+			lang = "javascript";
+		}
+
+		if ( lang ) {
+
+			$this
+			.addClass( "sunlight-highlight-" + lang )
+			.addClass( "linenums" )
+			.html( example.html() );
+
+		}
+	} );
+
+	Sunlight.highlightAll( {
+		lineNumbers : true,
+		showMenu : true,
+		enableDoclinks : true
+	} );
+} );
+</script>
+
+
+
+<!--Navigation and Symbol Display-->
+
+<script>
+	$( function () {
+		$( '#main' ).localScroll( {
+			offset : { top : 60 } //offset by the height of your header (give or take a few px, see what works for you)
+		} );
+		$( "dt.name" ).each( function () {
+			var $this = $( this ).find("h4");
+			var icon = $( "<i/>" ).addClass( "icon-plus-sign" ).addClass( "pull-right" ).addClass( "icon-white" );
+			var dt = $(this);
+			var children = dt.next( "dd" );
+
+			dt.prepend( icon ).css( {cursor : "pointer"} );
+			dt.addClass( "member-collapsed" ).addClass( "member" );
+
+
+			children.hide();
+
+			dt.children().on( "click", function () {
+				children = dt.next( "dd" );
+				children.slideToggle( "fast", function () {
+
+					if ( children.is( ":visible" ) ) {
+						icon.addClass( "icon-minus-sign" ).removeClass( "icon-plus-sign" ).removeClass( "icon-white" );
+						dt.addClass( "member-open" ).animate( "member-collapsed" );
+					} else {
+						icon.addClass( "icon-plus-sign" ).removeClass( "icon-minus-sign" ).addClass( "icon-white" );
+						dt.addClass( "member-collapsed" ).removeClass( "member-open" );
+					}
+				} );
+			} );
+
+		} );
+	} );
+</script>
+
+<script>
+	$(function () {
+
+		$('a[href^="module-"]').each(function() {
+			var text = $(this).text();
+			text = text.replace(/module:/g, '');
+ 
+			$(this).css('margin', '0 0.2em');
+			$(this).text(text);
+		});
+
+		$('body').removeClass('loading');
+	});
+</script>
+
+<!--Google Analytics-->
+
+
+</body>
+</html>
