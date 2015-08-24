@@ -155,7 +155,7 @@ function getPhonesForUser(db, username) {
 
 If you read that and didn't have the urge to convert it to use ES6 Promises, then you probably don't know about them 
 yet. Though this function is simple and doesn't benefit much from their use, promises can help prevent deeply nested
-code and allow you to work with asynchronous operations much more smoothly. But in the case of vanilla IndexeDB, 
+code and allow you to work with asynchronous operations much more smoothly. But in the case of vanilla IndexedDB, 
 promises don't reduce the lines of code...
 
 ```js
@@ -281,8 +281,8 @@ You might even want to retrieve just the IDBObjectStore object
 instead of a dibello.Repository:
 
 ```js
-dibelloDb.transact(function($apples) {
-	$apples.get(9001).onsuccess = function(event) {
+dibelloDb.transact(function($$apples) {
+	$$apples.get(9001).onsuccess = function(event) {
 		// well, you get the picture
 	};
 });

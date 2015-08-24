@@ -128,4 +128,23 @@ describe('transact()', function() {
 			expect(typeof foo.get).toBe('function');
 		}], 'readwrite');
 	});
+	
+	it('should inject only the stores with $$ prefix', function() {
+		transact(new Database(new SchemaBuilder('foo', {}), mockedDB()), function(stores, mode) {
+			return {
+				_stores: stores,
+				_mode: mode,
+				
+				objectStore: function(name) {
+					return {
+						_name: name,
+						get: function() {}
+					};
+				}
+			};
+		}, null, function($$foo) {
+			expect($$foo._name).toBe('foo');
+			expect(typeof $$foo.get).toBe('function');
+		}, 'readwrite');
+	});
 });
