@@ -5060,8 +5060,12 @@ function transact(db, transactionOrFactory, repositoryFactory, fn, mode, extraIn
 				var storeName = param;
 				
 				if (storeName.indexOf('store:') == 0) {
+					// @deprecated, will be removed at 1.0.0
 					storeOnly = true;
 					storeName = storeName.replace(/^store:/, '');
+				} else if (storeName.indexOf('$$') == 0) {
+					storeOnly = true;
+					storeName = storeName.replace(/^\$\$/, '');
 				}
 				
 				var store;
