@@ -210,7 +210,7 @@ Let's see what using Dibello above IndexedDB would look like.
 function getPhonesForUser(dibelloDb, username) {
 	return dibelloDb.transact(function(users, phones) {
 		return users.get(username).then(function(user) {
-			return phones.index(user.id);
+			return phones.find({userID: user.id});
 		});
 	});
 }
