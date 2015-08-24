@@ -110,6 +110,7 @@ describe('transact()', function() {
 		}, 'readwrite');
 	});
 	
+	// @deprecated, store:foo will be removed at 1.0.0
 	it('should inject only the stores with store: selector', function() {
 		transact(new Database(new SchemaBuilder('foo', {}), mockedDB()), function(stores, mode) {
 			return {
