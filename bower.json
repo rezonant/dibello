@@ -1,18 +1,18 @@
 {
-  "name": "skate",
+  "name": "dibello",
   "version": "0.3.4",
   "authors": [
     "William Lahti <wilahti@gmail.com>"
   ],
   "description": "A high-level API on top of IndexedDB",
-  "main": "src/skate.js",
+  "main": "dist/dibello.min.js",
   "keywords": [
     "indexeddb",
     "idb",
     "orm"
   ],
   "license": "MIT",
-  "homepage": "http://github.com/rezonant/skate",
+  "homepage": "http://rezonant.github.io/dibello",
   "ignore": [
     "**/.*",
     "node_modules",
