@@ -1,6 +1,6 @@
 {
   "name": "dibello",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "A high-level API on top of IndexedDB",
   "main": "src/dibello.js",
   "directories": {
