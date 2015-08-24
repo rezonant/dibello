@@ -208,15 +208,21 @@ Let's see what using Dibello above IndexedDB would look like.
 
 ```js
 function getPhonesForUser(dibelloDb, username) {
-	return new Promise(function(resolve, reject) {
-		dibelloDb.transact(function(users, phones) {
-			users.get(username).then(function(user) {
-				phones.index(user.id).then(function(foundNumbers) {
-					resolve(foundNumbers);
-				});
-			});
+	return dibelloDb.transact(function(users, phones) {
+		return users.get(username).then(function(user) {
+			return phones.index(user.id);
 		});
 	});
+}
+```
+
+When in doubt, use a transaction, but for simple, single-repository 
+operations, you can use detached repositories which acquire a 
+transaction as needed:
+
+```js
+function getUser(dibelloDb, username) {
+	return dibelloDb.repository('users').get(username);
 }
 ```
 
