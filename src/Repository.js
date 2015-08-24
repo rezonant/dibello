@@ -40,12 +40,10 @@ function Repository(db, storeName, transaction) {
 	
 }; module.exports = Repository;
 
-if (typeof window !== 'undefined')
-	window.SkateRepository = Repository;
-
 /**
  * Immediately dehydrates (flattens) the properties of the given object.
- * This method can be overridden for a specific repository by using skate/Database.configRepository()
+ * This method can be overridden for a specific repository by using 
+ * {@link module:dibello.Database#configRepository}
  * 
  * @param {type} item
  * @see {@link module:dibello/Database~Database#configRepository Database.configRepository}
@@ -56,8 +54,8 @@ Repository.prototype.dehydrate = function(item) {};
 
 /** 
  * Returns a promise to hydrate the properties of a given object.
- * This function is called using skate/Database.transact(), so you can request
- * repositories or other dependencies using Skate's function injection mechanism.
+ * This function is called using dibello/Database.transact(), so you can request
+ * repositories or other dependencies using Dibello's function injection mechanism.
  * 
  * @see {@link module:dibello/Database~Database#transact Database.transact} 
  * @param {type} item In addition to the standard transact services, you may also inject 'item' which is the item being hydrated
@@ -136,7 +134,7 @@ Repository.generateGuid = function() {
 
 /**
  * Set the transaction on this repository object so that future operations 
- * use it instead of creating a new one. This is used during skate.transact()
+ * use it instead of creating a new one. This is used during dibello.transact()
  * calls to ensure that a new Repository will use the newly created transaction
  * (amongst other uses).
  * 
@@ -517,7 +515,7 @@ Repository.prototype.find = function(criteria) {
 	 * and the proper operation function for use in checking values to see if 
 	 * they match.
 	 * 
-	 * @param {skate.Constraint} constraint
+	 * @param {dibello.Constraint} constraint
 	 * @returns {undefined}
 	 */
 	function compileConstraint(constraint) {
@@ -581,7 +579,7 @@ Repository.prototype.find = function(criteria) {
 	}
 	
 	/**
-	 * Resolve the criteria object so that all fields contain skate.Constraint objects.
+	 * Resolve the criteria object so that all fields contain dibello.Constraint objects.
 	 * 
 	 * @param {} criteria
 	 * @returns {}

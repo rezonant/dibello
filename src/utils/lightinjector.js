@@ -1,9 +1,9 @@
 /**
- * # skate/utils/lightinjector
+ * # dibello/utils/lightinjector
  * 
  * A light-weight function dependency injector, similar to the one found in Angular.js
  *
- * @module skate/utils/lightinjector
+ * @module dibello/utils/lightinjector
  * @author William Lahti <wilahti@gmail.com>
  * @copyright (C) 2015 William Lahti  
  */

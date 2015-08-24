@@ -1,10 +1,10 @@
 
-var skate = require('../src/dibello.js');
+var dibello = require('../src/dibello.js');
 var idbMock = require('indexeddb-mock');
 
-describe("skate.open()", function() {
-	it("returns a promise to provide a skate.Database containing an IDB database", function(done) {
-		var promise = skate.open(idbMock.mock, 'test123', {version: 3});
+describe("dibello.open()", function() {
+	it("returns a promise to provide a dibello.Database containing an IDB database", function(done) {
+		var promise = dibello.open(idbMock.mock, 'test123', {version: 3});
 
 		promise.then(function(db) {
 			expect(db.idb().name).toBe('test123');
@@ -19,7 +19,7 @@ describe("skate.open()", function() {
 		idbMock.flags.upgradeNeeded = true;
 		
 		var testKey = '';
-		var promise = skate.open(idbMock.mock, 'test123', {
+		var promise = dibello.open(idbMock.mock, 'test123', {
 			version: 4,
 			migrations: {
 				"1": function() { testKey += '1'; },
@@ -42,7 +42,7 @@ describe("skate.open()", function() {
 		idbMock.flags.upgradeNeeded = true;
 		
 		var testKey = '';
-		var promise = skate.open(idbMock.mock, 'test123', {
+		var promise = dibello.open(idbMock.mock, 'test123', {
 			version: 2,
 			migrations: {
 				"1": function(schema) { 
@@ -72,7 +72,7 @@ describe("skate.open()", function() {
 		idbMock.flags.upgradeNeeded = true;
 		
 		var testKey = '';
-		var promise = skate.open(idbMock.mock, 'test123', {
+		var promise = dibello.open(idbMock.mock, 'test123', {
 			version: 4,
 			migrations: {
 				"1": function() { testKey += '1'; },
@@ -97,7 +97,7 @@ describe("skate.open()", function() {
 		idbMock.flags.initialVersion = 3;
 		
 		var testKey = '';
-		var promise = skate.open(idbMock.mock, 'test123', {
+		var promise = dibello.open(idbMock.mock, 'test123', {
 			version: 5,
 			migrations: {
 				"1": function(schema) { 
@@ -131,7 +131,7 @@ describe("skate.open()", function() {
 		idbMock.flags.initialVersion = 3;
 		
 		var testKey = '';
-		var promise = skate.open(idbMock.mock, 'test123', {
+		var promise = dibello.open(idbMock.mock, 'test123', {
 			version: 5,
 			migrations: {
 				"1": function(schema) { 

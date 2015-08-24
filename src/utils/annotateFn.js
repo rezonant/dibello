@@ -1,10 +1,10 @@
 /**
- * # skate/utils/annotateFn
+ * # dibello/utils/annotateFn
  * 
  * A light-weight Javascript function reflector, similar to the one found in Angular.js.
  * Also supports array-style annotations for mangler-friendly code.
  *
- * @module skate/utils/annotateFn
+ * @module dibello/utils/annotateFn
  * @author William Lahti <wilahti@gmail.com>
  * @copyright (C) 2015 William Lahti  
  */

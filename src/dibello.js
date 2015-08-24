@@ -1,11 +1,11 @@
 /**  
- * # skate
+ * # dibello
  * 
  * The main module of Dibello, an IndexedDB ORM library.
  * 
  * @author William Lahti <wilahti@gmail.com>
  * @copyright (C) 2015 William Lahti
- * @module skate
+ * @module dibello
  */
 
 
@@ -22,11 +22,11 @@ var Database = require('./Database.js');
 
 /**
  * @alias module:dibello
- * @type skate
+ * @type dibello
  */
-var skate = { 
+var dibello = { 
 	/**
-	 * Contains the version of the Skate library.
+	 * Contains the version of the Dibello library.
 	 * @type String
 	 */ 
 	version: '0.1',
@@ -44,28 +44,28 @@ var skate = {
 	},
 	
 	/**
-	 * Returns a promise to open an IndexedDB database using Skate's schema manager.
+	 * Returns a promise to open an IndexedDB database using Dibello's schema manager.
 	 * 
 	 * You must pass the top-level indexedDB API object. If you are in a browser which
 	 * supports IndexedDB, then simply pass window.indexedDB. If you are in Node.js 
 	 * using indexeddb-js, then you should pass the indexeddbjs.indexedDB instance you
 	 * normally construct.
 	 * 
-	 * When the promise resolves you will receive a skate.Database instance.
+	 * When the promise resolves you will receive a dibello.Database instance.
 	 * 
-	 * In order for Skate to prepare the database, you must provide the desired IDB 
+	 * In order for Dibello to prepare the database, you must provide the desired IDB 
 	 * database name and a set of options.
 	 * 
 	 * Migrations
 	 * 
 	 * The most important option is 'migrations', which must be an
 	 * object with numeric keys, one for each revision of the database.
-	 * The 'version' option chooses what version of the schema Skate 
-	 * should consider current. During open(), Skate will apply the 
+	 * The 'version' option chooses what version of the schema Dibello 
+	 * should consider current. During open(), Dibello will apply the 
 	 * schema you define within your migrations functions to the given
 	 * IDB database. 
 	 * 
-	 * Since Skate only knows about your database schema through your migrations,
+	 * Since Dibello only knows about your database schema through your migrations,
 	 * they are structured in a particular way. You cannot interact with data within
 	 * the database during a migration unless you are within a run() block. This is 
 	 * because your migrations are _always run_ to construct a model of your schema. 
@@ -79,7 +79,7 @@ var skate = {
 	 * Example:
 	 * 
 	 * ```js
-	 * skate.open('apples', {
+	 * dibello.open('apples', {
 	 *		migrations: {
 	 *			'1': function(schema) {
 	 *				// This is our perfect apples schema.
@@ -121,7 +121,7 @@ var skate = {
 	 * }).then(function(db) {
 	 *		// Hey, lets use it!
 	 *		
-	 *		skate.transact(db, function(apples) {
+	 *		db.transact(function(apples) {
 	 *			apples.find({
 	 *				size: 'large'
 	 *			}).emit(function(apple) {
@@ -196,9 +196,6 @@ var skate = {
 			var oldVersion = event.oldVersion;
 			var newVersion = event.newVersion;
 			
-			//console.log('[skate] Schema update required from '+oldVersion+' to '+newVersion);
-			//console.log('[skate] Loading schema history...');
-
 			if (!options.migrations) {
 				throw "Cowardly refusing to upgrade when no migrations are specified.";
 			}
@@ -212,13 +209,13 @@ var skate = {
 			schema.setDatabase(db, event.currentTarget.transaction);
 			
 			idb.onerror = function (event) {
-				console.error('[skate] Error while building database schema');
+				console.error('[dibello] Error while building database schema');
 				console.log(event);
 			};
 
-			//console.log('[skate] Applying migrations...');
+			//console.log('[dibello] Applying migrations...');
 			for (var version = oldVersion+1; version <= newVersion; ++version) {
-				//console.log('[skate] - Applying schema version #'+version+' (live)');
+				//console.log('[dibello] - Applying schema version #'+version+' (live)');
 				options.migrations[version](schema);
 			}
 			 
@@ -230,4 +227,4 @@ var skate = {
 		
 		return ready;
 	}
-}; module.exports = skate;
+}; module.exports = dibello;

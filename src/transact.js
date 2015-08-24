@@ -1,13 +1,13 @@
 /**
- * # skate/transact
+ * # dibello/transact
  * 
- * transact() is Skate's core implementation of IndexedDB transactional injection,
+ * transact() is Dibello's core implementation of IndexedDB transactional injection,
  * which is the process of introspecting a function's parameters, creating a 
  * transaction to suit them, and then calling the function, passing objects to the 
  * function as it requested via naming.
  * 
  * This is function injection in a way popularized by the Angular.js framework.
- * transact() is used internally within Skate in many places, including Database.transact(),
+ * transact() is used internally within Dibello in many places, including Database.transact(),
  * SchemaBuilder.run() and Repository.hydrate().
  * 
  * @author William Lahti <wilahti@gmail.com>
@@ -16,13 +16,6 @@
  
 var injector = require('./utils/lightinjector.js');
 var Repository = require('./Repository.js');
-
-/**  
- * @param {String} message The message for the exception
- */
-function SkateUnknownStoreException(message) {
-	this.message = message; 
-};
 
 /**
  * Calls a function, injecting the proper repositories and related services (db, transaction),

@@ -1,6 +1,6 @@
 
 /**
- * Constructs a new skate.Constraint.
+ * Constructs a new dibello.Constraint.
  * @class 
  * @alias module:dibello.Constraint
  * @param {String} operator

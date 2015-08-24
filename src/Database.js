@@ -1,6 +1,6 @@
 /**
- * Module providing Skate's Database class which wraps an IndexedDB database to provide
- * access to Skate's features as well as the underlying IndexedDB features.
+ * Module providing Dibello's Database class which wraps an IndexedDB database to provide
+ * access to Dibello's features as well as the underlying IndexedDB features.
  * 
  * @author William Lahti <wilahti@gmail.com>
  * @copyright (C) 2015 William Lahti
@@ -19,7 +19,7 @@ var Repository = require('./Repository.js');
  */
 function Database(schema, idb) {
 	if (!schema)
-		throw "Must pass a SchemaBuilder as 'schema' to the skate.Database constructor";
+		throw "Must pass a SchemaBuilder as 'schema' to the dibello.Database constructor";
 	this._schema = schema;
 	this._idb = idb;
 	this._repositoryConfigs = {};  
