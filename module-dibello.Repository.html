@@ -28,7 +28,7 @@
 			<li class="dropdown">
 				<a href="modules.list.html" class="dropdown-toggle" data-toggle="dropdown">Modules<b class="caret"></b></a>
 				<ul class="dropdown-menu inline">
-					<li><a href="module-skate.html">skate</a></li><li><a href="module-skate_utils_annotateFn.html">skate/utils/annotateFn</a></li><li><a href="module-skate_utils_lightinjector.html">skate/utils/lightinjector</a></li>
+					<li><a href="module-dibello.html">dibello</a></li><li><a href="module-dibello_utils_annotateFn.html">dibello/utils/annotateFn</a></li><li><a href="module-dibello_utils_lightinjector.html">dibello/utils/lightinjector</a></li>
 				</ul>
 			</li>
 			
@@ -42,7 +42,7 @@
 			<li class="dropdown">
 				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
 				<ul class="dropdown-menu inline">
-					<li><a href="global.html#injector">injector</a></li><li><a href="global.html#SkateUnknownStoreException">SkateUnknownStoreException</a></li><li><a href="global.html#stripCopy">stripCopy</a></li><li><a href="global.html#transact">transact</a></li>
+					<li><a href="global.html#injector">injector</a></li><li><a href="global.html#stripCopy">stripCopy</a></li><li><a href="global.html#transact">transact</a></li>
 				</ul>
 			</li>
 			
@@ -723,7 +723,8 @@ object store (IDBObjectStore)</p>
     
     <div class="description">
         <p>Immediately dehydrates (flattens) the properties of the given object.
-This method can be overridden for a specific repository by using skate/Database.configRepository()</p>
+This method can be overridden for a specific repository by using 
+<a href="module-dibello.Database.html#configRepository">module:dibello.Database#configRepository</a></p>
     </div>
     
 
@@ -1870,8 +1871,8 @@ this repository. The resulting transaction cannot be used to access any other st
     
     <div class="description">
         <p>Returns a promise to hydrate the properties of a given object.
-This function is called using skate/Database.transact(), so you can request
-repositories or other dependencies using Skate's function injection mechanism.</p>
+This function is called using dibello/Database.transact(), so you can request
+repositories or other dependencies using Dibello's function injection mechanism.</p>
     </div>
     
 
@@ -2746,7 +2747,7 @@ Return a promise to resolve once the operation is completed.</p>
     
     <div class="description">
         <p>Set the transaction on this repository object so that future operations 
-use it instead of creating a new one. This is used during skate.transact()
+use it instead of creating a new one. This is used during dibello.transact()
 calls to ensure that a new Repository will use the newly created transaction
 (amongst other uses).</p>
     </div>

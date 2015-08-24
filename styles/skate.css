@@ -11,6 +11,19 @@ body.loading {
 	opacity: 0;
 }
 
+footer {
+	color: black;
+	padding: 3em;
+}
+
+footer .copyright {
+	color: black;
+}
+
+footer .jsdoc-message {
+	color: #585858;
+}
+
 .navbar-brand {
 	text-transform: none;
 }
@@ -18,6 +31,21 @@ body.loading {
 body {
 	opacity: 1;
 	transition: opacity 3s;
+}
+
+.navbar .dropdown-menu {
+	padding: 0;
+	max-height: initial;
+	height: auto;
+	overflow-y: visible;
+}
+
+.navbar .dropdown-menu li {
+	padding: 0;
+}
+
+.navbar .dropdown-menu li a {
+	padding: 20px;
 }
 
 .dropdown-backdrop {

@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
 	<meta charset="utf-8">
-	<title>dibello.js Global</title>
+	<title>dibello.js Module: dibello</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
 
@@ -73,11 +73,6 @@
 
 <header>
     
-        <h2>
-        
-        </h2>
-        
-    
 </header>
 
 
@@ -85,87 +80,10 @@
     <div class="container-overview">
     
         
+            <div class="description"><h1>dibello</h1><p>The main module of Dibello, an IndexedDB ORM library.</p></div>
+        
 
         
-<dl class="details">
-	
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-        
-    
-    </div>
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-        <h3 class="subsection-title">Members</h3>
-
-        <dl>
-            
-<dt class="name" id="injector">
-    <h4><span class="type-signature"></span>injector<span class="type-signature"></span></h4>
-
-    
-</dt>
-<dd>
-    
-    <div class="description">
-        <h1>dibello/transact</h1><p>transact() is Dibello's core implementation of IndexedDB transactional injection,
-which is the process of introspecting a function's parameters, creating a 
-transaction to suit them, and then calling the function, passing objects to the 
-function as it requested via naming.</p>
-<p>This is function injection in a way popularized by the Angular.js framework.
-transact() is used internally within Dibello in many places, including Database.transact(),
-SchemaBuilder.run() and Repository.hydrate().</p>
-    </div>
-    
-
-    
-
-    
 <dl class="details">
 	
 
@@ -219,17 +137,60 @@ SchemaBuilder.run() and Repository.hydrate().</p>
 </dl>
 
 
-    
-</dd>
-
         
+    
+    </div>
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Classes</h3>
+
+        <dl>
+            <dt><a href="module-dibello.Constraint.html">Constraint</a></dt>
+            <dd></dd>
+        
+            <dt><a href="module-dibello.Database.html">Database</a></dt>
+            <dd></dd>
+        
+            <dt><a href="module-dibello.IDBCursorGenerator.html">IDBCursorGenerator</a></dt>
+            <dd></dd>
+        
+            <dt><a href="module-dibello.IDBRequestGenerator.html">IDBRequestGenerator</a></dt>
+            <dd></dd>
+        
+            <dt><a href="module-dibello.Repository.html">Repository</a></dt>
+            <dd></dd>
+        
+            <dt><a href="module-dibello.SchemaBuilder.html">SchemaBuilder</a></dt>
+            <dd></dd>
+        
+            <dt><a href="module-dibello.StoreBuilder.html">StoreBuilder</a></dt>
+            <dd></dd>
+        </dl>
+    
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Members</h3>
+
+        <dl>
             
-<dt class="name" id="module:dibello">
-    <h4><span class="type-signature"></span>module:dibello<span class="type-signature"> :dibello</span></h4>
+<dt class="name" id=".version">
+    <h4><span class="type-signature">&lt;static> </span>version<span class="type-signature"> :String</span></h4>
 
     
 </dt>
 <dd>
+    
+    <div class="description">
+        <p>Contains the version of the Dibello library.</p>
+    </div>
     
 
     
@@ -237,7 +198,7 @@ SchemaBuilder.run() and Repository.hydrate().</p>
         <ul>
             <li>
                 
-<span class="param-type">dibello</span>
+<span class="param-type">String</span>
  
     
             </li>
@@ -287,234 +248,6 @@ SchemaBuilder.run() and Repository.hydrate().</p>
     
 </dd>
 
-        
-            
-<dt class="name" id="stripCopy">
-    <h4><span class="type-signature"></span>stripCopy<span class="type-signature"></span></h4>
-
-    
-</dt>
-<dd>
-    
-    <div class="description">
-        <p>Module  which is providing a class which provides a high-level API on top
-of an IndexedDB object store (IDBObjectStore)</p>
-    </div>
-    
-
-    
-
-    
-<dl class="details">
-	
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-	<dt class="tag-author">Author:</dt>
-	<dd class="tag-author">
-		<ul>
-			<li><a href="mailto:wilahti@gmail.com">William Lahti</a></li>
-			</ul>
-	</dd>
-	
-
-	
-	<dt class="tag-copyright">Copyright:</dt>
-	<dd class="tag-copyright">
-		<ul class="dummy">
-			<li>(C) 2015 William Lahti</li>
-		</ul>
-	</dd>
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-	<dt class="tag-see">See:</dt>
-	<dd class="tag-see">
-		<ul>
-			<li><a href="https://developer.mozilla.org/en-US/docs/Web/API/IDBObjectStore">MDN Reference - IDBObjectStore</a></li>
-			</ul>
-	</dd>
-	
-
-	
-</dl>
-
-
-    
-</dd>
-
-        
-            
-<dt class="name" id="transact">
-    <h4><span class="type-signature"></span>transact<span class="type-signature"></span></h4>
-
-    
-</dt>
-<dd>
-    
-    <div class="description">
-        <p>Module providing the SchemaBuilder class.</p>
-    </div>
-    
-
-    
-
-    
-<dl class="details">
-	
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-	<dt class="tag-author">Author:</dt>
-	<dd class="tag-author">
-		<ul>
-			<li><a href="mailto:wilahti@gmail.com">William Lahti</a></li>
-			</ul>
-	</dd>
-	
-
-	
-	<dt class="tag-copyright">Copyright:</dt>
-	<dd class="tag-copyright">
-		<ul class="dummy">
-			<li>(C) 2015 William Lahti</li>
-		</ul>
-	</dd>
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-</dd>
-
-        
-            
-<dt class="name" id="transact">
-    <h4><span class="type-signature"></span>transact<span class="type-signature"></span></h4>
-
-    
-</dt>
-<dd>
-    
-    <div class="description">
-        <p>Module providing Dibello's Database class which wraps an IndexedDB database to provide
-access to Dibello's features as well as the underlying IndexedDB features.</p>
-    </div>
-    
-
-    
-
-    
-<dl class="details">
-	
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-	<dt class="tag-author">Author:</dt>
-	<dd class="tag-author">
-		<ul>
-			<li><a href="mailto:wilahti@gmail.com">William Lahti</a></li>
-			</ul>
-	</dd>
-	
-
-	
-	<dt class="tag-copyright">Copyright:</dt>
-	<dd class="tag-copyright">
-		<ul class="dummy">
-			<li>(C) 2015 William Lahti</li>
-		</ul>
-	</dd>
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-</dd>
-
         </dl>
     
 
@@ -524,7 +257,7 @@ access to Dibello's features as well as the underlying IndexedDB features.</p>
         <dl>
             
 <dt>
-    <h4 class="name" id="transact"><span class="type-signature"></span> transact<span class="signature">(transactionOrFactory, repositoryFactory, fn, mode, extraInjectables)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
+    <h4 class="name" id=".open"><span class="type-signature">&lt;static> </span> open<span class="signature">(string, object)</span><span class="type-signature"> &rarr; {Promise|<a href="module-dibello.Database.html">module:dibello.Database</a>}</span></h4>
     
     
 </dt>
@@ -532,10 +265,81 @@ access to Dibello's features as well as the underlying IndexedDB features.</p>
     
     
     <div class="description">
-        <p>Calls a function, injecting the proper repositories and related services (db, transaction),
-for the given transaction (or the transaction created by a factory function).
-If no transaction is passed, one is automatically created based on the repositories requested
-by the given function.</p>
+        <p>Returns a promise to open an IndexedDB database using Dibello's schema manager.</p>
+<p>You must pass the top-level indexedDB API object. If you are in a browser which
+supports IndexedDB, then simply pass window.indexedDB. If you are in Node.js 
+using indexeddb-js, then you should pass the indexeddbjs.indexedDB instance you
+normally construct.</p>
+<p>When the promise resolves you will receive a dibello.Database instance.</p>
+<p>In order for Dibello to prepare the database, you must provide the desired IDB 
+database name and a set of options.</p>
+<p>Migrations</p>
+<p>The most important option is 'migrations', which must be an
+object with numeric keys, one for each revision of the database.
+The 'version' option chooses what version of the schema Dibello 
+should consider current. During open(), Dibello will apply the 
+schema you define within your migrations functions to the given
+IDB database. </p>
+<p>Since Dibello only knows about your database schema through your migrations,
+they are structured in a particular way. You cannot interact with data within
+the database during a migration unless you are within a run() block. This is 
+because your migrations are <em>always run</em> to construct a model of your schema. 
+The IDB database is only modified when a version migration operation is underway,
+and this includes run() blocks. </p>
+<p>Because of this, you should not attempt to do anything other than modify the 
+schema using the SchemaBuilder instance you are given when you are outside of a run()
+block!</p>
+<p>Example:</p>
+<pre class="prettyprint source lang-js"><code>dibello.open('apples', {
+        migrations: {
+            '1': function(schema) {
+                // This is our perfect apples schema.
+                // We're very sure right now that this won't need to be changed.
+
+                schema.createStore('apples')
+                    .id('id'),
+                    .key('color')
+                    .field('history')
+                ;
+            },
+            '2': function(schema) {
+                // Let's add a size key, we didn't realize we needed it before
+
+                schema.getStore('apples')
+                    .key('size')
+                ;
+            },
+            '3': function(schema) {
+
+                // Change 'size' from a bunch of strings to a numeric type
+
+                schema.getStore('apples')
+                    .run(function(apples) {
+                        apples.all().emit(function(apple) {
+                            var map = { small: 2, medium: 3, large: 4, 'extra-large': 5 };
+
+                            if (apple.size) {
+                                var neuSize = map[apple.size];
+                                apple.size = neuSize;
+                            }
+
+                            apples.persist(apple);
+                        });
+                    })
+                ;
+            },
+        }
+}).then(function(db) {
+        // Hey, lets use it!
+
+        db.transact(function(apples) {
+            apples.find({
+                size: 'large'
+            }).emit(function(apple) {
+                console.log('Found a large apple!', apple);
+            });
+        })
+});</code></pre>
     </div>
     
 
@@ -551,17 +355,7 @@ by the given function.</p>
 <div class="params-mobile">
 	
 			<div style="margin-left:0.5em;border-left:5px solid #ccc;margin-bottom:0.5em;">
-				<label class="columnar"><code>transactionOrFactory</code></label>
-				
-					<span style="display:inline-block;margin-left:0.25em;">
-						
-<span class="param-type">IDBTransaction</span>
-| 
-
-<span class="param-type">function</span>
- 
-    
-					</span>
+				<label class="columnar"><code>string</code></label>
 				
 
 				
@@ -569,22 +363,13 @@ by the given function.</p>
 				
 
 				<div style="margin-left:1em;margin-top:0.25em;">
-					<p>The transaction to use, 
-        or a function to construct a transaction from an array of object store names and a mode
-        (ie function(storeNames, mode))</p>
+					<p>dbName</p>
 				</div>
 				
 				</div>
 			
 			<div style="margin-left:0.5em;border-left:5px solid #ccc;margin-bottom:0.5em;">
-				<label class="columnar"><code>repositoryFactory</code></label>
-				
-					<span style="display:inline-block;margin-left:0.25em;">
-						
-<span class="param-type">function</span>
- 
-    
-					</span>
+				<label class="columnar"><code>object</code></label>
 				
 
 				
@@ -592,72 +377,7 @@ by the given function.</p>
 				
 
 				<div style="margin-left:1em;margin-top:0.25em;">
-					<p>A function which creates a repository when given a db, name, and transaction
-        (ie function(db, name, tx)) or null to use the default factory</p>
-				</div>
-				
-				</div>
-			
-			<div style="margin-left:0.5em;border-left:5px solid #ccc;margin-bottom:0.5em;">
-				<label class="columnar"><code>fn</code></label>
-				
-					<span style="display:inline-block;margin-left:0.25em;">
-						
-<span class="param-type">function</span>
- 
-    
-					</span>
-				
-
-				
-
-				
-
-				<div style="margin-left:1em;margin-top:0.25em;">
-					<p>The function which should be introspected and run</p>
-				</div>
-				
-				</div>
-			
-			<div style="margin-left:0.5em;border-left:5px solid #ccc;margin-bottom:0.5em;">
-				<label class="columnar"><code>mode</code></label>
-				
-					<span style="display:inline-block;margin-left:0.25em;">
-						
-<span class="param-type">String</span>
- 
-    
-					</span>
-				
-
-				
-
-				
-
-				<div style="margin-left:1em;margin-top:0.25em;">
-					<p>The transaction mode ('readonly' or 'readwrite')</p>
-				</div>
-				
-				</div>
-			
-			<div style="margin-left:0.5em;border-left:5px solid #ccc;margin-bottom:0.5em;">
-				<label class="columnar"><code>extraInjectables</code></label>
-				
-					<span style="display:inline-block;margin-left:0.25em;">
-						
-<span class="param-type">String</span>
- 
-    
-					</span>
-				
-
-				
-
-				
-
-				<div style="margin-left:1em;margin-top:0.25em;">
-					<p>An object containing extra services which should be made available for injection
-        in addition to the standard ones</p>
+					<p>options</p>
 				</div>
 				
 				</div>
@@ -686,18 +406,10 @@ by the given function.</p>
 
         <tr>
             
-                <td class="name"><code>transactionOrFactory</code></td>
+                <td class="name"><code>string</code></td>
             
 
             <td class="type">
-            
-                
-<span class="param-type">IDBTransaction</span>
-| 
-
-<span class="param-type">function</span>
- 
-    
             
             </td>
 
@@ -705,24 +417,17 @@ by the given function.</p>
 
             
 
-            <td class="description last"><p>The transaction to use, 
-        or a function to construct a transaction from an array of object store names and a mode
-        (ie function(storeNames, mode))</p></td>
+            <td class="description last"><p>dbName</p></td>
         </tr>
 
 	
 
         <tr>
             
-                <td class="name"><code>repositoryFactory</code></td>
+                <td class="name"><code>object</code></td>
             
 
             <td class="type">
-            
-                
-<span class="param-type">function</span>
- 
-    
             
             </td>
 
@@ -730,78 +435,7 @@ by the given function.</p>
 
             
 
-            <td class="description last"><p>A function which creates a repository when given a db, name, and transaction
-        (ie function(db, name, tx)) or null to use the default factory</p></td>
-        </tr>
-
-	
-
-        <tr>
-            
-                <td class="name"><code>fn</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
- 
-    
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>The function which should be introspected and run</p></td>
-        </tr>
-
-	
-
-        <tr>
-            
-                <td class="name"><code>mode</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">String</span>
- 
-    
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>The transaction mode ('readonly' or 'readwrite')</p></td>
-        </tr>
-
-	
-
-        <tr>
-            
-                <td class="name"><code>extraInjectables</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">String</span>
- 
-    
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>An object containing extra services which should be made available for injection
-        in addition to the standard ones</p></td>
+            <td class="description last"><p>options</p></td>
         </tr>
 
 	
@@ -864,10 +498,6 @@ by the given function.</p>
     <h5>Returns:</h5>
     
             
-<div class="param-desc">
-    <p>A promise to resolve once the transaction has fully completed.</p>
-</div>
-
 
 
 <dl>
@@ -877,6 +507,223 @@ by the given function.</p>
 	<dd>
 		
 <span class="param-type">Promise</span>
+| 
+
+<span class="param-type"><a href="module-dibello.Database.html">module:dibello.Database</a></span>
+ 
+    
+	</dd>
+</dl>
+
+
+        
+    
+    
+</dd>
+
+        
+            
+<dt>
+    <h4 class="name" id=".repository"><span class="type-signature">&lt;static> </span> repository<span class="signature">(db, storeName)</span><span class="type-signature"> &rarr; {<a href="module-dibello.Repository.html">module:dibello.Repository</a>}</span></h4>
+    
+    
+</dt>
+<dd>
+    
+    
+    <div class="description">
+        <p>Create a new repository object for the given database and object store.</p>
+    </div>
+    
+
+    
+
+    
+    
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<div class="params-mobile">
+	
+			<div style="margin-left:0.5em;border-left:5px solid #ccc;margin-bottom:0.5em;">
+				<label class="columnar"><code>db</code></label>
+				
+					<span style="display:inline-block;margin-left:0.25em;">
+						
+<span class="param-type">IDBDatabase</span>
+ 
+    
+					</span>
+				
+
+				
+
+				
+
+				<div style="margin-left:1em;margin-top:0.25em;">
+					
+				</div>
+				
+				</div>
+			
+			<div style="margin-left:0.5em;border-left:5px solid #ccc;margin-bottom:0.5em;">
+				<label class="columnar"><code>storeName</code></label>
+				
+					<span style="display:inline-block;margin-left:0.25em;">
+						
+<span class="param-type">type</span>
+ 
+    
+					</span>
+				
+
+				
+
+				
+
+				<div style="margin-left:1em;margin-top:0.25em;">
+					
+				</div>
+				
+				</div>
+			
+		<br/>
+</div>
+<table class="params table table-striped">
+    <thead>
+	<tr>
+		
+		<th>Name</th>
+		
+
+		<th>Type</th>
+
+		
+
+		
+
+		<th class="last">Description</th>
+	</tr>
+	</thead>
+
+	<tbody>
+	
+
+        <tr>
+            
+                <td class="name"><code>db</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">IDBDatabase</span>
+ 
+    
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+	
+
+        <tr>
+            
+                <td class="name"><code>storeName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">type</span>
+ 
+    
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+	
+	</tbody>
+</table>
+
+    
+    
+    
+<dl class="details">
+	
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+    
+    
+
+    
+
+    
+
+    
+    
+    
+    
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+	<dt>
+		Type
+	</dt>
+	<dd>
+		
+<span class="param-type"><a href="module-dibello.Repository.html">module:dibello.Repository</a></span>
  
     
 	</dd>
