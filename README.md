@@ -1,4 +1,4 @@
-*Homepage*: http://rezonant.github.io/dibello
+# Dibello
 
 Provides an ORM library built on top of IndexedDB.
 
@@ -15,30 +15,21 @@ browser's local storage.
 - A rich repository layer that builds upon the capabilities of
   IndexedDB object stores by providing more advanced query methods 
   and a unified, terse way to interact with IndexedDB requests
+- Written in Typescript, usable in ES5 environments and up.
+
+### Looking for the old Dibello?
+
+Switch to the `0.x` branch, where the classic non-Typescript ES5 version of Dibello still lives.
 
 ### License
 
-This software is provided under the terms of the MIT License. See COPYING for details.
+This software is provided under the terms of the MIT License. See LICENSE for details.
 
 ### Installation
 
-Node (server-side) and Browserify (client-side): 
 ```sh
-npm install dibello
+npm install dibello --save
 ```
- 
-Regardless of whether you are in Node or Browserify, you can use 
-```require('dibello')``` to obtain the Dibello API.
-
-Bower (client-side): 
-```sh
-bower install dibello
-```
-
-Now include ```bower_components/dibello/dist/dibello.min.js``` either directly on your page or within your 
-Javascript build step.
-
-Non-minified dist versions are also included.
 
 ### Opening a Database
 
@@ -50,9 +41,9 @@ of the database, and a set of migrations which are run to compute the schema of 
 database. More about migrations later.
 
 
-```js
-var dibello = require('dibello');
-dibello.open(indexedDB, 'mydb', {
+```ts
+import { Database } from 'dibello';
+let db = await Database.open(indexedDB, 'mydb', {
    version: 2
    migrations: {
       "1": function(schema) {
@@ -66,30 +57,27 @@ dibello.open(indexedDB, 'mydb', {
             .key('size');
       }
    }
-}).then(function(db) {
-    // hey, we have a database (dibello.Database)
-	// if we need to do low-level stuff, we can 
-	// get the IDBDatabase with .idb()
-	var idb = db.idb();
-
-	// but there are better ways to 
-	// use a dibello.Database...
 });
 
+// if we need to do low-level stuff, we can 
+// get the IDBDatabase with .idb()
+var idb = db.idb();
+
+// but there are better ways to 
+// use a dibello.Database...
 ```
 
 ### Transactions
 
 Once you have a database instance, you can transact.
 ```js
-db.transact('readonly', function(apples) {
+db.transact('readonly', async function(apples) {
 
-    // apples is a dibello.Repository which wraps the 'apples' IDBObjectStore,
+    // apples is a Repository which wraps the 'apples' IDBObjectStore,
 	// and repositories use promises :-)
 
-    apples.get('someappleid').then(function(item) {
-        console.log('found my apple: '+item.name);
-    });
+    let item = await apples.get('someappleid');
+    console.log(`found my apple: ${item.name}`);
 });
 ```
 
@@ -115,6 +103,7 @@ Code for getting all phone numbers for a user might
 look like the following in vanilla IndexedDB:
 
 ```js
+// No Dibello here, just plain old IndexedDB
 function getPhonesForUser(db, username) {
 	return new Promise(function(resolve, reject) {
 		function handleError(message) {
@@ -153,14 +142,14 @@ function getPhonesForUser(db, username) {
 }
 ```
 
-If you read that and didn't have the urge to convert it to use ES6 Promises, then you probably don't know about them 
+If you read that and didn't have the urge to convert it to use ES6 Promises and async functions, then you probably don't know about them 
 yet. Though this function is simple and doesn't benefit much from their use, promises can help prevent deeply nested
 code and allow you to work with asynchronous operations much more smoothly. But in the case of vanilla IndexedDB, 
 promises don't reduce the lines of code...
 
 ```js
-function getPhonesForUser(db, username) {
-	return new Promise(function(resolveMain, rejectMain) {
+async function getPhonesForUser(db, username) {
+	let user = await new Promise(function(resolveMain, rejectMain) {
 		function handleError(message) {
 			return function(event) {
 				console.log('Encountered an error while '+message);
@@ -180,38 +169,36 @@ function getPhonesForUser(db, username) {
 				var item = event.target.result;
 				resolve(item);
 			};
-		}).then(function(user) {
-			return new Promise(function(resolve, reject) {
-				var foundNumbers = [];
+		});
+		return new Promise(function(resolve, reject) {
+			var foundNumbers = [];
 
-				var request = phones.index('userID').openCursor(user.id);
-				request.onsuccess = function(event) {
-					var cursor = event.target.cursor;
-					if (!cursor) {
-						resolve(foundNumbers);
-						return;
-					}
+			var request = phones.index('userID').openCursor(user.id);
+			request.onsuccess = function(event) {
+				var cursor = event.target.cursor;
+				if (!cursor) {
+					resolve(foundNumbers);
+					return;
+				}
 
-					var phoneNumberRecord = cursor.value;
-					foundNumbers.push(phoneNumberRecord);
+				var phoneNumberRecord = cursor.value;
+				foundNumbers.push(phoneNumberRecord);
 
-					cursor.continue();
-				};
-			});
+				cursor.continue();
+			};
 		});
 	});
 }
 ```
 
 You would be crazy to use vanilla IndexedDB without some kind of layer above it.
-Let's see what using Dibello above IndexedDB would look like.
+Let's see the same code using Dibello instead:
 
 ```js
 function getPhonesForUser(dibelloDb, username) {
-	return dibelloDb.transact(function(users, phones) {
-		return users.get(username).then(function(user) {
-			return phones.find({userID: user.id});
-		});
+	return dibelloDb.transact(async function(users, phones) {
+		let user = await users.get(username);
+		return phones.find({userID: user.id});
 	});
 }
 ```
@@ -220,7 +207,7 @@ When in doubt, use a transaction, but for simple, single-repository
 operations, you can use detached repositories which acquire a 
 transaction as needed:
 
-```js
+```ts
 function getUser(dibelloDb, username) {
 	return dibelloDb.repository('users').get(username);
 }
@@ -242,11 +229,11 @@ use them to interact with it.
 
 ### More injectable services
 
-You might want to inject more than just dibello repositories. You can request the 
-dibello.Database instance using $db. You can request the dibello.Transaction instance 
-representing your transaction with $transaction:
+You may want to inject more than just repositories. You can request the 
+`Database` instance using `$db`. You can request the `Transaction` instance 
+representing your transaction with `$transaction`:
 
-```js
+```ts
 dibelloDb.transact(function($db, $transaction, users) {
 
 	doSomethingImportantToDatabase();
@@ -268,9 +255,9 @@ dibelloDb.transact(function($db, $transaction, users) {
 });
 ```
 
-You might need to access the IndexedDB objects which underpin dibello.Databse and
-dibello.Transaction (IDBDatabase, IDBTransaction, respectively).
-transact() provides these using the $$db and $$transaction services
+You might need to access the native IndexedDB objects which underpin the `Database` and
+`Transaction` (`IDBDatabase` and `IDBTransaction`, respectively).
+`transact()` provides these using the `$$db` and `$$transaction` services
 
 ```js
 dibelloDb.transact(function($$db, $$transaction) {
@@ -306,8 +293,8 @@ schema in steps as it progresses through time. Dibello is no different. Let's re
 our first code example:
 
 ```js
-var dibello = require('dibello');
-dibello.open(indexedDB, 'mydb', {
+import { Database } from 'dibello';
+Database.open(indexedDB, 'mydb', {
    version: 2
    migrations: {
       "1": function(schema) {
@@ -352,59 +339,78 @@ dibello.transact() calls, meaning you can request any of the services described 
 
 ### Getting results as they arrive
 
-When you request more than one item within Dibello, you will receive a Promise-like object
-with .then() and .catch() methods. The promise will be resolved once all item events have been
-received from IndexedDB, and the array of those items will be provided as the value of the promise.
-However, such requests also have an .emit() function which allows you to receive items as 
-they are emitted from the IndexedDB API. You can then provide a function to .done() to be 
-notified when the request has fully completed.
+When you request more than one object using Dibello, you will receive an `AsyncIteratorIterable` object. If you are in an environment supporting `for...await...of` (such as Typescript 2.3+ with `downlevelIterators: true`, and `es2015`, `esnest.iterables` in your `lib` setting) then you can consume these results elegantly:
+
+```ts
+for await (let apple of applesRepo.all()) {
+    eatApple();
+}
+burp();
+```
+
+You can still use these if you cannot use async iterables. If you happen to have `async/await` support:
 
 ```js
-applesRepo.all().emit(function(apple) {
-	eatApple(apple);
-}).done(function() {
-	burp();
+let result = applesRepo.all();
+for (let item = await result.next(); !item.done; item = await result.next()) {
+    eatApple(apple);
+}
+burp();
+```
+
+If you don't even have async support, the correct code would be pretty verbose, so dibello provides a utility to make it simpler:
+
+```js 
+import { iteratorForEach } from 'dibello';
+// ...
+iteratorForEach(applesRepo.all(), result => {
+    if (result.done) {
+        burp();
+        return;
+    }
+    
+    eatApple(apple);
 });
 ```
 
-**Note** that .then() will cause all items emitted subsequently to be stored into an array (so that they
-can be returned when the function provided to .then() is called).  For large datasets this may have 
-performance implications. The .done() method does not have this effect, as .done() does not receive 
-any data from the request.
+All of the above iteration methods stream the results as they arrive, so their memory efficiency is O(1). This is ideal for larger data sets. If you have a smaller data set and you just want an array of the items, you can use `iteratorCollect`. This is useful regardless of the ES environment you are using:
 
-This type of generator is provided by the es5-generators NPM package. They are similar to 
-ES6 generators without needing runtime-level support for co-routines, because they are 
-built similarly to ES5 promises. A future version of Dibello will support ES6 generators 
-directly. For more on es5-generators, 
-visit [github.com/rezonant/es5-generators](http://github.com/rezonant/es5-generators)
+```js 
+import { iteratorCollect } from 'dibello';
+// ...
+iteratorCollect(applesRepo.all(), items => {
+    for (let item of items)
+        eatApple(apple);
+    burp();
+});
+```
+
+For the remainder of this introduction, we'll use `for...await...of`, but you can substitute these other iteration means in any of the examples.
 
 ### Repositories
 
-Most importantly, Dibello's repositories provide a much more terse pattern of interaction with 
-IndexedDB object stores than the vanilla APIs:
+Most importantly, Dibello's repositories provide a much more terse pattern of interaction with IndexedDB object stores than the vanilla APIs:
 
-```js
-apples
-	.index('size').cursor().above(5).emit(function(apple) {
-		recognizeBigness(apple);
-	});
+```ts
+for await (let apple of apples.index('size').cursor().above(5)) {
+	recognizeBigness(apple);
+});
 ```
 
 You also have access to more sophisticated query mechanisms:
 
-```js
-apples.find({
+```ts
+let apple = await apples.find({
 	color: 'green',
 	size: 5
-}).then(function(apple) {
-	eatSizeFiveGreenApple(apple);
-}
+});
+eatSizeFiveGreenApple(apple);
 ```
 
 And .find() isn't just for exact matches:
 
 ```js
-apples.find(function(is) {
+let apple = await apples.find(function(is) {
 	return {
 		color: 'green',
 		size: is.greaterThan(5)
@@ -414,19 +420,19 @@ apples.find(function(is) {
 
 Did you see this coming? .find() is also injectable,
 and you can use other queries without waiting for them
-to finish first.
+to finish first:
 
-```js
-apples.find(function(is, orchards) {
+```ts
+let apple = await apples.find(function(is, orchards) {
 	return {
 		orchard: is.in(orchards.find({
-			city: 'Marquette'
+			city: 'Los Angeles'
 		}))
 	};
 });
 ```
 
-We're excited to see what you can make using Dibello. So npm install
+We're excited to see what you can make using Dibello. So `npm install`
 and get started! 
 
 ### Contributing
