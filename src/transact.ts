@@ -72,12 +72,15 @@ export function transact<T>(db, transactionOrFactory, repositoryFactory, fn : (.
 				storeNames.push(params[i]);
 			}
 
-			if (transactionOrFactory == null) {
-				this.$transaction = idb.transaction(storeNames, mode);
-			} else if (typeof transactionOrFactory === 'function') {
-				this.$transaction = transactionOrFactory(storeNames, mode);
-			} else {
-				this.$transaction = transactionOrFactory;
+			this.$transaction = null;
+			if (storeNames.length > 0) {
+				if (transactionOrFactory == null) {
+					this.$transaction = idb.transaction(storeNames, mode);
+				} else if (typeof transactionOrFactory === 'function') {
+					this.$transaction = transactionOrFactory(storeNames, mode);
+				} else {
+					this.$transaction = transactionOrFactory;
+				}
 			}
 			
 			var hydratedParams = [];
