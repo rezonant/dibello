@@ -1,7 +1,7 @@
-import { Repository } from '@dibello/repository';
-import { Database } from '@dibello/database';
-import { idbRequestToPromise } from '@dibello/utils/idb/request-to-promise';
-import { idbRequestToIterable } from '@dibello/utils/idb/request-to-iterable';
+import { Repository } from './repository';
+import { Database } from './database';
+import { idbRequestToPromise } from './utils/idb/request-to-promise';
+import { idbRequestToIterable } from './utils/idb/request-to-iterable';
 
 export class Index<TModel, TIndex> {
     constructor(repository : Repository<TModel>, name : string) {

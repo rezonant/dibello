@@ -1,4 +1,4 @@
-import { annotateFn } from '@dibello/utils/annotate-fn';
+import { annotateFn } from '../src/utils/annotate-fn';
 
 describe('annotateFn', function() {
 	it('should work with a parameterless function', function() {

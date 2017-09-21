@@ -5,11 +5,11 @@
  * @copyright (C) 2015 William Lahti 
  */
 
-import { transact } from '@dibello/transact';
-import { annotateFn } from '@dibello/utils/annotate-fn';
-import { StoreBuilder } from '@dibello/store-builder';
-import { Database } from '@dibello/database';
-import { StoreAlreadyExistsError } from '@dibello/errors/store-already-exists';
+import { transact } from './transact';
+import { annotateFn } from './utils/annotate-fn';
+import { StoreBuilder } from './store-builder';
+import { Database } from './database';
+import { StoreAlreadyExistsError } from './errors/store-already-exists';
 
 /**
  * @class

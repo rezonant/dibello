@@ -14,8 +14,8 @@
  * @copyright (C) 2015 William Lahti    
  */   
 
-import { inject } from '@dibello/utils/light-injector';
-import { Repository } from '@dibello/repository';
+import { inject } from './utils/light-injector';
+import { Repository } from './repository';
 
 /**
  * Calls a function, injecting the proper repositories and related services (db, transaction),

@@ -1,5 +1,5 @@
-import { Database } from '@dibello/database';
-import { SchemaBuilder } from '@dibello/schema-builder';
+import { Database } from '../src/database';
+import { SchemaBuilder } from '../src/schema-builder';
 
 import * as idbMock from 'indexeddb-mock';
 

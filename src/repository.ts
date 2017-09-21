@@ -11,14 +11,14 @@
 // import { IDBRequestGenerator } from './IDBRequestGenerator.js';
 // import { IDBCursorGenerator } from './IDBCursorGenerator.js';
 
-import { stripCopy } from '@dibello/strip-copy';
-import { Constraint } from '@dibello/constraint';
-import { transact } from '@dibello/transact';
-import { Database } from '@dibello/database';
-import { Index } from '@dibello/index';
-import { CriteriaFinder } from '@dibello/criteria-finder';
-import { idbRequestToPromise } from '@dibello/utils/idb/request-to-promise';
-import { idbRequestToIterable } from '@dibello/utils/idb/request-to-iterable';
+import { stripCopy } from './strip-copy';
+import { Constraint } from './constraint';
+import { transact } from './transact';
+import { Database } from './database';
+import { Index } from './index';
+import { CriteriaFinder } from './criteria-finder';
+import { idbRequestToPromise } from './utils/idb/request-to-promise';
+import { idbRequestToIterable } from './utils/idb/request-to-iterable';
 
 /**
  * Provides a high-level API on top of an IndexedDB object store (IDBObjectStore)

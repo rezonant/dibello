@@ -1,7 +1,7 @@
 
-import { Database } from '@dibello/database';
-import { transact } from '@dibello/transact';
-import { SchemaBuilder } from '@dibello/schema-builder';
+import { Database } from '../src/database';
+import { transact } from '../src/transact';
+import { SchemaBuilder } from '../src/schema-builder';
 
 function mockedDB() {
 	return {

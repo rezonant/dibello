@@ -4,9 +4,6 @@
         "module": "commonjs",
         "moduleResolution": "node",
         "baseUrl": "./src",
-        "paths": {
-            "@dibello/*": ["./*"]
-        },
         "lib": [
             "dom",
             "es2015",

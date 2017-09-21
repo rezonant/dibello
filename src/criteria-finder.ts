@@ -1,8 +1,8 @@
-import { Constraint } from '@dibello/constraint';
-import { Repository } from '@dibello/repository';
-import { idbRequestToIterable } from '@dibello/utils/idb/request-to-iterable';
-import { idbRequestToPromise } from '@dibello/utils/idb/request-to-promise';
-import { transact } from '@dibello/transact';
+import { Constraint } from './constraint';
+import { Repository } from './repository';
+import { idbRequestToIterable } from './utils/idb/request-to-iterable';
+import { idbRequestToPromise } from './utils/idb/request-to-promise';
+import { transact } from './transact';
 
 export class CriteriaFinder<T> {
     constructor(private repository : Repository<T>) {

@@ -1,4 +1,4 @@
-import { inject } from '@dibello/utils/light-injector';
+import { inject } from '../src/utils/light-injector';
 
 describe('lightinjector', function() {
 	it('injects no parameters for a parameterless function', function(done) {

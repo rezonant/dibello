@@ -1,7 +1,7 @@
 
-import { Repository } from '@dibello/repository';
-import { Database } from '@dibello/database';
-import { SchemaBuilder } from '@dibello/schema-builder';
+import { Repository } from '../src/repository';
+import { Database } from '../src/database';
+import { SchemaBuilder } from '../src/schema-builder';
 
 // import { Generator } from 'es5-generators';
 import * as idbMock from 'indexeddb-mock';

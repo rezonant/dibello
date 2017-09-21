@@ -5,9 +5,9 @@
  * @author William Lahti <wilahti@gmail.com>
  * @copyright (C) 2015 William Lahti
  */
-import { transact } from '@dibello/transact';
-import { Repository } from '@dibello/repository';
-import { SchemaBuilder } from '@dibello/schema-builder';
+import { transact } from './transact';
+import { Repository } from './repository';
+import { SchemaBuilder } from './schema-builder';
 
 /**
  * Constructs a Database object which represents an IndexedDB database.

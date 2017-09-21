@@ -1,6 +1,6 @@
 import idbMock = require('indexeddb-mock');
-import { SchemaBuilder } from '@dibello/schema-builder';
-import { Database } from '@dibello/database';
+import { SchemaBuilder } from '../src/schema-builder';
+import { Database } from '../src/database';
 
 describe("SchemaBuilder", function() {
 	it("should throw when requesting a store that doesn't exist", function(done) {
