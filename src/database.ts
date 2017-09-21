@@ -245,12 +245,12 @@ export class Database {
 	/**
 	 * Retrieve a repository
 	 * 
-	 * @param {String} name The name of the repository to retrieve
-	 * @param {type} tx An optional transaction which the repository should be associated with
-	 * @returns {module:dibello.Repository} The new repository object
+	 * @param name The name of the repository to retrieve
+	 * @param tx An optional transaction which the repository should be associated with
+	 * @returns The new repository object
 	 */
-	repository(name, tx?) {
-		var repo = new Repository(this, name, tx);
+	repository<T>(name : string, tx? : IDBTransaction): Repository<T> {
+		var repo = new Repository<T>(this, name, tx);
 		this.prepareRepository(repo);
 		return repo;
 	};
@@ -259,9 +259,9 @@ export class Database {
 	 * Prepare the given Repository instance by calling any config functions
 	 * registered for its name.
 	 * 
-	 * @param {module:dibello.Repository} repository The repository which must be prepared
+	 * @param repository The repository which must be prepared
 	 */
-	prepareRepository(repository) {
+	prepareRepository<T>(repository : Repository<T>) {
 		if (this._repositoryConfigs[repository.storeName])
 			this._repositoryConfigs[repository.storeName](repository);
 	};
@@ -272,11 +272,11 @@ export class Database {
 	 * It is possible to have multiple configurers, but should be avoided 
 	 * for simplicity.
 	 * 
-	 * @param {String} name The name of the repository to configure
-	 * @param {function} cb A callback which will be called for each 
+	 * @param name The name of the repository to configure
+	 * @param cb A callback which will be called for each 
 	 *		instance of the desired repository which is created
 	*/
-	configRepository(name, cb) {
+	configRepository(name : string, cb) {
 		if (this._repositoryConfigs[name]) {
 			var original = this._repositoryConfigs[name];
 			this._repositoryConfigs[name] = function(repo) {
@@ -293,17 +293,17 @@ export class Database {
 	 * it. This is mostly for use internally but can be useful for debugging (see 
 	 * SchemaBuilder.debug()).
 	 * 
-	 * @returns {module:dibello.SchemaBuilder} The SchemaBuilder containing this database's current schema
+	 * @returns The SchemaBuilder containing this database's current schema
 	 */
-	getSchema() {
+	getSchema(): SchemaBuilder {
 		return this._schema;
 	}
 
 	/**
 	 * Retrieve the underlying {@link https://developer.mozilla.org/en-US/docs/Web/API/IDBDatabase IDBDatabase} instance 
-	 * @returns {IDBDatabase} The {@link https://developer.mozilla.org/en-US/docs/Web/API/IDBDatabase IDBDatabase} instance
+	 * @returns The {@link https://developer.mozilla.org/en-US/docs/Web/API/IDBDatabase IDBDatabase} instance
 	 */
-	idb() {
+	idb(): IDBDatabase {
 		return this._idb;
 	};
 }
