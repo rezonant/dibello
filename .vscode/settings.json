@@ -5,7 +5,10 @@
         "**/.hg": true,
         "**/CVS": true,
         "**/.DS_Store": true,
-        "**/*.js": false,
+        "src/**/*.js": true,
+        "test/**/*.js": true,
+        "index.js": true,
         "**/*.d.ts": true,
+        "**/*.map": true
     }
 }
