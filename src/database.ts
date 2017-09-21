@@ -124,9 +124,12 @@ export class Database {
 	 * @param object options
 	 * @returns {Promise|module:dibello.Database}
 	 */
-	static open(dbName : string, options, indexedDB?): Promise<Database> {
-		if (!indexedDB)
-			indexedDB = window.indexedDB;
+	static open(dbName : string, options, idbImplementation? : IDBFactory): Promise<Database> {
+		if (!idbImplementation) {
+			if (typeof indexedDB === 'undefined') 
+				throw new Error('No native indexedDB implementation, you must pass one in via the idbImplementation parameter.');
+			idbImplementation = indexedDB;
+		}
 
 		// Process options
 		
@@ -150,7 +153,7 @@ export class Database {
 		
 		// Open DB request
 		
-		var DBOpenRequest = indexedDB.open(dbName, version);
+		var DBOpenRequest = idbImplementation.open(dbName, version);
 
 		// these two event handlers act on the database being opened successfully, or not
 		DBOpenRequest.onerror = function (event) {
@@ -158,7 +161,7 @@ export class Database {
 		};
 
 		DBOpenRequest.onsuccess = function (event) {
-			var idb = event.target.result;
+			var idb = (<any>event.target).result;
 			db.setIDB(idb);
 				
 			// If we didn't migrate, populate the schema as necessary
@@ -179,7 +182,7 @@ export class Database {
 		//it is only implemented in recent browsers
 		DBOpenRequest.onupgradeneeded = function (event) {
 			migrated = true;
-			let idb = event.target.result;
+			let idb = (<any>event.target).result;
 			
 			db.setIDB(idb);
 			schema.setDatabase(db, null);
@@ -197,7 +200,7 @@ export class Database {
 					options.migrations[version](schema);
 			}
 			
-			schema.setDatabase(db, event.currentTarget.transaction);
+			schema.setDatabase(db, (<any>event.currentTarget).transaction);
 			
 			idb.onerror = function (event) {
 				console.error('[dibello] Error while building database schema');
