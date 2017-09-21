@@ -142,10 +142,6 @@ export class CriteriaFinder<T> {
      * @returns {undefined}
      */
     filterByConstraint(item, fieldName, constraint) {
-        
-        if (!item) 
-            debugger;
-
         // Cache the operation function on the constraint object.
         if (!constraint._compiled || !constraint._compiled.fn || constraint._compiled.operator != constraint.operator)
             this.compileConstraint(constraint);

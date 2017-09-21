@@ -398,9 +398,6 @@ describe('Repository.find()', function() {
 	}
 	
 	it('should get the underlying index and use openCursor()', async function(done) {
-		
-		debugger;
-
 		var count = 0;  
 		let iterable = mockFind([
 			{id: 1, key: 123, thing: 321},
