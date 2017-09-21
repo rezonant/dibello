@@ -3,3 +3,4 @@ nbproject/private/
 dist/
 node_modules/
 *.js
+coverage/
