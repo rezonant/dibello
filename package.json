@@ -1,6 +1,6 @@
 {
   "name": "dibello",
-  "version": "1.0.0-alpha.5",
+  "version": "1.0.0-alpha.6",
   "description": "A high-level API on top of IndexedDB",
   "types": "./index.d.ts",
   "main": "./index.js",
