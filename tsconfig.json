@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "target": "es5",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "baseUrl": "./src",
+        "paths": {
+            "@dibello/*": ["./*"]
+        },
+        "lib": [
+            "dom",
+            "es2015",
+            "es2015.iterable",
+            "esnext.asynciterable"
+        ],
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "downlevelIteration": true,
+        "declaration": true
+    }
+}

@@ -2,11 +2,13 @@
   "name": "dibello",
   "version": "0.4.5",
   "description": "A high-level API on top of IndexedDB",
-  "main": "src/dibello.js",
+  "types": "./index.d.ts",
+  "main": "./index.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
+    "build": "tsc -p .",
     "test": "./node_modules/.bin/karma start --single-run"
   },
   "repository": {
@@ -21,29 +23,21 @@
   "author": "William Lahti <wilahti@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "deepcopy": "^0.5.0",
-    "es5-generators": "^1.1.0"
+    "core-js": "^2.5.1",
+    "deepcopy": "^0.5.0"
   },
   "devDependencies": {
+    "@types/jasmine": "^2.6.0",
     "brfs": "^1.4.1",
-    "browserify": "^11.0.1",
-    "browserify-istanbul": "^0.2.1",
-    "grunt": "^0.4.5",
-    "grunt-browserify": "^3.8.0",
-    "grunt-bump": "^0.3.1",
-    "grunt-concurrent": "^2.0.1",
-    "grunt-contrib-uglify": "^0.9.1",
-    "grunt-contrib-watch": "^0.6.1",
-    "grunt-jsdoc": "^0.6.7",
-    "grunt-karma": "^0.12.0",
-    "grunt-shell": "^1.1.2",
+    "debug": "^3.0.1",
     "indexeddb-mock": "git+https://github.com/rezonant/indexeddb-mock.git",
     "ink-docstrap": "^0.5.2",
     "jasmine-core": "^2.3.4",
-    "karma": "^0.13.3",
-    "karma-browserify": "^4.2.1",
+    "karma": "^1.7.1",
     "karma-chrome-launcher": "^0.2.0",
     "karma-coverage": "^0.5.0",
-    "karma-jasmine": "^0.3.6"
+    "karma-jasmine": "^0.3.6",
+    "karma-typescript": "^3.0.6",
+    "typescript": "^2.5.2"
   }
 }
