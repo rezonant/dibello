@@ -3,7 +3,7 @@ import "core-js/fn/symbol/async-iterator";
 /**
  * Converts an IndexedDB IDBCursor into an async iterable.
  */
-export function idbRequestToIterable<T>(request : IDBRequest | Promise<IDBRequest>, map? : (any) => T): AsyncIterable<T> {
+export function idbRequestToIterable<T>(request : IDBRequest | Promise<IDBRequest>, map? : (any) => T | Promise<T>): AsyncIterable<T> {
 
 	let requestPromise : Promise<IDBRequest>;
 
@@ -14,9 +14,8 @@ export function idbRequestToIterable<T>(request : IDBRequest | Promise<IDBReques
 	
 	let cancelled = false;
 	let finished = false;
-	let cursor : IDBCursor = null;
 	let bufferedResults : Promise<IteratorResult<T>>[] = [];
-	let resolve, reject;
+	let resolve, reject; 
 
 	bufferedResults.push(new Promise((rs, rj) => {
 		resolve = rs;
@@ -24,12 +23,11 @@ export function idbRequestToIterable<T>(request : IDBRequest | Promise<IDBReques
 	}));
 	
 	requestPromise.then(request => {
-		request.onsuccess = function(ev) {
-
+		request.onsuccess = async function(ev) {
 			if (!ev.target)
 				return;
 			
-			cursor = (<any>ev.target).result;
+			let cursor : IDBCursor = (<any>ev.target).result;
 	
 			// End the generator if we're done
 	
@@ -43,8 +41,18 @@ export function idbRequestToIterable<T>(request : IDBRequest | Promise<IDBReques
 	
 			let value = (<any>cursor).value;
 			
+			let mapResult = map? map(value) : value;
+			let mapPromise : Promise<T>;
+
+			if (!value || !value['then']) {
+				// TODO: can we lock this to instanceof Promise safely?
+				mapPromise = Promise.resolve(mapResult);
+			}
+
+			mapResult = await mapPromise;
+
 			resolve(<IteratorResult<T>>{
-				value: map? map(value) : value,
+				value: mapResult,
 				done: false
 			});
 			

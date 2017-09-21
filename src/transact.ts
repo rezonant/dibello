@@ -35,7 +35,7 @@ import { Repository } from '@dibello/repository';
  * 
  * @returns {Promise} A promise to resolve once the transaction has fully completed.
  */
-export function transact<T>(db, transactionOrFactory, repositoryFactory, fn, mode, extraInjectables?): T | Promise<T> {
+export function transact<T>(db, transactionOrFactory, repositoryFactory, fn : (...args) => T, mode, extraInjectables?): T {
 	var mode = mode || 'readonly';
 	var idb = db.idb();
 	

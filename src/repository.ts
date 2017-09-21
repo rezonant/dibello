@@ -94,7 +94,7 @@ export class Repository<T> {
 	* @param {module:dibello.Database} db Database instance
 	* @param {object} item The item being hydrated
 	*/
-	_hydrateItem(db : Database, item): T {
+	_hydrateItem(db : Database, item): Promise<T> {
 		var self = this; 
 		
 		// Standard hydration
@@ -103,7 +103,7 @@ export class Repository<T> {
 		var store = schema.getStore(self._storeName);
 		var foreignFields = store.getForeignFields();
 		
-		return transact(db, null, function(db, name, transaction) {
+		return transact(db, null, function(db : Database, name : string, transaction : IDBTransaction) {
 			return db.repository(name, transaction);
 		}, self.hydrate, 'readonly', {
 			item: item

@@ -191,9 +191,15 @@ describe('Repository.all()', function() {
 			repo.setTransaction(tx);
 
 			store.openCursor = function() {
+				var itemAccept;
+				var itemAccepted = new Promise((rs, rj) => {
+					itemAccept = rs;
+				})
+
 				var request : any = {
 					onsuccess: function() { console.log('BUG: DEFAULT YIELD CALLED'); },
-					_finishes: function() { 
+					_finishes: async function() { 
+						await itemAccepted;
 						var target = {
 							result: null
 						};  
@@ -207,7 +213,7 @@ describe('Repository.all()', function() {
 							value: {
 								id: '123'
 							},
-							"continue": function() { }
+							"continue": function() { itemAccept(); }
 						}
 					};
 					request.onsuccess({
@@ -369,7 +375,7 @@ describe('Repository.find()', function() {
 		store.indexNames = {
 			contains: function(field) {
 				return true;
-			}
+			} 
 		}; 
 		
 		store.index = function(key) {
@@ -377,7 +383,7 @@ describe('Repository.find()', function() {
 				key: key,
 				openCursor: function(idb) {
 					for (var i = 0, max = data.length; i < max; ++i) {
-						data[i]._queriedKey = key;
+						data[i]._queriedKey = key; 
 					}
 		
 					return idbMock.request.success(data);
@@ -386,12 +392,15 @@ describe('Repository.find()', function() {
 		};
 
 		for await (let item of repo.find(criteria)) {
+
 			yield <any>item;
 		}
 	}
 	
 	it('should get the underlying index and use openCursor()', async function(done) {
 		
+		debugger;
+
 		var count = 0;  
 		let iterable = mockFind([
 			{id: 1, key: 123, thing: 321},
@@ -402,7 +411,7 @@ describe('Repository.find()', function() {
 			key: 123
 		});
 		
-		for await (let item of iterable) {
+		for await (let item of iterable) { 
 			expect(item.key).toBe(123);
 			expect(item._queriedKey).toBe('key');
 			++count;

@@ -124,7 +124,7 @@ export class Database {
 	 * @param object options
 	 * @returns {Promise|module:dibello.Database}
 	 */
-	static open(dbName, options, indexedDB?): Promise<Database> {
+	static open(dbName : string, options, indexedDB?): Promise<Database> {
 		if (!indexedDB)
 			indexedDB = window.indexedDB;
 
@@ -218,11 +218,12 @@ export class Database {
 		
 		return ready;
 	}
+
 	/**
 	 * Start a transaction.
 	 * @returns {Promise} A promise to resolve once the transaction has completed processing.
 	 */
-	transact(mode, fn) {
+	transact<T>(mode, fn : (...args) => T | Promise<T>): T | Promise<T> {
 		
 		if (typeof mode !== 'string') {
 			throw 'First parameter must be a mode string';
