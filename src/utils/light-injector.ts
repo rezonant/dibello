@@ -26,8 +26,9 @@ export function inject(map, self, fn) {
 	
 	for (var i = 0, max = params.length; i < max; ++i) {
 		var param = params[i];
+		var hasFactory = param in map;
 		var factory = map[param];
-		
+
 		// We want to be able to inject services with names containing $ at the beginning, middle
 		// or end as necessary, so we do not, as a matter of policy, inject any service that both 
 		// starts and ends with '$' such as '$populate$' or '$any$'. Naturally the injectables 
@@ -38,8 +39,7 @@ export function inject(map, self, fn) {
 			continue;
 		}
 		
-		if (typeof factory === 'undefined') {
-			
+		if (!hasFactory) {
 			if (map.$any$) {
 				factory = map.$any$;
 			} else {

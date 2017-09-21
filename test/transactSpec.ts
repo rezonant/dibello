@@ -110,6 +110,26 @@ describe('transact()', function() {
 		}, 'readwrite');
 	});
 	
+	it('should be able to inject falsey injectables', function() {
+		transact(new Database(new SchemaBuilder('foo', {}), mockedDB()), function(stores, mode) {
+			return {
+				_stores: stores,
+				_mode: mode,
+				
+				objectStore: function(name) {
+					return {
+						_name: name,
+						get: function() {}
+					};
+				}
+			};
+		}, null, function(item, item2) {
+			expect(item).toBeUndefined();
+			expect(item2).toBe(false);
+			
+		}, 'readwrite', { item: undefined, item2: false });
+	});
+	
 	it('should inject only the stores with $$ prefix', function() {
 		transact(new Database(new SchemaBuilder('foo', {}), mockedDB()), function(stores, mode) {
 			return {

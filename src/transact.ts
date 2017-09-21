@@ -84,7 +84,7 @@ export function transact<T>(db, transactionOrFactory, repositoryFactory, fn : (.
 				var param = params[i];
 				
 				// Skip predefined stuff
-				if (this[param])
+				if (param in this)
 					continue;
 				
 				var storeOnly = false;
