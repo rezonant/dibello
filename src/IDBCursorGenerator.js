@@ -6,6 +6,8 @@
  * @copyright (C) 2015 William Lahti  
  */
 
+var Generator = require('es5-generators');
+
 /**
  * Converts an IndexedDB IDBCursor into an ES5 Generator
  * (see es5-generators).

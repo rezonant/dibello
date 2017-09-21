@@ -3,6 +3,7 @@ var Repository = require('../src/Repository.js');
 var Database = require('../src/Database.js');
 var SchemaBuilder = require('../src/SchemaBuilder.js');
 var idbMock = require('indexeddb-mock');
+var Generator = require('es5-generators');
 
 describe('Repository.getStoreTransaction()', function() { 
 	it('should return a new transaction', function(done) {
