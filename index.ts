@@ -11,3 +11,4 @@ export * from './src/strip-copy';
 export * from './src/transact';
 export * from './src/utils/iterator-for-each';
 export * from './src/utils/iterator-collect';
+export * from './src/schema';

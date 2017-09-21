@@ -8,6 +8,7 @@
 import { transact } from './transact';
 import { Repository } from './repository';
 import { SchemaBuilder } from './schema-builder';
+import { Schema } from './schema';
 
 /**
  * Constructs a Database object which represents an IndexedDB database.
@@ -124,7 +125,7 @@ export class Database {
 	 * @param object options
 	 * @returns {Promise|module:dibello.Database}
 	 */
-	static open(dbName : string, options, idbImplementation? : IDBFactory): Promise<Database> {
+	static open(dbName : string, schema : Schema, idbImplementation? : IDBFactory): Promise<Database> {
 		if (!idbImplementation) {
 			if (typeof indexedDB === 'undefined') 
 				throw new Error('No native indexedDB implementation, you must pass one in via the idbImplementation parameter.');
@@ -134,8 +135,8 @@ export class Database {
 		// Process options
 		
 		var version = 1;
-		if (options.version)
-			version = options.version;
+		if (schema.version)
+			version = schema.version;
 		
 		// Ready promise
 		
@@ -147,8 +148,8 @@ export class Database {
 			rejectReady = reject;
 		});
 		
-		var schema = new SchemaBuilder(dbName, this);
-		var db = new Database(schema, null);
+		var schemaBuilder = new SchemaBuilder(dbName, this);
+		var db = new Database(schemaBuilder, null);
 		var migrated = false;
 		
 		// Open DB request
@@ -165,9 +166,9 @@ export class Database {
 			db.setIDB(idb);
 				
 			// If we didn't migrate, populate the schema as necessary
-			if (!migrated && options.migrations) {
+			if (!migrated && schema.migrations) {
 				for (var v = 1; v <= version; ++v) {
-					options.migrations[v](schema);
+					schema.migrations[v](schemaBuilder);
 				}
 			}
 			
@@ -185,22 +186,22 @@ export class Database {
 			let idb = (<any>event.target).result;
 			
 			db.setIDB(idb);
-			schema.setDatabase(db, null);
+			schemaBuilder.setDatabase(db, null);
 			
 			let oldVersion = event.oldVersion;
 			let newVersion = event.newVersion;
 			
-			if (!options.migrations) {
+			if (!schema.migrations) {
 				throw new Error("Cowardly refusing to upgrade when no migrations are specified.");
 			}
 			
 			for (let version = 1; version <= oldVersion; ++version) {
 				//console.log(' - Loading schema version #'+version+' (model-only)');
-				if (options.migrations[version])
-					options.migrations[version](schema);
+				if (schema.migrations[version])
+					schema.migrations[version](schemaBuilder);
 			}
 			
-			schema.setDatabase(db, (<any>event.currentTarget).transaction);
+			schemaBuilder.setDatabase(db, (<any>event.currentTarget).transaction);
 			
 			idb.onerror = function (event) {
 				console.error('[dibello] Error while building database schema');
@@ -210,10 +211,10 @@ export class Database {
 			//console.log('[dibello] Applying migrations...');
 			for (let version = oldVersion+1; version <= newVersion; ++version) {
 				//console.log('[dibello] - Applying schema version #'+version+' (live)');
-				options.migrations[version](schema);
+				schema.migrations[version](schemaBuilder);
 			}
 				
-			schema.disconnectDatabase();
+			schemaBuilder.disconnectDatabase();
 			//console.log('Schema updated successfully.');
 
 			idb.onerror = null;
