@@ -25,7 +25,7 @@ function StoreBuilder(builder, name, id) {
 	if (builder) {
 		this.builder.stores[name] = this;
 		if (this.builder.transaction && this.builder.db) {
-			  this.store.realized = this.builder.db.createObjectStore(name, { keyPath: id });
+			  this.store.realized = this.builder.db.idb().createObjectStore(name, { keyPath: id });
 		}
 		
 	}
