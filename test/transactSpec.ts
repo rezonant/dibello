@@ -110,26 +110,6 @@ describe('transact()', function() {
 		}, 'readwrite');
 	});
 	
-	// @deprecated, store:foo will be removed at 1.0.0
-	it('should inject only the stores with store: selector', function() {
-		transact(new Database(new SchemaBuilder('foo', {}), mockedDB()), function(stores, mode) {
-			return {
-				_stores: stores,
-				_mode: mode,
-				
-				objectStore: function(name) {
-					return {
-						_name: name,
-						get: function() {}
-					};
-				}
-			};
-		}, null, ['store:foo', function(foo) {
-			expect(foo._name).toBe('foo');
-			expect(typeof foo.get).toBe('function');
-		}], 'readwrite');
-	});
-	
 	it('should inject only the stores with $$ prefix', function() {
 		transact(new Database(new SchemaBuilder('foo', {}), mockedDB()), function(stores, mode) {
 			return {

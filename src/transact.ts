@@ -35,7 +35,7 @@ import { Repository } from '@dibello/repository';
  * 
  * @returns {Promise} A promise to resolve once the transaction has fully completed.
  */
-export function transact(db, transactionOrFactory, repositoryFactory, fn, mode, extraInjectables?) {
+export function transact<T>(db, transactionOrFactory, repositoryFactory, fn, mode, extraInjectables?): T | Promise<T> {
 	var mode = mode || 'readonly';
 	var idb = db.idb();
 	
@@ -90,11 +90,7 @@ export function transact(db, transactionOrFactory, repositoryFactory, fn, mode, 
 				var storeOnly = false;
 				var storeName = param;
 				
-				if (storeName.indexOf('store:') == 0) {
-					// @deprecated, will be removed at 1.0.0
-					storeOnly = true;
-					storeName = storeName.replace(/^store:/, '');
-				} else if (storeName.indexOf('$$') == 0) {
+				if (storeName.indexOf('$$') == 0) {
 					storeOnly = true;
 					storeName = storeName.replace(/^\$\$/, '');
 				}
