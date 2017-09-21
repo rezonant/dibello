@@ -67,10 +67,17 @@ Repository.prototype.hydrate = function(item) { return Promise.resolve(item); };
  * Get an IndexedDB transaction (IDBTransaction) for only the store represented by 
  * this repository. The resulting transaction cannot be used to access any other store.
  * 
- * @param {Database} idb The IDBDatabase instance
+ * @param {Database} db The Database instance
  * @returns {type|IDBTransaction}
  */
-Repository.prototype.getStoreTransaction = function(idb) {
+Repository.prototype.getStoreTransaction = function(db) {
+
+	// BACKWARDS COMPAT: Older dibello versions accepted an IDBDatabase here.
+	
+	let idb = db;
+	if (db._transact)
+		idb = idb.idb();
+
 	if (this.transaction)
 		return this.transaction; 
 	return idb.transaction([this.storeName], 'readwrite');
