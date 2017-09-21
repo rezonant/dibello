@@ -65,7 +65,8 @@ export function transact<T>(db, transactionOrFactory, repositoryFactory, fn : (.
 		$populate$: function(params) {
 			var storeNames = [];
 			for (var i = 0, max = params.length; i < max; ++i) {
-				if (params[i] == 'db')
+				// Skip predefined stuff
+				if (params[i] in this)
 					continue;
 
 				storeNames.push(params[i]);
