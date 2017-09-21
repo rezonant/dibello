@@ -70,10 +70,10 @@ Repository.prototype.hydrate = function(item) { return Promise.resolve(item); };
  * @param {Database} idb The IDBDatabase instance
  * @returns {type|IDBTransaction}
  */
-Repository.prototype.getStoreTransaction = function(db) {
+Repository.prototype.getStoreTransaction = function(idb) {
 	if (this.transaction)
 		return this.transaction; 
-	return db.idb().transaction([this.storeName], 'readwrite');
+	return idb.transaction([this.storeName], 'readwrite');
 }
 
 /*-*
