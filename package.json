@@ -1,16 +1,16 @@
 {
   "name": "dibello",
-  "version": "1.0.0-alpha.11",
+  "version": "1.0.0-alpha.12",
   "description": "A high-level API on top of IndexedDB",
-  "types": "./index.d.ts",
-  "main": "./index.js",
+  "types": "./dist/index.d.ts",
+  "main": "./dist/index.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
     "build": "tsc -p .",
     "test": "./node_modules/.bin/karma start --single-run",
-    "prepublish": "npm run build && npm test"
+    "prepare": "npm run build && npm test"
   },
   "repository": {
     "type": "git",

@@ -4,6 +4,7 @@
         "module": "commonjs",
         "moduleResolution": "node",
         "baseUrl": "./src",
+        "outDir": "./dist",
         "lib": [
             "dom",
             "es2015",
