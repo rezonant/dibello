@@ -158,7 +158,7 @@ export class CriteriaFinder<T> {
      * @param criteria 
      */
     async *find(criteria : { [name : string] : any }): AsyncIterableIterator<T> {
-        
+
         var self = this;
         let constraints : { fieldName : string, constraint : Constraint }[];
         let db = await this.repository.ready;

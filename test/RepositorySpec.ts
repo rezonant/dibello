@@ -260,8 +260,8 @@ describe('Repository.getMany()', function() {
 
 			store.get = function(key) {
 				var request : any = {
-					onsuccess: function() { console.log('default yield on get()! oh no!'); },
-					onerror: function() { console.log('default catch on get()! oh no!'); }
+					onsuccess: function() { console.warn('default yield on get()! oh no!'); },
+					onerror: function() { console.warn('default catch on get()! oh no!'); }
 				};
 
 				setTimeout(function() {
@@ -311,7 +311,7 @@ describe('Repository.cursor()', function() {
 
 			store.openCursor = function() {
 				var request : any = {
-					onsuccess: function() { console.log('DEFAULT YIELD'); },
+					onsuccess: function() { console.warn('DEFAULT YIELD'); },
 					_finishes: function() { 
 						var target = {
 							result: null

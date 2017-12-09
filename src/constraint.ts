@@ -18,7 +18,7 @@ export class Constraint {
 	idb : any; // TODO 
 	_compiled : any; // TODO
 
-	static isValidKey(value) {
+	public static isValidKey(value) {
 		if (value === undefined || value === null)
 			return false;
 		
@@ -34,8 +34,8 @@ export class Constraint {
 	 * @param {type} value
 	 * @returns {module:dibello.Constraint}
 	 */
-	static greaterThan(value) {
-		return new Constraint('>', value, !this.isValidKey(value)? null : IDBKeyRange.lowerBound(value));
+	public static greaterThan(value) {
+		return new Constraint('>', value, !this.isValidKey(value)? null : IDBKeyRange.lowerBound(value, true));
 	}
 
 	/**
@@ -44,7 +44,7 @@ export class Constraint {
 	 * @param {type} value
 	 * @returns {module:dibello.Constraint}
 	 */
-	static greaterThanOrEqualTo(value) {
+	public static greaterThanOrEqualTo(value) {
 		return new Constraint('>=', value, !this.isValidKey(value)? null : IDBKeyRange.lowerBound(value));
 	}
 
@@ -53,11 +53,11 @@ export class Constraint {
 	 * @param {type} value
 	 * @returns {module:dibello.Constraint}
 	 */
-	static lessThan(value) {
-		return new Constraint('<', value, !this.isValidKey(value)? null : IDBKeyRange.upperBound(value));
+	public static lessThan(value) {
+		return new Constraint('<', value, !this.isValidKey(value)? null : IDBKeyRange.upperBound(value, true));
 	}
 
-	static compound(constraints : { fieldName : string, constraint : Constraint }[]) {
+	public static compound(constraints : { fieldName : string, constraint : Constraint }[]) {
 		return new Constraint('compound', constraints, null);
 	}
 
@@ -66,7 +66,7 @@ export class Constraint {
 	 * @param {type} value
 	 * @returns {module:dibello.Constraint}
 	 */
-	static lessThanOrEqualTo(value) {
+	public static lessThanOrEqualTo(value) {
 		return new Constraint('<=', value, !this.isValidKey(value)? null : IDBKeyRange.upperBound(value));
 	}
 
@@ -76,7 +76,7 @@ export class Constraint {
 	 * @param {type} value
 	 * @returns {module:dibello.Constraint}
 	 */
-	static equalTo(value) {
+	public static equalTo(value) {
 		return new Constraint('=', value, !this.isValidKey(value)? null : IDBKeyRange.only(value));
 	}
 
@@ -86,7 +86,7 @@ export class Constraint {
 	 * @param {type} value
 	 * @returns {module:dibello.Constraint}
 	 */
-	static inBounds(lower, upper, exclusiveLower, exclusiveUpper) {
+	public static inBounds(lower, upper, exclusiveLower, exclusiveUpper) {
 		return new Constraint(
 			'bound', 
 			[lower, upper, exclusiveLower, exclusiveUpper], 
@@ -100,7 +100,7 @@ export class Constraint {
 	 * @param {type} value
 	 * @returns {module:dibello.Constraint}
 	 */
-	static in(value) {
+	public static in(value) {
 		return new Constraint('in', value, null);
 	}
 }

@@ -389,14 +389,6 @@ For the remainder of this introduction, we'll use `for...await...of`, but you ca
 
 ### Repositories
 
-Most importantly, Dibello's repositories provide a much more terse pattern of interaction with IndexedDB object stores than the vanilla APIs:
-
-```ts
-for await (let apple of apples.index('size').cursor().above(5)) {
-	recognizeBigness(apple);
-});
-```
-
 You also have access to more sophisticated query mechanisms:
 
 ```ts
@@ -412,15 +404,16 @@ And .find() isn't just for exact matches:
 ```js
 let apple = await apples.find(function(is) {
 	return {
+		size: is.greaterThan(5),
 		color: 'green',
-		size: is.greaterThan(5)
 	}
 });
 ```
 
-Did you see this coming? .find() is also injectable,
-and you can use other queries without waiting for them
-to finish first:
+When there are multiple constraints on a find() query, Dibello will create an IndexedDB index query for the first constraint when possible. So in the above query, Dibello will try to obtain an `IDBIndex` for `size`, then will attempt to use `openCursor(IDBKeyRange.lowerBound(5, true))`. Dibello will then filter the results returned by IndexedDB according to the remaining constraints. This means if you reverse the order of `size` and `color` above, the performance characteristics will be different, so as a rule of thumb be sure to order your constraints so as to reduce the size of the result as dramatically as possible as early as possible (just as you would when writing `WHERE` clauses in SQL queries).
+
+### `find()` is injectable
+Did you see this coming? `.find()` is also injectable, and you can use other queries without waiting for them to finish first:
 
 ```ts
 let apple = await apples.find(function(is, orchards) {
@@ -439,8 +432,7 @@ and get started!
 
 Fork us on [Github](http://github.com/rezonant/dibello). Please use 
 the Github workflow (ie use feature-specific branches and send 
-pull requests). Please only send PRs to the master branch unless 
-absolutely necessary.
+pull requests).
 
 ### Testing
 
