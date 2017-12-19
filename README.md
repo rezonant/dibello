@@ -353,7 +353,7 @@ You can still use these if you cannot use async iterables. If you happen to have
 ```js
 let result = applesRepo.all();
 for (let item = await result.next(); !item.done; item = await result.next()) {
-    eatApple(apple);
+    eatApple(item.value);
 }
 burp();
 ```

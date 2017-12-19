@@ -141,7 +141,7 @@ export class Database {
 		// Ready promise
 		
 		let resolveReady : (db : Database) => void;
-		var rejectReady : (err? : any) => void;
+		var rejectReady : (err : any) => void;
 		
 		var ready = new Promise<Database>(function(resolve, reject) {
 			resolveReady = resolve;
@@ -158,7 +158,7 @@ export class Database {
 
 		// these two event handlers act on the database being opened successfully, or not
 		DBOpenRequest.onerror = function (event) {
-			rejectReady();
+			rejectReady(DBOpenRequest.error);
 		};
 
 		DBOpenRequest.onsuccess = function (event) {

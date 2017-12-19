@@ -5,6 +5,7 @@ import { idbRequestToIterable } from './utils/idb/request-to-iterable';
 
 export class Index<TModel, TIndex> {
     constructor(repository : Repository<TModel>, name : string) {
+        this._repository = repository;
         this._name = name;
     }
 
