@@ -75,7 +75,12 @@ export function transact<T>(db, transactionOrFactory, repositoryFactory, fn : (.
 			this.$transaction = null;
 			if (storeNames.length > 0) {
 				if (transactionOrFactory == null) {
-					this.$transaction = idb.transaction(storeNames, mode);
+					try {
+						this.$transaction = idb.transaction(storeNames, mode);
+					} catch (e) {
+						console.error(`Caught error while fetching object stores from IndexedDB. Requested stores were: ${storeNames.join(', ')}`);
+						throw e;
+					}
 				} else if (typeof transactionOrFactory === 'function') {
 					this.$transaction = transactionOrFactory(storeNames, mode);
 				} else {
