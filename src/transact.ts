@@ -35,7 +35,7 @@ import { Repository } from './repository';
  * 
  * @returns {Promise} A promise to resolve once the transaction has fully completed.
  */
-export function transact<T>(db, transactionOrFactory, repositoryFactory, fn : (...args) => T, mode, extraInjectables?): T {
+export function transact<T>(db, transactionOrFactory, repositoryFactory, fn : ((...args) => T) | any[], mode, extraInjectables?): T {
 	var mode = mode || 'readonly';
 	var idb = db.idb();
 	
@@ -43,6 +43,11 @@ export function transact<T>(db, transactionOrFactory, repositoryFactory, fn : (.
 		repositoryFactory = function(db, name, tx) {
 			return new Repository(db, name, tx);
 		};
+	} else if (typeof repositoryFactory !== 'function') {
+		console.error('Bad value passed as repositoryFactory was:');
+		console.dir(repositoryFactory);
+
+		throw new Error(`Cannot use value of type ${typeof repositoryFactory} as repository factory function -- ${JSON.stringify(repositoryFactory)}`);
 	}
 	
 	var injectables = {
