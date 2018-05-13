@@ -105,7 +105,7 @@ export class Repository<T> {
 		
 		return transact(db, null, function(db : Database, name : string, transaction : IDBTransaction) {
 			return db.repository(name, transaction);
-		}, self.hydrate, 'readonly', {
+		}, ['item', self.hydrate], 'readonly', {
 			item: item
 		});
 	};
