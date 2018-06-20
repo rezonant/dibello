@@ -27,7 +27,11 @@ export class StoreBuilder {
 		if (builder) {
 			this.builder.stores[name] = this;
 			if (this.builder.transaction && this.builder.db) {
-				this.store.realized = this.builder.db.idb().createObjectStore(name, { keyPath: id });
+				let options : any = {};
+				if (id)
+					options.keyPath = id;
+				
+				this.store.realized = this.builder.db.idb().createObjectStore(name, options);
 			}
 			
 		}
