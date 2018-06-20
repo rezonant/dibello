@@ -55,8 +55,8 @@ export class StoreBuilder {
 	getForeignFields = function() {
 		var items = [];
 		
-		for (var i = 0, max = this.store.fields.length; i < max; ++i) {
-			var field = this.store.fields[i];
+		for (let key of Object.keys(this.store.fields)) {
+			var field = this.store.fields[key];
 			
 			if (field.references) {
 				items.push(field);
@@ -74,8 +74,8 @@ export class StoreBuilder {
 	getOneToManyFields() {
 		var items = [];
 		
-		for (var i = 0, max = this.store.fields.length; i < max; ++i) {
-			var field = this.store.fields[i];
+		for (let key of Object.keys(this.store.fields)) {
+			var field = this.store.fields[key];
 			
 			if (field.references) {
 				items.push(field);
