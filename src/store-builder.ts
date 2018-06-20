@@ -42,7 +42,7 @@ export class StoreBuilder {
 	 * 
 	 * @param {function} callback The function to call 
 	 */
-	run = function(callback) {
+	run(callback) {
 		if (this.builder)
 			return this.builder.run(callback);
 	};
@@ -52,7 +52,7 @@ export class StoreBuilder {
 	 * 
 	 * @returns {Array} An array of the matching fields.
 	 */
-	getForeignFields = function() {
+	getForeignFields() {
 		var items = [];
 		
 		for (let key of Object.keys(this.store.fields)) {
