@@ -4,6 +4,32 @@
  */
 
 import { SchemaBuilder } from './schema-builder';
+
+export interface StoreFieldDefinition {
+	key: boolean;
+	index: string;
+	name: string;
+	unique: boolean;
+
+	/**
+	 * Reference to a store and field that this field references.
+	 * For instance, if the field links to the 'id' field of the 'apples' store,
+	 * `references` should be 'apples.id'
+	 */
+	references?: string;
+}
+
+export interface StoreFieldMap {
+	[ name : string ] : StoreFieldDefinition;
+}
+
+export interface StoreDefinition {
+	name : string;
+	primaryKey : string;
+	fields: StoreFieldMap;
+	realized? : IDBObjectStore
+}
+
 /**
  * Represents a data store being built (or reflected upon)
  * 
@@ -37,7 +63,7 @@ export class StoreBuilder {
 		}
 	}
 
-	public store : any; // TODO
+	public store : StoreDefinition; // TODO
 		
 	/**
 	 * Run an imperative migration block. The callback will only be executed
@@ -163,7 +189,7 @@ export class StoreBuilder {
 	 * @param {String} name The name of the new field
 	 * @param {String} data The metadata to save with the field definition
 	 */
-	addField(name, data) {
+	addField(name : string, data? : any) {
 		if (this.store.fields[name]) {
 			throw {
 				error: 'FieldAlreadyExists',
@@ -190,7 +216,7 @@ export class StoreBuilder {
 	 * 
 	 * @param {String} name The name of the field to remove
 	 */
-	remove(name) {
+	remove(name : string) {
 		this.removeField(name);
 		return this;
 	}
@@ -200,7 +226,7 @@ export class StoreBuilder {
 	 * 
 	 * @param {String} name The name of the field to remove
 	 */
-	removeField(name) {
+	removeField(name : string) {
 		delete this.store.fields[name];
 		
 		if (this.builder && this.builder.transaction) {
@@ -217,7 +243,7 @@ export class StoreBuilder {
 	 * 
 	 * @param {String} name The name of the new field
 	 */
-	id(name) {
+	id(name : string) {
 		this.addField(name, {key: true, index: name, name: name, unique: true});
 		return this;
 	}
@@ -229,7 +255,7 @@ export class StoreBuilder {
 	 * @param {String} name The name of the new field
 	 * @param {String} ref The field which this foreign field references (ie apples.id)
 	 */
-	foreign(name, ref) {
+	foreign(name : string, ref : string) {
 		this.addField(name, {
 			key: true, 
 			index: name, 
