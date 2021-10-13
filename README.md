@@ -295,7 +295,7 @@ our first code example:
 ```js
 import { Database } from 'dibello';
 Database.open(indexedDB, 'mydb', {
-   version: 2
+   version: 2,
    migrations: {
       "1": function(schema) {
 	    schema.createStore('apples')
