@@ -4,6 +4,9 @@ import { idbRequestToIterable } from './utils/idb/request-to-iterable';
 import { idbRequestToPromise } from './utils/idb/request-to-promise';
 import { transact } from './transact';
 
+export type Criteria = { [name : string] : any };
+export type CriteriaFactory = ((...args) => Criteria);
+
 export class CriteriaFinder<T> {
     constructor(private repository : Repository<T>) {
 
@@ -157,16 +160,15 @@ export class CriteriaFinder<T> {
      * 
      * @param criteria 
      */
-    async *find(criteria : { [name : string] : any }): AsyncIterableIterator<T> {
+    async *find(criteria : CriteriaFactory | Criteria): AsyncIterableIterator<T> {
 
         var self = this;
         let constraints : { fieldName : string, constraint : Constraint }[];
         let db = await this.repository.ready;
         if (typeof criteria === 'function') {
-
-            criteria = await transact(db, null, function(db, name, transaction) {
+            criteria = await transact<Criteria>(db, null, function(db, name, transaction) {
                 return db.repository(name, transaction);
-            }, criteria, 'readonly', {
+            }, <CriteriaFactory>criteria, 'readonly', {
                 is: function() {
                     return Constraint;
                 }

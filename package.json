@@ -8,9 +8,10 @@
     "test": "test"
   },
   "scripts": {
-    "build": "tsc -p .",
-    "test": "./node_modules/.bin/karma start --single-run",
-    "prepare": "npm run build && npm test"
+    "build": "tsc -b",
+    "test": "karma start --single-run",
+    "test:watch": "karma start",
+    "prepublishOnly": "npm run build && npm test"
   },
   "repository": {
     "type": "git",
@@ -28,18 +29,25 @@
     "deepcopy": "^0.5.0"
   },
   "devDependencies": {
-    "@types/jasmine": "^2.6.0",
+    "@types/chai": "^4.2.22",
+    "@types/karma": "^5.0.1",
     "brfs": "^1.4.1",
+    "chai": "^4.3.4",
     "debug": "^3.0.1",
     "indexeddb-mock": "git+https://github.com/rezonant/indexeddb-mock.git",
     "ink-docstrap": "^0.5.2",
     "jasmine-core": "^2.3.4",
-    "karma": "^1.7.1",
-    "karma-chrome-launcher": "^0.2.0",
-    "moment": "^2.19.3",
+    "karma": "^6.3.4",
+    "karma-chrome-launcher": "^3.1.0",
     "karma-coverage": "^0.5.0",
-    "karma-jasmine": "^0.3.6",
-    "karma-typescript": "^3.0.6",
-    "typescript": "^2.5.2"
+    "karma-material-reporter": "^1.1.2",
+    "karma-sourcemap-loader": "^0.3.7",
+    "karma-typescript": "^5.5.2",
+    "karma-webpack": "^4.0.2",
+    "moment": "^2.19.3",
+    "razmin": "^1.1.5",
+    "ts-loader": "^8.3.0",
+    "ts-node": "^8.10.2",
+    "typescript": "^4.4.4"
   }
 }

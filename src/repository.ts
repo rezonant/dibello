@@ -15,7 +15,7 @@ import { stripCopy } from './strip-copy';
 import { Constraint } from './constraint';
 import { transact } from './transact';
 import { Database } from './database';
-import { Index } from './index';
+import { Index } from './repository-index';
 import { CriteriaFinder } from './criteria-finder';
 import { idbRequestToPromise } from './utils/idb/request-to-promise';
 import { idbRequestToIterable } from './utils/idb/request-to-iterable';

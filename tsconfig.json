@@ -3,7 +3,7 @@
         "target": "es6",
         "module": "commonjs",
         "moduleResolution": "node",
-        "baseUrl": "./src",
+        "rootDir": "./src",
         "outDir": "./dist",
         "lib": [
             "dom",
@@ -15,6 +15,11 @@
         "experimentalDecorators": true,
         "downlevelIteration": true,
         "declaration": true,
-        "sourceMap": true
-    }
+        "sourceMap": true,
+        "esModuleInterop": true
+    },
+    "exclude": [ "./karma.conf.ts" ],
+    "include": [
+        "./src/**/*.ts"
+    ]
 }
